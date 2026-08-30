@@ -1,0 +1,48 @@
+name: Release
+
+# pub.dev publishes through OIDC: the job exchanges its GitHub identity token
+# for a short-lived pub credential, so there is no secret to store. It needs
+# "Automated publishing from GitHub Actions" enabled on the package's admin
+# page at pub.dev, with the repository set to fopost/fopost-dart and the tag
+# pattern v{{version}}.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - run: dart pub get
+
+      - run: dart analyze --fatal-infos
+
+      - run: dart test
+
+      - name: Verify the tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION=$(grep -m1 '^version:' pubspec.yaml | cut -d' ' -f2 | tr -d '\r')
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "::error::pubspec.yaml says $VERSION but the tag is $TAG"
+            exit 1
+          fi
+
+      - name: Publish to pub.dev
+        run: dart pub publish --force
