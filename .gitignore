@@ -1,0 +1,14 @@
+# Dart / pub
+.dart_tool/
+.packages
+build/
+doc/api/
+
+# A library package resolves fresh against its constraints, so the lock is not committed.
+pubspec.lock
+
+# Editors and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
