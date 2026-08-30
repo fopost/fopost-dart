@@ -45,7 +45,8 @@ http.Response jsonOk(Object? data, {Map<String, String> headers = const {}}) =>
     );
 
 /// A bare `200`, for the endpoints that answer without an envelope.
-http.Response jsonBare(Object? body, {int status = 200, Map<String, String> headers = const {}}) =>
+http.Response jsonBare(Object? body,
+        {int status = 200, Map<String, String> headers = const {}}) =>
     http.Response(
       jsonEncode(body),
       status,

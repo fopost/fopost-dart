@@ -54,13 +54,15 @@ void main() {
     test('a bulk import sends the CSV under the file field', () async {
       final seen = RecordedRequests();
       final client = fakeClient(
-        (_) async => jsonOk({'total_rows': 2, 'valid_rows': 1, 'invalid_rows': 1, 'rows': []}),
+        (_) async => jsonOk(
+            {'total_rows': 2, 'valid_rows': 1, 'invalid_rows': 1, 'rows': []}),
         recorder: seen,
       );
 
       final result = await client.posts.validateBulkImport(
         workspaceId: 'ws_1',
-        file: FoPostFile.fromString('posts.csv', 'content,schedule_at\nhi,2026-09-01'),
+        file: FoPostFile.fromString(
+            'posts.csv', 'content,schedule_at\nhi,2026-09-01'),
       );
 
       expect(seen.last.url.path, '/v1/posts/bulk-import/validate');

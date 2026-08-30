@@ -46,7 +46,8 @@ void main() {
       final seen = RecordedRequests();
       final client = fakeClient((_) async => jsonOk([]), recorder: seen);
 
-      await client.posts.list(workspaceId: 'ws_1', status: 'published', perPage: 50);
+      await client.posts
+          .list(workspaceId: 'ws_1', status: 'published', perPage: 50);
 
       final url = seen.last.url;
       expect(url.path, '/v1/posts');
@@ -93,14 +94,16 @@ void main() {
       client.close();
     });
 
-    test('request() is the escape hatch and leaves the envelope alone', () async {
+    test('request() is the escape hatch and leaves the envelope alone',
+        () async {
       final seen = RecordedRequests();
       final client = fakeClient(
         (_) async => jsonOk({'platforms': 30}),
         recorder: seen,
       );
 
-      final body = await client.request('GET', '/platforms', query: {'active': true});
+      final body =
+          await client.request('GET', '/platforms', query: {'active': true});
 
       expect(body, {
         'data': {'platforms': 30}
@@ -112,9 +115,11 @@ void main() {
 
     test('sends a JSON body with the right content type', () async {
       final seen = RecordedRequests();
-      final client = fakeClient((_) async => jsonOk({'id': 'lb_1'}), recorder: seen);
+      final client =
+          fakeClient((_) async => jsonOk({'id': 'lb_1'}), recorder: seen);
 
-      await client.labels.create(workspaceId: 'ws_1', name: 'Launch', color: '#2563eb');
+      await client.labels
+          .create(workspaceId: 'ws_1', name: 'Launch', color: '#2563eb');
 
       expect(seen.last.headers['content-type'], startsWith('application/json'));
       expect(jsonDecode(seen.last.body), {
@@ -132,4 +137,3 @@ void main() {
     });
   });
 }
-

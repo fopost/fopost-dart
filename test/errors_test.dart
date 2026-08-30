@@ -73,7 +73,8 @@ void main() {
 
     test('a 402 exposes the upgrade URL', () async {
       final client = fakeClient(
-        (_) async => jsonError(402, 'subscription_required', 'Upgrade to publish',
+        (_) async => jsonError(
+            402, 'subscription_required', 'Upgrade to publish',
             extra: {'upgrade_url': 'https://app.fopost.com/settings/billing'}),
         maxRetries: 1,
       );
@@ -170,8 +171,18 @@ void main() {
 String _httpDate(DateTime utc) {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   String two(int value) => value.toString().padLeft(2, '0');
   return '${days[utc.weekday - 1]}, ${two(utc.day)} ${months[utc.month - 1]} '

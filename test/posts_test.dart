@@ -34,7 +34,8 @@ void main() {
   group('create', () {
     test('creates a single-block post from a string', () async {
       final seen = RecordedRequests();
-      final client = fakeClient((_) async => jsonOk(postJson()), recorder: seen);
+      final client =
+          fakeClient((_) async => jsonOk(postJson()), recorder: seen);
 
       final post = await client.posts.create(
         workspaceId: 'ws_1',
@@ -62,7 +63,8 @@ void main() {
 
     test('creates a thread from a list of blocks, media and all', () async {
       final seen = RecordedRequests();
-      final client = fakeClient((_) async => jsonOk(postJson()), recorder: seen);
+      final client =
+          fakeClient((_) async => jsonOk(postJson()), recorder: seen);
 
       await client.posts.create(
         workspaceId: 'ws_1',
@@ -178,8 +180,8 @@ void main() {
         recorder: seen,
       );
 
-      final result =
-          await client.posts.publish('p_1', accountIds: ['acc_1'], dryRun: true);
+      final result = await client.posts
+          .publish('p_1', accountIds: ['acc_1'], dryRun: true);
 
       expect(jsonDecode(seen.last.body), {
         'accountIds': ['acc_1'],
@@ -227,13 +229,19 @@ void main() {
           final page = int.parse(request.url.queryParameters['page']!);
           return jsonBare({
             'data': [postJson(id: 'p_$page')],
-            'meta': {'current_page': page, 'per_page': 1, 'total': 3, 'last_page': 3},
+            'meta': {
+              'current_page': page,
+              'per_page': 1,
+              'total': 3,
+              'last_page': 3
+            },
           });
         },
         recorder: seen,
       );
 
-      final ids = await client.posts.stream(perPage: 1).map((p) => p.id).toList();
+      final ids =
+          await client.posts.stream(perPage: 1).map((p) => p.id).toList();
 
       expect(ids, ['p_1', 'p_2', 'p_3']);
       expect(seen.length, 3);
@@ -251,7 +259,8 @@ void main() {
         });
       });
 
-      final ids = await client.posts.stream(perPage: 30).map((p) => p.id).toList();
+      final ids =
+          await client.posts.stream(perPage: 30).map((p) => p.id).toList();
 
       expect(ids, ['p_1']);
       expect(calls, 1);
