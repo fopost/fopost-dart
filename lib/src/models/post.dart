@@ -4,7 +4,8 @@ import 'common.dart';
 /// A label as it appears on a post.
 class PostLabelRef {
   /// Creates a label reference.
-  const PostLabelRef({required this.id, required this.name, required this.color});
+  const PostLabelRef(
+      {required this.id, required this.name, required this.color});
 
   /// Reads a label reference.
   factory PostLabelRef.fromJson(Map<String, dynamic> json) => PostLabelRef(
@@ -46,7 +47,8 @@ class PostAccountResult {
   });
 
   /// Reads an account result off a post.
-  factory PostAccountResult.fromJson(Map<String, dynamic> json) => PostAccountResult(
+  factory PostAccountResult.fromJson(Map<String, dynamic> json) =>
+      PostAccountResult(
         id: asString(json['id']) ?? '',
         platform: asString(json['platform']) ?? '',
         username: asString(json['username']) ?? '',
@@ -134,7 +136,8 @@ class Post {
   /// Reads a post.
   factory Post.fromJson(Map<String, dynamic> json) => Post(
         id: asString(json['id']) ?? '',
-        workspaceId: asString(json['workspace_id'] ?? json['workspaceId']) ?? '',
+        workspaceId:
+            asString(json['workspace_id'] ?? json['workspaceId']) ?? '',
         status: asString(json['status']) ?? '',
         content: asModelList(json['content'], ContentBlock.fromJson),
         contentType: asString(json['content_type']),
@@ -262,7 +265,8 @@ class PublishDelivery {
   });
 
   /// Reads a delivery record.
-  factory PublishDelivery.fromJson(Map<String, dynamic> json) => PublishDelivery(
+  factory PublishDelivery.fromJson(Map<String, dynamic> json) =>
+      PublishDelivery(
         id: asString(json['id']) ?? '',
         accountId: asString(json['accountId']) ?? '',
         status: asString(json['status']) ?? '',
@@ -340,7 +344,8 @@ class PublishResult {
       postStatus: asString(json['post_status'] ?? post['status']),
       postId: asString(post['id']),
       deliveries: asModelList(json['deliveries'], PublishDelivery.fromJson),
-      healthWarnings: asModelList(json['healthWarnings'], HealthWarning.fromJson),
+      healthWarnings:
+          asModelList(json['healthWarnings'], HealthWarning.fromJson),
       accounts: asModelList(json['accounts'], PlannedAccount.fromJson),
     );
   }
@@ -364,7 +369,8 @@ class PublishResult {
   final List<PlannedAccount> accounts;
 
   @override
-  String toString() => 'PublishResult($postStatus, ${deliveries.length} deliveries)';
+  String toString() =>
+      'PublishResult($postStatus, ${deliveries.length} deliveries)';
 }
 
 /// One account named in a dry-run plan.
@@ -391,10 +397,12 @@ class PlannedAccount {
 /// An account that has run out of delivery attempts.
 class ExceededAccount {
   /// Creates an exceeded-account record.
-  const ExceededAccount({required this.accountId, required this.platform, this.attempts});
+  const ExceededAccount(
+      {required this.accountId, required this.platform, this.attempts});
 
   /// Reads an exceeded-account record.
-  factory ExceededAccount.fromJson(Map<String, dynamic> json) => ExceededAccount(
+  factory ExceededAccount.fromJson(Map<String, dynamic> json) =>
+      ExceededAccount(
         accountId: asString(json['accountId']) ?? '',
         platform: asString(json['platform']) ?? '',
         attempts: asInt(json['attempts']),
@@ -416,7 +424,8 @@ class ExceededAccount {
 /// What a retry re-sent, and what it could not.
 class RetryResult {
   /// Creates a retry result.
-  const RetryResult({this.postStatus, this.deliveries = const [], this.exceeded = const []});
+  const RetryResult(
+      {this.postStatus, this.deliveries = const [], this.exceeded = const []});
 
   /// Reads a retry result.
   factory RetryResult.fromJson(Map<String, dynamic> json) => RetryResult(
@@ -473,7 +482,8 @@ class PreflightAccount {
   });
 
   /// Reads a preflight account.
-  factory PreflightAccount.fromJson(Map<String, dynamic> json) => PreflightAccount(
+  factory PreflightAccount.fromJson(Map<String, dynamic> json) =>
+      PreflightAccount(
         accountId: asString(json['accountId']) ?? '',
         platform: asString(json['platform']) ?? '',
         ready: asBool(json['ready']) ?? false,
@@ -511,7 +521,11 @@ class PreflightAccount {
 /// A post checked against every target platform, without publishing.
 class PreflightResult {
   /// Creates a preflight result.
-  const PreflightResult({required this.ready, this.postId, this.postStatus, this.accounts = const []});
+  const PreflightResult(
+      {required this.ready,
+      this.postId,
+      this.postStatus,
+      this.accounts = const []});
 
   /// Reads a preflight result.
   factory PreflightResult.fromJson(Map<String, dynamic> json) {
@@ -659,7 +673,8 @@ class PublishRunDelivery {
   });
 
   /// Reads a run delivery.
-  factory PublishRunDelivery.fromJson(Map<String, dynamic> json) => PublishRunDelivery(
+  factory PublishRunDelivery.fromJson(Map<String, dynamic> json) =>
+      PublishRunDelivery(
         accountId: asString(json['account_id']) ?? '',
         platform: asString(json['platform']) ?? '',
         status: asString(json['status']) ?? '',
@@ -737,7 +752,8 @@ class PublishRun {
         runNumber: asInt(json['run_number']),
         startedAt: asDate(json['started_at']),
         completedAt: asDate(json['completed_at']),
-        deliveries: asModelList(json['deliveries'], PublishRunDelivery.fromJson),
+        deliveries:
+            asModelList(json['deliveries'], PublishRunDelivery.fromJson),
       );
 
   /// The run's id.
@@ -780,7 +796,8 @@ class PostAnalyticsTotals {
   });
 
   /// Reads a totals block.
-  factory PostAnalyticsTotals.fromJson(Map<String, dynamic> json) => PostAnalyticsTotals(
+  factory PostAnalyticsTotals.fromJson(Map<String, dynamic> json) =>
+      PostAnalyticsTotals(
         impressions: asInt(json['impressions']) ?? 0,
         reach: asInt(json['reach']) ?? 0,
         engagements: asInt(json['engagements']) ?? 0,
@@ -854,7 +871,8 @@ class PostPlatformMetrics {
   });
 
   /// Reads a metrics block.
-  factory PostPlatformMetrics.fromJson(Map<String, dynamic> json) => PostPlatformMetrics(
+  factory PostPlatformMetrics.fromJson(Map<String, dynamic> json) =>
+      PostPlatformMetrics(
         impressions: asInt(json['impressions']),
         reach: asInt(json['reach']),
         engagements: asInt(json['engagements']),
@@ -936,7 +954,8 @@ class PostPlatformAnalytics {
   });
 
   /// Reads a per-platform block.
-  factory PostPlatformAnalytics.fromJson(Map<String, dynamic> json) => PostPlatformAnalytics(
+  factory PostPlatformAnalytics.fromJson(Map<String, dynamic> json) =>
+      PostPlatformAnalytics(
         platform: asString(json['platform']) ?? '',
         metrics: PostPlatformMetrics.fromJson(asMap(json['metrics'])),
         username: asString(json['username']),
@@ -989,7 +1008,8 @@ class PostAnalytics {
   factory PostAnalytics.fromJson(Map<String, dynamic> json) => PostAnalytics(
         postId: asString(json['postId']) ?? '',
         totals: PostAnalyticsTotals.fromJson(asMap(json['totals'])),
-        platforms: asModelList(json['platforms'], PostPlatformAnalytics.fromJson),
+        platforms:
+            asModelList(json['platforms'], PostPlatformAnalytics.fromJson),
         lastFetchedAt: asDate(json['lastFetchedAt']),
       );
 
@@ -1097,7 +1117,8 @@ class BulkImportValidation {
   });
 
   /// Reads a validation result.
-  factory BulkImportValidation.fromJson(Map<String, dynamic> json) => BulkImportValidation(
+  factory BulkImportValidation.fromJson(Map<String, dynamic> json) =>
+      BulkImportValidation(
         totalRows: asInt(json['total_rows']) ?? 0,
         validRows: asInt(json['valid_rows']) ?? 0,
         invalidRows: asInt(json['invalid_rows']) ?? 0,
@@ -1126,7 +1147,8 @@ class BulkImportedPost {
   const BulkImportedPost({required this.id, this.scheduleAt});
 
   /// Reads an imported post reference.
-  factory BulkImportedPost.fromJson(Map<String, dynamic> json) => BulkImportedPost(
+  factory BulkImportedPost.fromJson(Map<String, dynamic> json) =>
+      BulkImportedPost(
         id: asString(json['id']) ?? '',
         scheduleAt: asDate(json['schedule_at']),
       );
@@ -1144,10 +1166,12 @@ class BulkImportedPost {
 /// What a committed CSV import created. Keep [batchId] to roll it back.
 class BulkImportResult {
   /// Creates an import result.
-  const BulkImportResult({required this.batchId, required this.created, this.posts = const []});
+  const BulkImportResult(
+      {required this.batchId, required this.created, this.posts = const []});
 
   /// Reads an import result.
-  factory BulkImportResult.fromJson(Map<String, dynamic> json) => BulkImportResult(
+  factory BulkImportResult.fromJson(Map<String, dynamic> json) =>
+      BulkImportResult(
         batchId: asString(json['batch_id']) ?? '',
         created: asInt(json['created']) ?? 0,
         posts: asModelList(json['posts'], BulkImportedPost.fromJson),

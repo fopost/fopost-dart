@@ -17,7 +17,8 @@ class MediaLibraryItem {
   });
 
   /// Reads a library item.
-  factory MediaLibraryItem.fromJson(Map<String, dynamic> json) => MediaLibraryItem(
+  factory MediaLibraryItem.fromJson(Map<String, dynamic> json) =>
+      MediaLibraryItem(
         id: asString(json['id']) ?? '',
         name: asString(json['name']) ?? '',
         url: asString(json['url']) ?? '',

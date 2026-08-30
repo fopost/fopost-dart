@@ -17,8 +17,8 @@ class LabelsResource {
   /// Returns the labels the key can reach, optionally narrowed to one
   /// workspace.
   Future<List<Label>> list({String? workspaceId}) async {
-    final rows =
-        await _http.objects('GET', '/labels', query: {'workspace_id': workspaceId});
+    final rows = await _http
+        .objects('GET', '/labels', query: {'workspace_id': workspaceId});
     return rows.map(Label.fromJson).toList();
   }
 
@@ -37,12 +37,14 @@ class LabelsResource {
   }
 
   /// Renames or recolors a label. Both fields are required by the API.
-  Future<Label> update(String id, {required String name, required String color}) async {
+  Future<Label> update(String id,
+      {required String name, required String color}) async {
     final body = {'name': name, 'color': color};
     return Label.fromJson(
         await _http.object('PUT', '/labels/${segment(id)}', body: body));
   }
 
   /// Removes a label and unlinks it from every post carrying it.
-  Future<void> delete(String id) => _http.discard('DELETE', '/labels/${segment(id)}');
+  Future<void> delete(String id) =>
+      _http.discard('DELETE', '/labels/${segment(id)}');
 }

@@ -87,7 +87,8 @@ class AccountDetail {
       id: asString(json['id']) ?? '',
       platform: asString(json['platform']) ?? '',
       username: asString(json['username']) ?? '',
-      workspaceId: asString(json['workspace_id'] ?? json['workspaceId'] ?? workspace['id']),
+      workspaceId: asString(
+          json['workspace_id'] ?? json['workspaceId'] ?? workspace['id']),
       name: asString(json['name']),
       avatar: asString(json['avatar']),
       workspaceName: asString(workspace['name']),
@@ -243,7 +244,8 @@ class AccountValidation {
   });
 
   /// Reads a validation result.
-  factory AccountValidation.fromJson(Map<String, dynamic> json) => AccountValidation(
+  factory AccountValidation.fromJson(Map<String, dynamic> json) =>
+      AccountValidation(
         accountId: asString(json['accountId']) ?? '',
         platform: asString(json['platform']) ?? '',
         valid: asBool(json['valid']) ?? false,
@@ -321,7 +323,8 @@ class AccountSnapshot {
   });
 
   /// Reads a snapshot.
-  factory AccountSnapshot.fromJson(Map<String, dynamic> json) => AccountSnapshot(
+  factory AccountSnapshot.fromJson(Map<String, dynamic> json) =>
+      AccountSnapshot(
         followers: asInt(json['followers']),
         following: asInt(json['following']),
         totalPosts: asInt(json['totalPosts']),
@@ -384,5 +387,6 @@ class AccountAnalyticsHistory {
   final List<AccountSnapshot> history;
 
   @override
-  String toString() => 'AccountAnalyticsHistory($platform, ${history.length} points)';
+  String toString() =>
+      'AccountAnalyticsHistory($platform, ${history.length} points)';
 }

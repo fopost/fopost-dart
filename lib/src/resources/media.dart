@@ -17,8 +17,8 @@ class MediaResource {
 
   /// Returns a workspace's media library.
   Future<List<MediaLibraryItem>> list(String workspaceId) async {
-    final rows =
-        await _http.objects('GET', '/media', query: {'workspaceId': workspaceId});
+    final rows = await _http
+        .objects('GET', '/media', query: {'workspaceId': workspaceId});
     return rows.map(MediaLibraryItem.fromJson).toList();
   }
 
@@ -38,7 +38,8 @@ class MediaResource {
     List<FoPostFile> files,
   ) async {
     if (files.isEmpty) {
-      throw ArgumentError.value(files, 'files', 'at least one file is required');
+      throw ArgumentError.value(
+          files, 'files', 'at least one file is required');
     }
     final body = await _http.multipart(
       '/media/upload',

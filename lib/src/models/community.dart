@@ -62,10 +62,15 @@ class Community {
 /// A community as search returns it, before it is linked to an account.
 class CommunitySearchResult {
   /// Creates a search result.
-  const CommunitySearchResult({required this.id, required this.name, this.description, this.memberCount});
+  const CommunitySearchResult(
+      {required this.id,
+      required this.name,
+      this.description,
+      this.memberCount});
 
   /// Reads a search result.
-  factory CommunitySearchResult.fromJson(Map<String, dynamic> json) => CommunitySearchResult(
+  factory CommunitySearchResult.fromJson(Map<String, dynamic> json) =>
+      CommunitySearchResult(
         id: asString(json['id']) ?? '',
         name: asString(json['name']) ?? '',
         description: asString(json['description']),

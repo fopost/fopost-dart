@@ -23,8 +23,8 @@ class AutomationsResource {
   }
 
   /// Returns one automation with its steps.
-  Future<Automation> get(String id) async =>
-      Automation.fromJson(await _http.object('GET', '/automations/${segment(id)}'));
+  Future<Automation> get(String id) async => Automation.fromJson(
+      await _http.object('GET', '/automations/${segment(id)}'));
 
   /// Adds an automation.
   ///
@@ -46,7 +46,8 @@ class AutomationsResource {
       'triggerConfig': triggerConfig,
       'active': active,
     });
-    return Automation.fromJson(await _http.object('POST', '/automations', body: body));
+    return Automation.fromJson(
+        await _http.object('POST', '/automations', body: body));
   }
 
   /// Edits an automation. Passing [steps] replaces the whole list.
@@ -87,8 +88,9 @@ class AutomationsResource {
   }
 
   /// Returns one execution, with a log per step.
-  Future<AutomationRun> run(String id, int runId) async => AutomationRun.fromJson(
-      await _http.object('GET', '/automations/${segment(id)}/runs/$runId'));
+  Future<AutomationRun> run(String id, int runId) async =>
+      AutomationRun.fromJson(
+          await _http.object('GET', '/automations/${segment(id)}/runs/$runId'));
 
   /// Fires an `api_webhook` automation with a payload its steps can read.
   Future<AutomationTriggerResult> trigger(

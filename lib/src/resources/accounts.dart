@@ -18,14 +18,14 @@ class AccountsResource {
   /// Returns the connected accounts the key can reach, optionally narrowed to
   /// one workspace.
   Future<List<Account>> list({String? workspaceId}) async {
-    final rows =
-        await _http.objects('GET', '/accounts', query: {'workspaceId': workspaceId});
+    final rows = await _http
+        .objects('GET', '/accounts', query: {'workspaceId': workspaceId});
     return rows.map(Account.fromJson).toList();
   }
 
   /// Returns one account.
-  Future<AccountDetail> get(String id) async =>
-      AccountDetail.fromJson(await _http.object('GET', '/accounts/${segment(id)}'));
+  Future<AccountDetail> get(String id) async => AccountDetail.fromJson(
+      await _http.object('GET', '/accounts/${segment(id)}'));
 
   /// Connects an account from credentials you already hold.
   ///
@@ -46,7 +46,8 @@ class AccountsResource {
       'avatar': avatar,
       'credentials': credentials,
     });
-    return AccountDetail.fromJson(await _http.object('POST', '/accounts', body: body));
+    return AccountDetail.fromJson(
+        await _http.object('POST', '/accounts', body: body));
   }
 
   /// Disconnects an account.
@@ -58,8 +59,9 @@ class AccountsResource {
       await _http.object('POST', '/accounts/${segment(id)}/primary'));
 
   /// Checks an account's credentials against the platform.
-  Future<AccountValidation> validate(String id) async => AccountValidation.fromJson(
-      await _http.object('POST', '/accounts/${segment(id)}/validate'));
+  Future<AccountValidation> validate(String id) async =>
+      AccountValidation.fromJson(
+          await _http.object('POST', '/accounts/${segment(id)}/validate'));
 
   /// Returns an account's health.
   ///
@@ -81,8 +83,9 @@ class AccountsResource {
       ));
 
   /// Renews an account's OAuth token ahead of its expiry.
-  Future<RefreshedToken> refreshToken(String id) async => RefreshedToken.fromJson(
-      await _http.object('POST', '/accounts/${segment(id)}/refresh-token'));
+  Future<RefreshedToken> refreshToken(String id) async =>
+      RefreshedToken.fromJson(
+          await _http.object('POST', '/accounts/${segment(id)}/refresh-token'));
 
   /// Returns an account's stored snapshots, newest first.
   Future<AccountAnalyticsHistory> analytics(String id, {int? limit}) async =>

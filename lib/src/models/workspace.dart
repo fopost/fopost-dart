@@ -13,7 +13,8 @@ class WorkspaceAccountRef {
   });
 
   /// Reads an account reference.
-  factory WorkspaceAccountRef.fromJson(Map<String, dynamic> json) => WorkspaceAccountRef(
+  factory WorkspaceAccountRef.fromJson(Map<String, dynamic> json) =>
+      WorkspaceAccountRef(
         id: asString(json['id']) ?? '',
         platform: asString(json['platform']) ?? '',
         username: asString(json['username']) ?? '',
@@ -170,7 +171,8 @@ class WorkspaceAccountAnalytics {
   final DateTime? fetchedAt;
 
   @override
-  String toString() => 'WorkspaceAccountAnalytics($platform, $followers followers)';
+  String toString() =>
+      'WorkspaceAccountAnalytics($platform, $followers followers)';
 }
 
 /// The follower and post roll-up for one workspace.
@@ -188,7 +190,8 @@ class WorkspaceAnalytics {
     final totals = asMap(json['totals']);
     return WorkspaceAnalytics(
       workspaceId: asString(json['workspaceId']) ?? '',
-      accounts: asModelList(json['accounts'], WorkspaceAccountAnalytics.fromJson),
+      accounts:
+          asModelList(json['accounts'], WorkspaceAccountAnalytics.fromJson),
       totalFollowers: asInt(totals['followers']) ?? 0,
       totalPosts: asInt(totals['totalPosts']) ?? 0,
     );

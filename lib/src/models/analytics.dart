@@ -29,7 +29,8 @@ class AnalyticsDeltas {
   });
 
   /// Reads a deltas block.
-  factory AnalyticsDeltas.fromJson(Map<String, dynamic> json) => AnalyticsDeltas(
+  factory AnalyticsDeltas.fromJson(Map<String, dynamic> json) =>
+      AnalyticsDeltas(
         followers: asDouble(json['followers']),
         posts: asDouble(json['posts']),
         engagement: asDouble(json['engagement']),
@@ -71,10 +72,12 @@ class AnalyticsDeltas {
 /// One platform's share of an overview.
 class PlatformBreakdown {
   /// Creates a platform breakdown.
-  const PlatformBreakdown({required this.platform, this.accounts = 0, this.followers = 0});
+  const PlatformBreakdown(
+      {required this.platform, this.accounts = 0, this.followers = 0});
 
   /// Reads a platform breakdown.
-  factory PlatformBreakdown.fromJson(Map<String, dynamic> json) => PlatformBreakdown(
+  factory PlatformBreakdown.fromJson(Map<String, dynamic> json) =>
+      PlatformBreakdown(
         platform: asString(json['platform']) ?? '',
         accounts: asInt(json['accounts']) ?? 0,
         followers: asInt(json['followers']) ?? 0,
@@ -108,7 +111,8 @@ class OverviewAccount {
   });
 
   /// Reads an overview account.
-  factory OverviewAccount.fromJson(Map<String, dynamic> json) => OverviewAccount(
+  factory OverviewAccount.fromJson(Map<String, dynamic> json) =>
+      OverviewAccount(
         accountId: asString(json['accountId']) ?? '',
         platform: asString(json['platform']) ?? '',
         username: asString(json['username']),
@@ -172,7 +176,8 @@ class AnalyticsOverview {
   });
 
   /// Reads an overview.
-  factory AnalyticsOverview.fromJson(Map<String, dynamic> json) => AnalyticsOverview(
+  factory AnalyticsOverview.fromJson(Map<String, dynamic> json) =>
+      AnalyticsOverview(
         totalAccounts: asInt(json['totalAccounts']) ?? 0,
         totalFollowers: asInt(json['totalFollowers']) ?? 0,
         totalPosts: asInt(json['totalPosts']) ?? 0,
@@ -248,7 +253,8 @@ class AnalyticsOverview {
   final List<OverviewAccount> accounts;
 
   @override
-  String toString() => 'AnalyticsOverview($totalFollowers followers, $totalPosts posts)';
+  String toString() =>
+      'AnalyticsOverview($totalFollowers followers, $totalPosts posts)';
 }
 
 /// One day of activity.
@@ -266,7 +272,8 @@ class TimeSeriesPoint {
   });
 
   /// Reads a point.
-  factory TimeSeriesPoint.fromJson(Map<String, dynamic> json) => TimeSeriesPoint(
+  factory TimeSeriesPoint.fromJson(Map<String, dynamic> json) =>
+      TimeSeriesPoint(
         date: asString(json['date']) ?? '',
         engagements: asInt(json['engagements']) ?? 0,
         impressions: asInt(json['impressions']) ?? 0,
@@ -311,7 +318,8 @@ class AnalyticsTimeSeries {
   const AnalyticsTimeSeries({this.days = 0, this.series = const []});
 
   /// Reads a series.
-  factory AnalyticsTimeSeries.fromJson(Map<String, dynamic> json) => AnalyticsTimeSeries(
+  factory AnalyticsTimeSeries.fromJson(Map<String, dynamic> json) =>
+      AnalyticsTimeSeries(
         days: asInt(json['days']) ?? 0,
         series: asModelList(json['series'], TimeSeriesPoint.fromJson),
       );
@@ -332,7 +340,8 @@ class TopPostPlatform {
   const TopPostPlatform({required this.platform, this.username, this.url});
 
   /// Reads a platform reference.
-  factory TopPostPlatform.fromJson(Map<String, dynamic> json) => TopPostPlatform(
+  factory TopPostPlatform.fromJson(Map<String, dynamic> json) =>
+      TopPostPlatform(
         platform: asString(json['platform']) ?? '',
         username: asString(json['username']),
         url: asString(json['url']),
@@ -633,10 +642,12 @@ class PostsTableRow {
 /// One platform on a posts-table row.
 class PostsTablePlatform {
   /// Creates a platform cell.
-  const PostsTablePlatform({required this.platform, this.username, this.url, this.deliveryStatus});
+  const PostsTablePlatform(
+      {required this.platform, this.username, this.url, this.deliveryStatus});
 
   /// Reads a platform cell.
-  factory PostsTablePlatform.fromJson(Map<String, dynamic> json) => PostsTablePlatform(
+  factory PostsTablePlatform.fromJson(Map<String, dynamic> json) =>
+      PostsTablePlatform(
         platform: asString(json['platform']) ?? '',
         username: asString(json['username']),
         url: asString(json['url']),
@@ -747,10 +758,12 @@ class StreakDay {
 /// One slice of an audience: a value and its share.
 class DemographicsBucket {
   /// Creates a bucket.
-  const DemographicsBucket({required this.key, required this.value, required this.share});
+  const DemographicsBucket(
+      {required this.key, required this.value, required this.share});
 
   /// Reads a bucket.
-  factory DemographicsBucket.fromJson(Map<String, dynamic> json) => DemographicsBucket(
+  factory DemographicsBucket.fromJson(Map<String, dynamic> json) =>
+      DemographicsBucket(
         key: asString(json['key']) ?? '',
         value: asDouble(json['value']) ?? 0,
         share: asDouble(json['share']) ?? 0,
@@ -772,7 +785,8 @@ class DemographicsBucket {
 /// An account named in a demographics response.
 class DemographicsAccountRef {
   /// Creates an account reference.
-  const DemographicsAccountRef({required this.accountId, required this.platform, this.username});
+  const DemographicsAccountRef(
+      {required this.accountId, required this.platform, this.username});
 
   /// Reads an account reference.
   factory DemographicsAccountRef.fromJson(Map<String, dynamic> json) =>
@@ -817,10 +831,10 @@ class Demographics {
       gender: asModelList(dimensions['gender'], DemographicsBucket.fromJson),
       country: asModelList(dimensions['country'], DemographicsBucket.fromJson),
       city: asModelList(dimensions['city'], DemographicsBucket.fromJson),
-      contributingAccounts:
-          asModelList(json['contributingAccounts'], DemographicsAccountRef.fromJson),
-      unsupportedAccounts:
-          asModelList(json['unsupportedAccounts'], DemographicsAccountRef.fromJson),
+      contributingAccounts: asModelList(
+          json['contributingAccounts'], DemographicsAccountRef.fromJson),
+      unsupportedAccounts: asModelList(
+          json['unsupportedAccounts'], DemographicsAccountRef.fromJson),
     );
   }
 
@@ -852,7 +866,12 @@ class Demographics {
 /// One account that failed during a collection run.
 class CollectError {
   /// Creates a collection error.
-  const CollectError({required this.accountId, required this.stage, this.platform, this.username, this.message});
+  const CollectError(
+      {required this.accountId,
+      required this.stage,
+      this.platform,
+      this.username,
+      this.message});
 
   /// Reads a collection error.
   factory CollectError.fromJson(Map<String, dynamic> json) => CollectError(

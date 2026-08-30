@@ -62,8 +62,10 @@ class FoPostException implements Exception {
     final status = response.statusCode;
     final body = _tryDecode(decodedBody);
     final envelope = body is Map<String, dynamic> ? body : const {};
-    final code = envelope['error'] is String ? envelope['error'] as String : null;
-    final message = envelope['message'] is String && (envelope['message'] as String).isNotEmpty
+    final code =
+        envelope['error'] is String ? envelope['error'] as String : null;
+    final message = envelope['message'] is String &&
+            (envelope['message'] as String).isNotEmpty
         ? envelope['message'] as String
         : (code ?? response.reasonPhrase ?? 'HTTP $status');
     final rateLimit = RateLimit.fromHeaders(response.headers);
@@ -164,8 +166,18 @@ DateTime? _parseHttpDate(String value) {
   ).firstMatch(value);
   if (match == null) return null;
   const months = <String, int>{
-    'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
-    'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
+    'Jan': 1,
+    'Feb': 2,
+    'Mar': 3,
+    'Apr': 4,
+    'May': 5,
+    'Jun': 6,
+    'Jul': 7,
+    'Aug': 8,
+    'Sep': 9,
+    'Oct': 10,
+    'Nov': 11,
+    'Dec': 12,
   };
   final month = months[match.group(2)];
   if (month == null) return null;

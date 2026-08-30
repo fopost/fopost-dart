@@ -24,8 +24,8 @@ class WorkspacesResource {
   }
 
   /// Returns one workspace with its connected accounts.
-  Future<Workspace> get(String id) async =>
-      Workspace.fromJson(await _http.object('GET', '/workspaces/${segment(id)}'));
+  Future<Workspace> get(String id) async => Workspace.fromJson(
+      await _http.object('GET', '/workspaces/${segment(id)}'));
 
   /// Adds a workspace.
   ///
@@ -53,7 +53,8 @@ class WorkspacesResource {
       'description': description,
       'language': language,
     });
-    return Workspace.fromJson(await _http.object('POST', '/workspaces', body: body));
+    return Workspace.fromJson(
+        await _http.object('POST', '/workspaces', body: body));
   }
 
   /// Edits a workspace. Only the fields you pass are sent.
@@ -95,6 +96,7 @@ class WorkspacesResource {
       _http.discard('DELETE', '/workspaces/${segment(id)}');
 
   /// Returns a workspace's follower and post totals.
-  Future<WorkspaceAnalytics> analytics(String id) async => WorkspaceAnalytics.fromJson(
-      await _http.object('GET', '/workspaces/${segment(id)}/analytics'));
+  Future<WorkspaceAnalytics> analytics(String id) async =>
+      WorkspaceAnalytics.fromJson(
+          await _http.object('GET', '/workspaces/${segment(id)}/analytics'));
 }

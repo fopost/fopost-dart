@@ -31,7 +31,8 @@ class WebhooksResource {
     required List<String> events,
   }) async {
     final body = {'workspaceId': workspaceId, 'url': url, 'events': events};
-    return Webhook.fromJson(await _http.object('POST', '/webhooks', body: body));
+    return Webhook.fromJson(
+        await _http.object('POST', '/webhooks', body: body));
   }
 
   /// Changes a subscription's endpoint, events, or active flag.
@@ -47,7 +48,8 @@ class WebhooksResource {
   }
 
   /// Removes a subscription.
-  Future<void> delete(String id) => _http.discard('DELETE', '/webhooks/${segment(id)}');
+  Future<void> delete(String id) =>
+      _http.discard('DELETE', '/webhooks/${segment(id)}');
 
   /// Sends a sample event to the subscribed endpoint.
   Future<ApiMessage> test(String id) async {

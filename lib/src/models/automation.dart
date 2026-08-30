@@ -30,7 +30,11 @@ abstract final class AutomationAction {
 /// One action in an automation, in position order.
 class AutomationStep {
   /// Creates a step.
-  const AutomationStep({required this.actionType, this.actionConfig = const {}, this.id, this.position});
+  const AutomationStep(
+      {required this.actionType,
+      this.actionConfig = const {},
+      this.id,
+      this.position});
 
   /// Reads a step.
   factory AutomationStep.fromJson(Map<String, dynamic> json) => AutomationStep(
@@ -156,7 +160,8 @@ class AutomationRunLog {
   });
 
   /// Reads a log entry.
-  factory AutomationRunLog.fromJson(Map<String, dynamic> json) => AutomationRunLog(
+  factory AutomationRunLog.fromJson(Map<String, dynamic> json) =>
+      AutomationRunLog(
         id: asInt(json['id']) ?? 0,
         stepPosition: asInt(json['stepPosition']) ?? 0,
         status: asString(json['status']) ?? '',
@@ -269,7 +274,8 @@ class AutomationToggle {
   const AutomationToggle({required this.id, required this.active});
 
   /// Reads a toggle result.
-  factory AutomationToggle.fromJson(Map<String, dynamic> json) => AutomationToggle(
+  factory AutomationToggle.fromJson(Map<String, dynamic> json) =>
+      AutomationToggle(
         id: asString(json['id']) ?? '',
         active: asBool(json['active']) ?? false,
       );
@@ -318,7 +324,8 @@ class AutomationRunSummary {
   });
 
   /// Reads a run summary.
-  factory AutomationRunSummary.fromJson(Map<String, dynamic> json) => AutomationRunSummary(
+  factory AutomationRunSummary.fromJson(Map<String, dynamic> json) =>
+      AutomationRunSummary(
         id: asInt(json['id']) ?? 0,
         status: asString(json['status']) ?? '',
         automationId: asString(json['automationId']),
@@ -368,7 +375,8 @@ class AutomationStats {
       activeAutomations: asInt(json['activeAutomations']) ?? 0,
       totalRuns24h: asInt(json['totalRuns24h']) ?? 0,
       runsByStatus: byStatus,
-      recentRuns: asModelList(json['recentRuns'], AutomationRunSummary.fromJson),
+      recentRuns:
+          asModelList(json['recentRuns'], AutomationRunSummary.fromJson),
     );
   }
 
@@ -388,5 +396,6 @@ class AutomationStats {
   final List<AutomationRunSummary> recentRuns;
 
   @override
-  String toString() => 'AutomationStats($activeAutomations/$totalAutomations active)';
+  String toString() =>
+      'AutomationStats($activeAutomations/$totalAutomations active)';
 }

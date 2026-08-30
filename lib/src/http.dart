@@ -222,7 +222,9 @@ class FoPostHttp {
     } on FormatException {
       return text;
     }
-    if (unwrap && decoded is Map<String, dynamic> && decoded.containsKey('data')) {
+    if (unwrap &&
+        decoded is Map<String, dynamic> &&
+        decoded.containsKey('data')) {
       return decoded['data'];
     }
     return decoded;
@@ -232,7 +234,8 @@ class FoPostHttp {
 
   Duration _backoff(int attempt) {
     final millis = retryBaseDelay.inMilliseconds * math.pow(2, attempt - 1);
-    final capped = math.min(millis.toDouble(), maxRetryDelay.inMilliseconds.toDouble());
+    final capped =
+        math.min(millis.toDouble(), maxRetryDelay.inMilliseconds.toDouble());
     return Duration(milliseconds: capped.round());
   }
 }

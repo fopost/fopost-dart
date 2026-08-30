@@ -49,7 +49,8 @@ class PostsResource {
       'to': to,
       'sort': sort,
     });
-    return Page.fromJson(body is Map<String, dynamic> ? body : {}, Post.fromJson);
+    return Page.fromJson(
+        body is Map<String, dynamic> ? body : {}, Post.fromJson);
   }
 
   /// Walks every matching post, a page at a time.
@@ -201,11 +202,13 @@ class PostsResource {
       'auto_plug_content': autoPlugContent,
       'settings': settings,
     });
-    return Post.fromJson(await _http.object('PUT', '/posts/${segment(id)}', body: body));
+    return Post.fromJson(
+        await _http.object('PUT', '/posts/${segment(id)}', body: body));
   }
 
   /// Removes a post.
-  Future<void> delete(String id) => _http.discard('DELETE', '/posts/${segment(id)}');
+  Future<void> delete(String id) =>
+      _http.discard('DELETE', '/posts/${segment(id)}');
 
   /// Copies a post into a new draft.
   Future<DuplicatedPost> duplicate(String id) async => DuplicatedPost.fromJson(
@@ -225,8 +228,8 @@ class PostsResource {
       if (accountIds != null && accountIds.isNotEmpty) 'accountIds': accountIds,
       if (dryRun) 'options': {'dryRun': true},
     };
-    return PublishResult.fromJson(
-        await _http.object('POST', '/posts/${segment(id)}/publish', body: body));
+    return PublishResult.fromJson(await _http
+        .object('POST', '/posts/${segment(id)}/publish', body: body));
   }
 
   /// Re-sends the deliveries that failed, leaving successful ones alone.
@@ -251,8 +254,9 @@ class PostsResource {
   }
 
   /// Checks a post against every target platform without publishing.
-  Future<PreflightResult> preflight(String id) async => PreflightResult.fromJson(
-      await _http.object('POST', '/posts/${segment(id)}/preflight'));
+  Future<PreflightResult> preflight(String id) async =>
+      PreflightResult.fromJson(
+          await _http.object('POST', '/posts/${segment(id)}/preflight'));
 
   /// Lists the current delivery record per account.
   Future<List<Delivery>> deliveries(String id) async {
@@ -262,7 +266,8 @@ class PostsResource {
 
   /// Lists every publish attempt made for a post, newest first.
   Future<List<PublishRun>> publishRuns(String id) async {
-    final rows = await _http.objects('GET', '/posts/${segment(id)}/publish-runs');
+    final rows =
+        await _http.objects('GET', '/posts/${segment(id)}/publish-runs');
     return rows.map(PublishRun.fromJson).toList();
   }
 
@@ -318,7 +323,8 @@ class PostsResource {
 
   Future<BulkResult> _bulk(Map<String, dynamic> body) async {
     final response = await _http.raw('POST', '/posts/bulk', body: body);
-    return BulkResult.fromJson(response is Map<String, dynamic> ? response : {});
+    return BulkResult.fromJson(
+        response is Map<String, dynamic> ? response : {});
   }
 
   /// Checks a CSV without creating anything.

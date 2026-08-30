@@ -20,7 +20,8 @@ class Label {
       id: asString(json['id']) ?? '',
       name: asString(json['name']) ?? '',
       color: asString(json['color']) ?? '',
-      workspaceId: asString(json['workspace_id'] ?? json['workspaceId'] ?? workspace['id']),
+      workspaceId: asString(
+          json['workspace_id'] ?? json['workspaceId'] ?? workspace['id']),
       workspaceName: asString(workspace['name']),
       createdAt: asDate(json['created_at'] ?? json['createdAt']),
       updatedAt: asDate(json['updated_at'] ?? json['updatedAt']),

@@ -1,9 +1,7 @@
 import 'package:meta/meta.dart';
 
 import '../http.dart';
-import '../json.dart';
 import '../models/analytics.dart';
-import 'base.dart';
 
 /// The cross-account reporting surface.
 ///
@@ -154,8 +152,8 @@ class AnalyticsResource {
 
   /// Returns a year of posting activity.
   Future<List<StreakDay>> postingStreak({String? workspaceId}) async {
-    final body = await _http
-        .object('GET', '/analytics/posting-streak', query: {'workspace_id': workspaceId});
+    final body = await _http.object('GET', '/analytics/posting-streak',
+        query: {'workspace_id': workspaceId});
     final streak = body['streak'];
     if (streak is! List) return const [];
     return streak
@@ -193,6 +191,6 @@ class AnalyticsResource {
   /// This is rate limited harder than the read endpoints, since every call
   /// reaches out to a network.
   Future<CollectSummary> collect({String? accountId}) async =>
-      CollectSummary.fromJson(await _http
-          .object('POST', '/analytics/collect', query: {'accountId': accountId}));
+      CollectSummary.fromJson(await _http.object('POST', '/analytics/collect',
+          query: {'accountId': accountId}));
 }

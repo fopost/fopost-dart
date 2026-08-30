@@ -145,7 +145,8 @@ class MediaItem {
 /// entry, in order.
 class ContentBlock {
   /// Creates a block.
-  const ContentBlock({required this.text, this.media = const [], this.id, this.position});
+  const ContentBlock(
+      {required this.text, this.media = const [], this.id, this.position});
 
   /// Reads a block off a post.
   factory ContentBlock.fromJson(Map<String, dynamic> json) => ContentBlock(
@@ -175,13 +176,15 @@ class ContentBlock {
       });
 
   @override
-  String toString() => 'ContentBlock(${text.length} chars, ${media.length} media)';
+  String toString() =>
+      'ContentBlock(${text.length} chars, ${media.length} media)';
 }
 
 /// Advisory feedback from a preflight check. Blockers arrive as issues instead.
 class ContentSignal {
   /// Creates a signal.
-  const ContentSignal({required this.level, required this.code, required this.message});
+  const ContentSignal(
+      {required this.level, required this.code, required this.message});
 
   /// Reads a signal off a preflight response.
   factory ContentSignal.fromJson(Map<String, dynamic> json) => ContentSignal(
