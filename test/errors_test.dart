@@ -74,8 +74,9 @@ void main() {
     test('a 402 exposes the upgrade URL', () async {
       final client = fakeClient(
         (_) async => jsonError(
-            402, 'subscription_required', 'Upgrade to publish',
-            extra: {'upgrade_url': 'https://fopost.com/dashboard/settings/billing'}),
+            402, 'subscription_required', 'Upgrade to publish', extra: {
+          'upgrade_url': 'https://fopost.com/dashboard/settings/billing'
+        }),
         maxRetries: 1,
       );
 
@@ -83,7 +84,8 @@ void main() {
         await client.posts.publish('p_1');
         fail('expected a payment error');
       } on FoPostPaymentRequiredException catch (error) {
-        expect(error.upgradeUrl, 'https://fopost.com/dashboard/settings/billing');
+        expect(
+            error.upgradeUrl, 'https://fopost.com/dashboard/settings/billing');
       }
       client.close();
     });
