@@ -61,6 +61,27 @@ void main() {
       client.close();
     });
 
+    test('targets an account group without an accounts list', () async {
+      final seen = RecordedRequests();
+      final client =
+          fakeClient((_) async => jsonOk(postJson()), recorder: seen);
+
+      await client.posts.create(
+        workspaceId: 'ws_1',
+        accountGroupId: 'grp_1',
+        content: 'Hello from Dart',
+      );
+
+      expect(jsonDecode(seen.last.body), {
+        'workspace_id': 'ws_1',
+        'account_group_id': 'grp_1',
+        'content': [
+          {'text': 'Hello from Dart'}
+        ],
+      });
+      client.close();
+    });
+
     test('creates a thread from a list of blocks, media and all', () async {
       final seen = RecordedRequests();
       final client =
