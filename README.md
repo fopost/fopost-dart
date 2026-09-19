@@ -240,6 +240,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `media`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                                                                                |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `reply`, `hide`, `unhide`, `delete` |
 | `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
+| `validate`    | `post`, `length`, `media`                                                                                                                                                                                 |
 
 For an endpoint the SDK does not wrap yet, `request` sends an authenticated call
 and hands back the decoded body as it came, envelope and all:
@@ -251,7 +252,7 @@ final body = await client.request('GET', '/platforms');
 ## Scopes and limits
 
 Requests send `X-API-Key`. A key carries only the scopes granted when it was
-created: `posts` (which also covers publishing, deliveries, and media),
+created: `posts` (which also covers publishing, deliveries, media, and `validate`),
 `workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, `automations`,
 `inbox`, `ads`. Spending money through `ads` (`boost`, `create`, `setStatus`,
 `delete`) needs `publish` as well, and a boost or ad starts paused unless
