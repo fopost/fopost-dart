@@ -71,4 +71,77 @@ void main() {
     expect(accounts.single.platformName, 'Acme');
     client.close();
   });
+
+  test('createTelegramConnectCode posts the workspace', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk({
+              'code': 'ABC123',
+              'command': '/connect ABC123',
+              'bot_username': 'fopost_bot',
+              'deep_link': null,
+              'group_link': null,
+              'expires_at': '2026-09-19T12:15:00.000Z',
+            }),
+        recorder: seen);
+
+    final code =
+        await client.accounts.createTelegramConnectCode(workspaceId: 'ws_1');
+
+    expect(seen.last.method, 'POST');
+    expect(seen.last.url.path, '/v1/accounts/telegram/connect-code');
+    expect(jsonDecode(seen.last.body), {'workspaceId': 'ws_1'});
+    expect(code.command, '/connect ABC123');
+    expect(code.botUsername, 'fopost_bot');
+    expect(code.deepLink, isNull);
+    client.close();
+  });
+
+  test('getTelegramConnectStatus reads the failure reason', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk({
+              'status': 'failed',
+              'account_id': null,
+              'reason': 'card_required',
+            }),
+        recorder: seen);
+
+    final status = await client.accounts.getTelegramConnectStatus('ABC123');
+
+    expect(seen.last.url.path, '/v1/accounts/telegram/connect-code/status');
+    expect(seen.last.url.queryParameters, {'code': 'ABC123'});
+    expect(status.status, 'failed');
+    expect(status.reason, 'card_required');
+    client.close();
+  });
+
+  test('Telegram bot commands are read, replaced and cleared', () async {
+    final seen = RecordedRequests();
+    final menu = {
+      'commands': [
+        {'command': 'start', 'description': 'Start'}
+      ]
+    };
+    var calls = 0;
+    final client = fakeClient((_) async {
+      calls++;
+      return jsonOk(calls < 3 ? menu : {'commands': []});
+    }, recorder: seen);
+
+    final listed = await client.accounts.getTelegramBotCommands('acc_1');
+    expect(seen.last.method, 'GET');
+    expect(listed.single.command, 'start');
+
+    await client.accounts.setTelegramBotCommands('acc_1',
+        [const TelegramBotCommand(command: 'start', description: 'Start')]);
+    expect(seen.last.method, 'PUT');
+    expect(seen.last.url.path, '/v1/accounts/acc_1/telegram/commands');
+    expect(jsonDecode(seen.last.body), menu);
+
+    final cleared = await client.accounts.deleteTelegramBotCommands('acc_1');
+    expect(seen.last.method, 'DELETE');
+    expect(cleared, isEmpty);
+    client.close();
+  });
 }
