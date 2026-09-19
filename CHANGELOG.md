@@ -4,6 +4,12 @@
 
 - Added: `validate` resource (`post`, `length`, `media`) for standalone checks
   that store nothing. Needs the `posts` scope.
+- Added: `accountGroups` resource (`list`, `get`, `create`, `update`,
+  `delete`, `setMembers`) and `accounts.rename` / `accounts.move`. Needs the
+  `accounts` scope.
+- Added: `accounts.list(groupId:)`, `platformName` on `Account` and
+  `AccountDetail`, and `accountGroupId` on `posts.create`, where `accounts` is
+  now optional.
 
 ## 0.2.0
 

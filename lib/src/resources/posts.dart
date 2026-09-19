@@ -113,10 +113,12 @@ class PostsResource {
   /// [content] takes a `String` for a single post, or a list for a thread —
   /// each entry a `String`, a [ContentBlock], or a raw map. [status] is
   /// `draft` or `scheduled`, and a scheduled post needs [scheduleAt]. To send
-  /// something out now, create it and call [publish].
+  /// something out now, create it and call [publish]. [accountGroupId] adds
+  /// that group's accounts to [accounts], each account once.
   Future<Post> create({
     required String workspaceId,
-    required List<String> accounts,
+    List<String>? accounts,
+    String? accountGroupId,
     required Object content,
     String? contentType,
     String? artifactType,
@@ -139,6 +141,7 @@ class PostsResource {
     final body = pruned({
       'workspace_id': workspaceId,
       'accounts': accounts,
+      'account_group_id': accountGroupId,
       'content': encodeContent(content),
       'content_type': contentType,
       'artifact_type': artifactType,
