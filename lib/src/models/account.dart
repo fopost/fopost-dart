@@ -548,3 +548,111 @@ class TelegramBotCommand {
   @override
   String toString() => 'TelegramBotCommand(/$command)';
 }
+
+/// A Slack channel the app can post to.
+class SlackChannel {
+  /// Creates a channel.
+  const SlackChannel({
+    required this.id,
+    required this.name,
+    this.isPrivate = false,
+    this.isMember = false,
+    this.isCurrent = false,
+  });
+
+  /// Reads a channel.
+  factory SlackChannel.fromJson(Map<String, dynamic> json) => SlackChannel(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        isPrivate: asBool(json['is_private']) ?? false,
+        isMember: asBool(json['is_member']) ?? false,
+        isCurrent: asBool(json['is_current']) ?? false,
+      );
+
+  /// The Slack channel id.
+  final String id;
+
+  /// The channel name.
+  final String name;
+
+  /// Whether the channel is private.
+  final bool isPrivate;
+
+  /// Whether the bot is in the channel.
+  final bool isMember;
+
+  /// Whether this account posts to the channel.
+  final bool isCurrent;
+
+  @override
+  String toString() => 'SlackChannel($id, #$name)';
+}
+
+/// A person in the connected Slack workspace.
+class SlackMember {
+  /// Creates a member.
+  const SlackMember({
+    required this.id,
+    required this.name,
+    this.realName,
+    this.displayName,
+    this.avatar,
+    this.isBot = false,
+  });
+
+  /// Reads a member.
+  factory SlackMember.fromJson(Map<String, dynamic> json) => SlackMember(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        realName: asString(json['real_name']),
+        displayName: asString(json['display_name']),
+        avatar: asString(json['avatar']),
+        isBot: asBool(json['is_bot']) ?? false,
+      );
+
+  /// The Slack user id; pass it as the handle to start a DM.
+  final String id;
+
+  /// The Slack username.
+  final String name;
+
+  /// The member's full name.
+  final String? realName;
+
+  /// The member's display name.
+  final String? displayName;
+
+  /// The member's avatar URL.
+  final String? avatar;
+
+  /// Whether the member is a bot.
+  final bool isBot;
+
+  @override
+  String toString() => 'SlackMember($id, $name)';
+}
+
+/// The name and icon a Slack account posts under.
+class SlackIdentity {
+  /// Creates an identity.
+  const SlackIdentity({this.username, this.iconUrl, this.iconEmoji});
+
+  /// Reads an identity.
+  factory SlackIdentity.fromJson(Map<String, dynamic> json) => SlackIdentity(
+        username: asString(json['username']),
+        iconUrl: asString(json['icon_url']),
+        iconEmoji: asString(json['icon_emoji']),
+      );
+
+  /// The name posts appear under, or null for the app name.
+  final String? username;
+
+  /// The image posts appear with.
+  final String? iconUrl;
+
+  /// The emoji code posts appear with, e.g. `:rocket:`.
+  final String? iconEmoji;
+
+  @override
+  String toString() => 'SlackIdentity($username)';
+}
