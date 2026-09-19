@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
+  `updateSlackIdentity` for a Slack account's channels, workspace members and
+  posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
+  Needs the `accounts` scope.
+
 ## 0.3.0
 
 - Added: the ads campaign tree (`accountTree`; get, create, update, delete

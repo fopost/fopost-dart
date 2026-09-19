@@ -150,6 +150,50 @@ class AccountsResource {
       _commands(await _http.object(
           'DELETE', '/accounts/${segment(id)}/telegram/commands'));
 
+  /// Returns the channels the Slack app can post to: every public channel,
+  /// and private ones the app was invited to. A 409 `webhook_connection`
+  /// means the account posts through a webhook.
+  Future<List<SlackChannel>> slackChannels(String id) async {
+    final rows =
+        await _http.objects('GET', '/accounts/${segment(id)}/slack/channels');
+    return rows.map(SlackChannel.fromJson).toList();
+  }
+
+  /// Returns the people in the connected Slack workspace, for addressing a DM.
+  Future<List<SlackMember>> slackMembers(String id) async {
+    final rows =
+        await _http.objects('GET', '/accounts/${segment(id)}/slack/members');
+    return rows.map(SlackMember.fromJson).toList();
+  }
+
+  /// Returns the name and icon a Slack account posts under.
+  Future<SlackIdentity> getSlackIdentity(String id) async =>
+      SlackIdentity.fromJson(
+          await _http.object('GET', '/accounts/${segment(id)}/slack/identity'));
+
+  /// Sets the name and icon a Slack account posts under.
+  ///
+  /// An unset field keeps its value; a `clear*` flag sends `null` and clears
+  /// it. Set [iconUrl] or [iconEmoji], not both; setting one clears the other.
+  Future<SlackIdentity> updateSlackIdentity(
+    String id, {
+    String? username,
+    String? iconUrl,
+    String? iconEmoji,
+    bool clearUsername = false,
+    bool clearIconUrl = false,
+    bool clearIconEmoji = false,
+  }) async =>
+      SlackIdentity.fromJson(await _http.object(
+        'PATCH',
+        '/accounts/${segment(id)}/slack/identity',
+        body: {
+          if (username != null || clearUsername) 'username': username,
+          if (iconUrl != null || clearIconUrl) 'icon_url': iconUrl,
+          if (iconEmoji != null || clearIconEmoji) 'icon_emoji': iconEmoji,
+        },
+      ));
+
   List<TelegramBotCommand> _commands(Map<String, dynamic> json) =>
       asModelList(json['commands'], TelegramBotCommand.fromJson);
 }

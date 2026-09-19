@@ -144,4 +144,71 @@ void main() {
     expect(cleared, isEmpty);
     client.close();
   });
+
+  test('slack channels and members read the list', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (request) async => request.url.path.endsWith('/channels')
+            ? jsonOk([
+                {
+                  'id': 'C1',
+                  'name': 'general',
+                  'is_private': false,
+                  'is_member': true,
+                  'is_current': true,
+                }
+              ])
+            : jsonOk([
+                {
+                  'id': 'U1',
+                  'name': 'ada',
+                  'real_name': 'Ada',
+                  'display_name': null,
+                  'avatar': null,
+                  'is_bot': false,
+                }
+              ]),
+        recorder: seen);
+
+    final channels = await client.accounts.slackChannels('acc_1');
+    expect(seen.last.url.path, '/v1/accounts/acc_1/slack/channels');
+    expect(channels.single.isCurrent, isTrue);
+
+    final members = await client.accounts.slackMembers('acc_1');
+    expect(seen.last.url.path, '/v1/accounts/acc_1/slack/members');
+    expect(members.single.realName, 'Ada');
+    expect(members.single.displayName, isNull);
+    client.close();
+  });
+
+  test('slack identity update omits unset fields and sends null to clear',
+      () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk(
+            {'username': 'Bot', 'icon_url': null, 'icon_emoji': ':rocket:'}),
+        recorder: seen);
+
+    final current = await client.accounts.getSlackIdentity('acc_1');
+    expect(seen.last.url.path, '/v1/accounts/acc_1/slack/identity');
+    expect(current.iconEmoji, ':rocket:');
+
+    await client.accounts
+        .updateSlackIdentity('acc_1', username: 'Bot', clearIconUrl: true);
+    expect(seen.last.method, 'PATCH');
+    expect(jsonDecode(seen.last.body), {'username': 'Bot', 'icon_url': null});
+    client.close();
+  });
+
+  test('slack calls surface a webhook connection as a 409', () async {
+    final client = fakeClient(
+        (_) async => jsonError(409, 'webhook_connection', 'Reconnect'));
+
+    await expectLater(
+      client.accounts.slackChannels('acc_1'),
+      throwsA(predicate<FoPostException>(
+          (e) => e.statusCode == 409 && e.code == 'webhook_connection')),
+    );
+    client.close();
+  });
 }
