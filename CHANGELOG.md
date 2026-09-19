@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Added: `inbox` and `ads` resources, with their models. The four `ads` calls
+  that spend money (`boost`, `create`, `setStatus`, `delete`) need the `publish`
+  scope as well as `ads`.
+- `PageMeta` also reads the `page`/`perPage`/`total` shape the inbox lists send.
+
 ## 0.1.0
 
 First release.

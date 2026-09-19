@@ -3,9 +3,11 @@ import 'package:http/http.dart' as http;
 import 'env/env.dart';
 import 'http.dart';
 import 'resources/accounts.dart';
+import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
 import 'resources/communities.dart';
+import 'resources/inbox.dart';
 import 'resources/labels.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
@@ -83,6 +85,8 @@ class FoPost {
     analytics = AnalyticsResource(_http);
     automations = AutomationsResource(_http);
     media = MediaResource(_http);
+    inbox = InboxResource(_http);
+    ads = AdsResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -116,6 +120,12 @@ class FoPost {
 
   /// The media library.
   late final MediaResource media;
+
+  /// Comments, mentions and direct messages on connected accounts.
+  late final InboxResource inbox;
+
+  /// Boosts, ads, audiences and lead forms.
+  late final AdsResource ads;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;
