@@ -10,6 +10,11 @@
 - Added: `accounts.list(groupId:)`, `platformName` on `Account` and
   `AccountDetail`, and `accountGroupId` on `posts.create`, where `accounts` is
   now optional.
+- Added: `accounts.createTelegramConnectCode` / `getTelegramConnectStatus` to
+  connect a Telegram chat with a one-time code, and
+  `accounts.getTelegramBotCommands` / `setTelegramBotCommands` /
+  `deleteTelegramBotCommands` for the bot's command menu in a connected chat.
+  Needs the `accounts` scope.
 - Added: inbox actions `like`, `unlike`, `pin`, `unpin`, `react`,
   `editComment`, `startConversation` and `setTyping`, all needing the
   `publish` scope. `reply` takes optional `mediaIds` and `quickReplies`, and
