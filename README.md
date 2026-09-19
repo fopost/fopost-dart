@@ -75,6 +75,19 @@ final uploaded = await client.media.upload(workspace.id, [
 ]);
 ```
 
+For a direct upload the bytes go straight to storage instead of through the
+API: `uploadDirect` presigns a slot, `PUT`s the bytes to it, and completes.
+`presign` and `complete` are also exposed for doing the `PUT` yourself:
+
+```dart
+final asset = await client.media.uploadDirect(
+  workspace.id,
+  'chart.png',
+  'image/png',
+  bytes,
+);
+```
+
 ## Content
 
 `content` takes a `String` for a single post, or a list for a thread. Each entry
@@ -224,7 +237,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`                                                                                                   |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
-| `media`       | `list`, `upload`, `delete`                                                                                                                                                                                |
+| `media`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                                                                                |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `reply`, `hide`, `unhide`, `delete` |
 | `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
 
