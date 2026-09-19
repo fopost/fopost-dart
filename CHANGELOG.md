@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Added: `validate` resource (`post`, `length`, `media`) for standalone checks
   that store nothing. Needs the `posts` scope.

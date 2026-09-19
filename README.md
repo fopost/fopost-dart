@@ -52,7 +52,7 @@ this package imports `dart:io` on a path the web can reach.
 
 ```yaml
 dependencies:
-  fopost: ^0.2.0
+  fopost: ^0.3.0
 ```
 
 Two things to know:
