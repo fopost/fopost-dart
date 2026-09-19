@@ -52,7 +52,7 @@ this package imports `dart:io` on a path the web can reach.
 
 ```yaml
 dependencies:
-  fopost: ^0.1.0
+  fopost: ^0.2.0
 ```
 
 Two things to know:
@@ -225,6 +225,8 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`                                                                                                   |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `upload`, `delete`                                                                                                                                                                                |
+| `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `reply`, `hide`, `unhide`, `delete` |
+| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
 
 For an endpoint the SDK does not wrap yet, `request` sends an authenticated call
 and hands back the decoded body as it came, envelope and all:
@@ -237,9 +239,11 @@ final body = await client.request('GET', '/platforms');
 
 Requests send `X-API-Key`. A key carries only the scopes granted when it was
 created: `posts` (which also covers publishing, deliveries, and media),
-`workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, `automations`. A key
-may also be bound to a single workspace, in which case naming any other one
-returns `403`.
+`workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, `automations`,
+`inbox`, `ads`. Spending money through `ads` (`boost`, `create`, `setStatus`,
+`delete`) needs `publish` as well, and a boost or ad starts paused unless
+`paused: false` is passed. A key may also be bound to a single workspace, in
+which case naming any other one returns `403`.
 
 Mutating endpoints require an active subscription. Rate limits are per key, per
 minute, and every response carries `X-RateLimit-Limit`,
