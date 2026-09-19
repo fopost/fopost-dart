@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:meta/meta.dart';
 
 import '../file.dart';
@@ -51,6 +53,65 @@ class MediaResource {
         .whereType<Map>()
         .map((e) => UploadedMedia.fromJson(Map<String, dynamic>.from(e)))
         .toList();
+  }
+
+  /// Reserves a presigned slot for one file, to be filled with a direct `PUT`.
+  ///
+  /// [size] is the exact byte count that will be sent, at most 50 MB.
+  Future<PresignedUpload> presign({
+    required String workspaceId,
+    required String filename,
+    required String mimeType,
+    required int size,
+  }) async {
+    final body = await _http.object('POST', '/media/presign', body: {
+      'workspaceId': workspaceId,
+      'filename': filename,
+      'mimeType': mimeType,
+      'size': size,
+    });
+    return PresignedUpload.fromJson(body);
+  }
+
+  /// Turns a filled presigned slot into a library asset.
+  Future<UploadedMedia> complete(String uploadId) async {
+    final body = await _http.object(
+      'POST',
+      '/media/presign/${Uri.encodeComponent(uploadId)}/complete',
+    );
+    return UploadedMedia.fromJson(body);
+  }
+
+  /// Stores one file through a presigned direct upload: presigns, `PUT`s the
+  /// bytes straight to storage, then completes.
+  ///
+  /// ```dart
+  /// final asset = await client.media.uploadDirect(
+  ///   workspaceId,
+  ///   'chart.png',
+  ///   'image/png',
+  ///   bytes,
+  /// );
+  /// ```
+  Future<UploadedMedia> uploadDirect(
+    String workspaceId,
+    String filename,
+    String mimeType,
+    Uint8List data,
+  ) async {
+    final slot = await presign(
+      workspaceId: workspaceId,
+      filename: filename,
+      mimeType: mimeType,
+      size: data.length,
+    );
+    await _http.putBytes(
+      Uri.parse(slot.uploadUrl),
+      data,
+      // http sets Content-Length from the body, matching the presigned size.
+      headers: slot.headers,
+    );
+    return complete(slot.uploadId);
   }
 
   /// Removes an asset from the library.
