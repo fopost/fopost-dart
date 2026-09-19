@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
@@ -162,6 +163,32 @@ class FoPostHttp {
     Map<String, dynamic>? query,
   }) async {
     await raw(method, path, body: body, query: query);
+  }
+
+  /// Sends raw bytes to a presigned URL with exactly [headers].
+  ///
+  /// The URL carries its own authorisation, so no API key, `Accept` or
+  /// `User-Agent` is attached. A non-2xx answer throws the matching
+  /// [FoPostException].
+  Future<void> putBytes(
+    Uri url,
+    Uint8List bytes, {
+    required Map<String, String> headers,
+  }) async {
+    http.Response response;
+    try {
+      final request = http.Request('PUT', url)
+        ..headers.addAll(headers)
+        ..bodyBytes = bytes;
+      response = await _once(request).timeout(timeout);
+    } on Exception catch (error) {
+      throw FoPostConnectionException(
+        'the upload to ${url.host} did not complete: $error',
+        cause: error,
+      );
+    }
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    throw FoPostException.fromResponse(response, _text(response));
   }
 
   /// Releases the underlying client, when this transport owns it.
