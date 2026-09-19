@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 
 import 'env/env.dart';
 import 'http.dart';
+import 'resources/account_groups.dart';
 import 'resources/accounts.dart';
 import 'resources/ads.dart';
 import 'resources/analytics.dart';
@@ -82,6 +83,7 @@ class FoPost {
     accounts = AccountsResource(_http);
     communities = CommunitiesResource(_http);
     labels = LabelsResource(_http);
+    accountGroups = AccountGroupsResource(_http);
     webhooks = WebhooksResource(_http);
     analytics = AnalyticsResource(_http);
     automations = AutomationsResource(_http);
@@ -110,6 +112,9 @@ class FoPost {
 
   /// Campaign labels.
   late final LabelsResource labels;
+
+  /// Named sets of accounts a post can target at once.
+  late final AccountGroupsResource accountGroups;
 
   /// Outbound webhook subscriptions.
   late final WebhooksResource webhooks;
