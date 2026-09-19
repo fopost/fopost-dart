@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added: `validate` resource (`post`, `length`, `media`) for standalone checks
+  that store nothing. Needs the `posts` scope.
+
 ## 0.2.0
 
 - Added: `inbox` and `ads` resources, with their models. The four `ads` calls

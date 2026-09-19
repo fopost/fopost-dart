@@ -11,6 +11,7 @@ import 'resources/inbox.dart';
 import 'resources/labels.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
+import 'resources/validate.dart';
 import 'resources/webhooks.dart';
 import 'resources/workspaces.dart';
 import 'version.dart';
@@ -87,6 +88,7 @@ class FoPost {
     media = MediaResource(_http);
     inbox = InboxResource(_http);
     ads = AdsResource(_http);
+    validate = ValidateResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -126,6 +128,9 @@ class FoPost {
 
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
+
+  /// Standalone checks on a draft, a text's length, or a media URL.
+  late final ValidateResource validate;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;
