@@ -292,6 +292,7 @@ void main() {
                 'inboxSupported': true,
                 'dmSupported': false,
                 'dmPendingReason': 'approval_pending',
+                'canStartConversation': true,
               }
             ])
           : jsonOk([
@@ -303,10 +304,109 @@ void main() {
     expect(accounts.single.inboxSupported, isTrue);
     expect(accounts.single.dmSupported, isFalse);
     expect(accounts.single.dmPendingReason, 'approval_pending');
+    expect(accounts.single.canStartConversation, isTrue);
 
     final platforms = await client.inbox.platforms();
     expect(platforms.single.comments, 'live');
     expect(platforms.single.dms, 'soon');
+    client.close();
+  });
+
+  test('like, pin, react and editComment read the action fields', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+      (request) async => jsonOk({
+        ...itemJson(),
+        'liked': true,
+        'pinned': true,
+        'reaction': null,
+        'editedAt': '2026-09-18T12:00:00.000Z',
+        'canLike': true,
+        'canPin': true,
+        'canEdit': true,
+        'canReact': false,
+        'canSendMedia': false,
+        'canQuickReply': false,
+        'canPrivateReply': true,
+      }),
+      recorder: seen,
+    );
+
+    final liked = await client.inbox.like('in_1');
+    expect(seen.last.method, 'POST');
+    expect(seen.last.url.path, '/v1/inbox/in_1/like');
+    expect(liked.liked, isTrue);
+    expect(liked.canPrivateReply, isTrue);
+    expect(liked.canSendMedia, isFalse);
+
+    await client.inbox.unlike('in_1');
+    expect(seen.last.url.path, '/v1/inbox/in_1/unlike');
+    final pinned = await client.inbox.pin('in_1');
+    expect(seen.last.url.path, '/v1/inbox/in_1/pin');
+    expect(pinned.pinned, isTrue);
+    await client.inbox.unpin('in_1');
+    expect(seen.last.url.path, '/v1/inbox/in_1/unpin');
+
+    final reacted = await client.inbox.react('in_1', null);
+    expect(seen.last.url.path, '/v1/inbox/in_1/react');
+    expect(jsonDecode(seen.last.body), {'reaction': null});
+    expect(reacted.reaction, isNull);
+
+    final edited = await client.inbox.editComment('in_1', 'Fixed typo');
+    expect(seen.last.method, 'PATCH');
+    expect(seen.last.url.path, '/v1/inbox/in_1');
+    expect(jsonDecode(seen.last.body), {'text': 'Fixed typo'});
+    expect(edited.editedAt, DateTime.utc(2026, 9, 18, 12));
+    client.close();
+  });
+
+  test('reply sends media ids and quick replies without text', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+      (_) async => jsonOk({
+        'item': itemJson(),
+        'reply': {'externalId': 'm_1'},
+      }),
+      recorder: seen,
+    );
+
+    await client.inbox
+        .reply('in_1', null, mediaIds: ['med_1'], quickReplies: ['Yes', 'No']);
+    expect(jsonDecode(seen.last.body), {
+      'media_ids': ['med_1'],
+      'quick_replies': ['Yes', 'No'],
+    });
+    client.close();
+  });
+
+  test('startConversation and setTyping post snake_case bodies', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+      (request) async => request.url.path.endsWith('/typing')
+          ? jsonOk({'typing': false})
+          : jsonBare({
+              'data': {
+                'conversationId': 'conv_9',
+                'item': {...itemJson(), 'type': 'dm', 'direction': 'outbound'},
+              },
+            }, status: 201),
+      recorder: seen,
+    );
+
+    final started = await client.inbox
+        .startConversation(text: 'Thanks for the comment!', commentId: 'in_1');
+    expect(seen.last.method, 'POST');
+    expect(seen.last.url.path, '/v1/inbox/conversations');
+    expect(jsonDecode(seen.last.body),
+        {'comment_id': 'in_1', 'text': 'Thanks for the comment!'});
+    expect(started.conversationId, 'conv_9');
+    expect(started.item?.direction, 'outbound');
+
+    final typing =
+        await client.inbox.setTyping('conv_9', accountId: 'acc_1', on: false);
+    expect(seen.last.url.path, '/v1/inbox/conversations/conv_9/typing');
+    expect(jsonDecode(seen.last.body), {'account_id': 'acc_1', 'on': false});
+    expect(typing, isFalse);
     client.close();
   });
 }

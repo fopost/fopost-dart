@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Added: `validate` resource (`post`, `length`, `media`) for standalone checks
   that store nothing. Needs the `posts` scope.
@@ -10,6 +10,15 @@
 - Added: `accounts.list(groupId:)`, `platformName` on `Account` and
   `AccountDetail`, and `accountGroupId` on `posts.create`, where `accounts` is
   now optional.
+- Added: inbox actions `like`, `unlike`, `pin`, `unpin`, `react`,
+  `editComment`, `startConversation` and `setTyping`, all needing the
+  `publish` scope. `reply` takes optional `mediaIds` and `quickReplies`, and
+  its `text` may be null when `mediaIds` is given. `delete` also removes our
+  own replies.
+- Added: `liked`, `pinned`, `reaction`, `editedAt` and the `canLike`,
+  `canPin`, `canEdit`, `canReact`, `canSendMedia`, `canQuickReply`,
+  `canPrivateReply` flags on `InboxItem`; `canStartConversation` on
+  `InboxAccount`.
 
 ## 0.2.0
 

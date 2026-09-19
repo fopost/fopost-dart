@@ -178,10 +178,33 @@ class InboxResource {
         await _http.object('PATCH', '/inbox/${segment(id)}', body: body));
   }
 
+  /// Edits our own comment on the platform to [text].
+  ///
+  /// Needs the `publish` scope; only where [InboxItem.canEdit] is true.
+  Future<InboxItem> editComment(String id, String text) async =>
+      InboxItem.fromJson(await _http
+          .object('PATCH', '/inbox/${segment(id)}', body: {'text': text}));
+
   /// Sends [text] as a reply on the platform, as the connected account.
-  Future<InboxReplyResult> reply(String id, String text) async =>
-      InboxReplyResult.fromJson(await _http
-          .object('POST', '/inbox/${segment(id)}/reply', body: {'text': text}));
+  ///
+  /// [text] may be null when [mediaIds] (media library ids, at most 10) is
+  /// given. [mediaIds] and [quickReplies] (at most 13, each up to 20
+  /// characters) apply to DMs and need the `publish` scope.
+  Future<InboxReplyResult> reply(
+    String id,
+    String? text, {
+    List<String>? mediaIds,
+    List<String>? quickReplies,
+  }) async =>
+      InboxReplyResult.fromJson(await _http.object(
+        'POST',
+        '/inbox/${segment(id)}/reply',
+        body: pruned({
+          'text': text,
+          'media_ids': mediaIds,
+          'quick_replies': quickReplies,
+        }),
+      ));
 
   /// Hides a comment on the platform.
   Future<InboxItem> hide(String id) async => InboxItem.fromJson(
@@ -191,9 +214,75 @@ class InboxResource {
   Future<InboxItem> unhide(String id) async => InboxItem.fromJson(
       await _http.object('POST', '/inbox/${segment(id)}/unhide'));
 
-  /// Deletes a comment on the platform as well as here.
+  /// Deletes a comment, or our own reply, on the platform as well as here.
+  ///
+  /// Deleting our own reply needs the `publish` scope.
   Future<void> delete(String id) =>
       _http.discard('DELETE', '/inbox/${segment(id)}');
+
+  /// Likes an item on the platform. Needs the `publish` scope.
+  Future<InboxItem> like(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/like'));
+
+  /// Removes the account's like. Needs the `publish` scope.
+  Future<InboxItem> unlike(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/unlike'));
+
+  /// Pins our own comment on the platform. Needs the `publish` scope.
+  Future<InboxItem> pin(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/pin'));
+
+  /// Unpins our own comment. Needs the `publish` scope.
+  Future<InboxItem> unpin(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/unpin'));
+
+  /// Reacts to a DM with [reaction], an emoji of at most 32 characters, or
+  /// removes ours when it is null. Needs the `publish` scope.
+  Future<InboxItem> react(String id, String? reaction) async =>
+      InboxItem.fromJson(await _http.object(
+        'POST',
+        '/inbox/${segment(id)}/react',
+        // Not pruned: a null reaction means remove.
+        body: {'reaction': reaction},
+      ));
+
+  /// Sends [text] as a new DM: to [handle] from [accountId], or as a private
+  /// reply to the inbox comment [commentId]. [mediaIds] are media library ids,
+  /// at most 10. Needs the `publish` scope.
+  Future<InboxConversationStart> startConversation({
+    required String text,
+    String? accountId,
+    String? handle,
+    String? commentId,
+    List<String>? mediaIds,
+  }) async =>
+      InboxConversationStart.fromJson(await _http.object(
+        'POST',
+        '/inbox/conversations',
+        body: pruned({
+          'account_id': accountId,
+          'handle': handle,
+          'comment_id': commentId,
+          'text': text,
+          'media_ids': mediaIds,
+        }),
+      ));
+
+  /// Shows the typing indicator in the DM thread [conversationId], or clears
+  /// it when [on] is false. Returns whether it is now on. Needs the `publish`
+  /// scope.
+  Future<bool> setTyping(
+    String conversationId, {
+    required String accountId,
+    bool? on,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/inbox/conversations/${segment(conversationId)}/typing',
+      body: pruned({'account_id': accountId, 'on': on}),
+    );
+    return asBool(result['typing']) ?? false;
+  }
 
   Future<Page<T>> _page<T>(
     String path,

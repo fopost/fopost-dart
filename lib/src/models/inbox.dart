@@ -219,8 +219,19 @@ class InboxItem {
     this.createdAt,
     this.canReply,
     this.hidden,
+    this.liked,
+    this.pinned,
+    this.reaction,
+    this.editedAt,
     this.canHide,
     this.canDelete,
+    this.canLike,
+    this.canPin,
+    this.canEdit,
+    this.canReact,
+    this.canSendMedia,
+    this.canQuickReply,
+    this.canPrivateReply,
     this.post,
     this.postContext,
     this.account,
@@ -249,8 +260,19 @@ class InboxItem {
         createdAt: asDate(json['createdAt']),
         canReply: asBool(json['canReply']),
         hidden: asBool(json['hidden']),
+        liked: asBool(json['liked']),
+        pinned: asBool(json['pinned']),
+        reaction: asString(json['reaction']),
+        editedAt: asDate(json['editedAt']),
         canHide: asBool(json['canHide']),
         canDelete: asBool(json['canDelete']),
+        canLike: asBool(json['canLike']),
+        canPin: asBool(json['canPin']),
+        canEdit: asBool(json['canEdit']),
+        canReact: asBool(json['canReact']),
+        canSendMedia: asBool(json['canSendMedia']),
+        canQuickReply: asBool(json['canQuickReply']),
+        canPrivateReply: asBool(json['canPrivateReply']),
         post: asMapOrNull(json['post']),
         postContext: _postContext(json['postContext']),
         account: _accountRef(json['account']),
@@ -319,11 +341,45 @@ class InboxItem {
   /// Whether the comment is hidden on the platform.
   final bool? hidden;
 
+  /// Whether the account has liked it.
+  final bool? liked;
+
+  /// Whether our own comment is pinned.
+  final bool? pinned;
+
+  /// Our reaction on a DM.
+  final String? reaction;
+
+  /// When our own comment was last edited.
+  final DateTime? editedAt;
+
   /// Whether the platform lets the account hide it.
   final bool? canHide;
 
-  /// Whether the platform lets the account delete it.
+  /// Whether the platform lets the account delete it: a comment someone left,
+  /// or our own reply.
   final bool? canDelete;
+
+  /// Whether the platform lets the account like it.
+  final bool? canLike;
+
+  /// Whether the platform lets the account pin it (our own comment only).
+  final bool? canPin;
+
+  /// Whether the platform lets the account edit it (our own comment only).
+  final bool? canEdit;
+
+  /// Whether the platform lets the account react to it.
+  final bool? canReact;
+
+  /// Whether a reply can carry media.
+  final bool? canSendMedia;
+
+  /// Whether a reply can carry quick replies.
+  final bool? canQuickReply;
+
+  /// Whether a DM can be opened with `startConversation(commentId: ...)`.
+  final bool? canPrivateReply;
 
   /// The FoPost post it sits under, when it was published through FoPost.
   final Map<String, dynamic>? post;
@@ -509,6 +565,7 @@ class InboxAccount {
     this.pendingReason,
     this.dmSupported,
     this.dmPendingReason,
+    this.canStartConversation,
   });
 
   /// Reads an account.
@@ -523,6 +580,7 @@ class InboxAccount {
         pendingReason: asString(json['pendingReason']),
         dmSupported: asBool(json['dmSupported']),
         dmPendingReason: asString(json['dmPendingReason']),
+        canStartConversation: asBool(json['canStartConversation']),
       );
 
   /// The account's id.
@@ -554,6 +612,9 @@ class InboxAccount {
 
   /// Why DMs are not available yet, when they are not.
   final String? dmPendingReason;
+
+  /// Whether a new DM can be opened from it by handle.
+  final bool? canStartConversation;
 
   @override
   String toString() => 'InboxAccount($platform, $id)';
@@ -691,6 +752,30 @@ class InboxReplyResult {
 
   @override
   String toString() => 'InboxReplyResult(${item.id})';
+}
+
+/// What opening a DM produced.
+class InboxConversationStart {
+  /// Creates a result.
+  const InboxConversationStart({this.conversationId, this.item});
+
+  /// Reads a result.
+  factory InboxConversationStart.fromJson(Map<String, dynamic> json) =>
+      InboxConversationStart(
+        conversationId: asString(json['conversationId']),
+        item: json['item'] is Map
+            ? InboxItem.fromJson(asMap(json['item']))
+            : null,
+      );
+
+  /// The DM thread the message opened, when the platform returned one.
+  final String? conversationId;
+
+  /// The message that was sent, when it was stored.
+  final InboxItem? item;
+
+  @override
+  String toString() => 'InboxConversationStart($conversationId)';
 }
 
 /// An account whose DM access must be granted again.

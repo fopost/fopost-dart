@@ -2,7 +2,7 @@ name: fopost
 description: >-
   Official Dart SDK for the FoPost API. Schedule, publish and analyze social
   media posts across every connected platform, from Dart or Flutter.
-version: 0.2.0
+version: 0.3.0
 homepage: https://fopost.com
 repository: https://github.com/fopost/fopost-dart
 issue_tracker: https://github.com/fopost/fopost-dart/issues
