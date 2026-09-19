@@ -240,7 +240,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                                                                                |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping` |
-| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
+| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `estimateReach`, `insights`, `adInsights`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
 | `validate`    | `post`, `length`, `media`                                                                                                                                                                                 |
 
 For an endpoint the SDK does not wrap yet, `request` sends an authenticated call
@@ -256,8 +256,9 @@ Requests send `X-API-Key`. A key carries only the scopes granted when it was
 created: `posts` (which also covers publishing, deliveries, media, and `validate`),
 `workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, `automations`,
 `inbox`, `ads`. Spending money through `ads` (`boost`, `create`, `setStatus`,
-`delete`) needs `publish` as well, and a boost or ad starts paused unless
-`paused: false` is passed. The inbox actions `editComment`, `like`, `unlike`,
+`delete`, `bulkSetStatus`, and every create, update, delete and duplicate on
+campaigns, ad sets and network ads) needs `publish` as well, and anything
+created starts paused unless `paused: false` is passed. The inbox actions `editComment`, `like`, `unlike`,
 `pin`, `unpin`, `react`, `startConversation` and `setTyping`, deleting our own
 reply, and a reply with `mediaIds` or `quickReplies` need `publish` as well.
 A key may also be bound to a single workspace, in which case naming any other
