@@ -433,4 +433,290 @@ void main() {
     expect(boostable.single.deliveries.single.platform, 'facebook');
     client.close();
   });
+
+  test('accountTree nests ad sets and ads under campaigns', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk({
+              'adAccountId': 'act_123',
+              'currency': 'USD',
+              'workspaceId': 'ws_1',
+              'campaigns': [
+                {
+                  'id': 'c_1',
+                  'name': 'Launch',
+                  'status': 'ACTIVE',
+                  'budgetMinor': null,
+                  'adSets': [
+                    {
+                      'id': 's_1',
+                      'name': 'US',
+                      'campaignId': 'c_1',
+                      'status': 'PAUSED',
+                      'budgetMinor': 2000,
+                      'budgetType': 'daily',
+                      'ads': [
+                        {
+                          'id': 'a_1',
+                          'name': 'Morning',
+                          'adSetId': 's_1',
+                          'creativeId': 'cr_1',
+                          'status': 'PAUSED',
+                        }
+                      ],
+                    }
+                  ],
+                }
+              ],
+            }),
+        recorder: seen);
+
+    final tree = await client.ads
+        .accountTree('act_123', connectionId: 'conn_1', workspaceId: 'ws_1');
+
+    expect(seen.last.method, 'GET');
+    expect(seen.last.url.path, '/v1/ads/accounts/act_123/tree');
+    expect(seen.last.url.queryParameters,
+        {'workspace_id': 'ws_1', 'connection_id': 'conn_1'});
+    final campaign = tree.campaigns.single;
+    expect(campaign.budgetMinor, isNull);
+    expect(campaign.adSets.single.budgetMinor, 2000);
+    expect(campaign.adSets.single.ads.single.creativeId, 'cr_1');
+    client.close();
+  });
+
+  test('campaign writes carry workspace and connection in the query', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient((request) async {
+      if (request.url.path.endsWith('/duplicate')) {
+        return jsonBare({
+          'data': {'id': 'c_2'}
+        }, status: 201);
+      }
+      if (request.method == 'DELETE') {
+        return jsonBare({'message': 'Campaign deleted'});
+      }
+      return jsonOk({'id': 'c_1', 'name': 'Launch', 'status': 'ACTIVE'});
+    }, recorder: seen);
+
+    await client.ads.updateCampaign('c_1',
+        workspaceId: 'ws_1', connectionId: 'conn_1', status: AdStatus.active);
+    expect(seen.last.method, 'PATCH');
+    expect(seen.last.url.path, '/v1/ads/campaigns/c_1');
+    expect(seen.last.url.queryParameters,
+        {'workspace_id': 'ws_1', 'connection_id': 'conn_1'});
+    expect(jsonDecode(seen.last.body), {'status': 'active'});
+
+    final copy = await client.ads.duplicateCampaign('c_1',
+        workspaceId: 'ws_1', connectionId: 'conn_1', paused: false);
+    expect(copy, 'c_2');
+    expect(seen.last.url.path, '/v1/ads/campaigns/c_1/duplicate');
+    expect(jsonDecode(seen.last.body), {'paused': false});
+
+    await client.ads
+        .deleteCampaign('c_1', workspaceId: 'ws_1', connectionId: 'conn_1');
+    expect(seen.last.method, 'DELETE');
+    expect(seen.last.url.path, '/v1/ads/campaigns/c_1');
+    client.close();
+  });
+
+  test('bulkSetStatus sends each object with its level', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk([
+              {'id': 'c_1', 'level': 'campaign', 'ok': true, 'error': null},
+              {'id': 'a_1', 'level': 'ad', 'ok': false, 'error': 'Not found'},
+            ]),
+        recorder: seen);
+
+    final results = await client.ads.bulkSetStatus(
+      workspaceId: 'ws_1',
+      connectionId: 'conn_1',
+      status: AdStatus.paused,
+      objects: const [
+        AdObjectRef(id: 'c_1', level: AdObjectLevel.campaign),
+        AdObjectRef(id: 'a_1', level: AdObjectLevel.ad),
+      ],
+    );
+
+    expect(seen.last.url.path, '/v1/ads/status');
+    expect(jsonDecode(seen.last.body)['objects'], [
+      {'id': 'c_1', 'level': 'campaign'},
+      {'id': 'a_1', 'level': 'ad'},
+    ]);
+    expect(results.last.ok, isFalse);
+    expect(results.last.error, 'Not found');
+    client.close();
+  });
+
+  test('insights send the range, breakdown and daily flag', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk({
+              'objectId': 'c_1',
+              'currency': 'USD',
+              'since': '2026-09-01',
+              'until': '2026-09-07',
+              'breakdownBy': 'age',
+              'totals': {
+                'impressions': 1000,
+                'reach': 800,
+                'clicks': 25,
+                'spendMinor': 1200,
+                'ctr': 2.5,
+                'leads': 3,
+              },
+              'breakdown': [
+                {
+                  'key': '25-34',
+                  'metrics': {'impressions': 600}
+                }
+              ],
+              'timeline': [
+                {
+                  'date': '2026-09-01',
+                  'metrics': {'spendMinor': 150}
+                }
+              ],
+            }),
+        recorder: seen);
+
+    final report = await client.ads.insights(
+      connectionId: 'conn_1',
+      objectId: 'c_1',
+      since: '2026-09-01',
+      until: '2026-09-07',
+      breakdown: AdInsightsBreakdown.age,
+      daily: true,
+    );
+    expect(seen.last.url.path, '/v1/ads/insights');
+    expect(seen.last.url.queryParameters, {
+      'connection_id': 'conn_1',
+      'object_id': 'c_1',
+      'since': '2026-09-01',
+      'until': '2026-09-07',
+      'breakdown': 'age',
+      'daily': 'true',
+    });
+    expect(report.totals?.ctr, 2.5);
+    expect(report.breakdown.single.key, '25-34');
+    expect(report.timeline.single.key, '2026-09-01');
+    expect(report.timeline.single.metrics.spendMinor, 150);
+
+    await client.ads.adInsights('ad_1',
+        workspaceId: 'ws_1', since: '2026-09-01', until: '2026-09-07');
+    expect(seen.last.url.path, '/v1/ads/ad_1/insights');
+    expect(seen.last.url.queryParameters,
+        {'workspace_id': 'ws_1', 'since': '2026-09-01', 'until': '2026-09-07'});
+    client.close();
+  });
+
+  test('leadsFeed passes the cursor back', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient((request) async {
+      if (request.url.queryParameters['cursor'] == 'cur_2') {
+        return jsonOk({'leads': [], 'nextCursor': null});
+      }
+      return jsonOk({
+        'leads': [
+          {
+            'id': 'l_1',
+            'leadId': 'm_1',
+            'pageId': '1234',
+            'formId': 'form_1',
+            'isOrganic': false,
+            'fields': [
+              {
+                'name': 'email',
+                'values': ['sam@yourbrand.com']
+              }
+            ],
+            'submittedAt': '2026-09-10T12:00:00.000Z',
+          }
+        ],
+        'nextCursor': 'cur_2',
+      });
+    }, recorder: seen);
+
+    final first = await client.ads
+        .leadsFeed(workspaceId: 'ws_1', formId: 'form_1', limit: 50);
+    expect(seen.last.url.path, '/v1/ads/leads');
+    expect(seen.last.url.queryParameters,
+        {'workspace_id': 'ws_1', 'form_id': 'form_1', 'limit': '50'});
+    expect(first.leads.single.leadId, 'm_1');
+    expect(first.leads.single.submittedAt, DateTime.utc(2026, 9, 10, 12));
+    expect(first.hasMore, isTrue);
+
+    final second = await client.ads.leadsFeed(
+        workspaceId: 'ws_1',
+        formId: 'form_1',
+        cursor: first.nextCursor,
+        limit: 50);
+    expect(seen.last.url.queryParameters['cursor'], 'cur_2');
+    expect(second.leads, isEmpty);
+    expect(second.hasMore, isFalse);
+    client.close();
+  });
+
+  test('creatives carry urlTags and lead pages subscribe', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient((request) async {
+      final path = request.url.path;
+      if (path.endsWith('/creatives')) {
+        return jsonBare({
+          'data': {
+            'id': 'cr_1',
+            'name': 'Carousel',
+            'format': 'carousel',
+            'callToAction': 'SHOP_NOW',
+            'urlTags': 'utm_source=meta',
+          }
+        }, status: 201);
+      }
+      if (path.endsWith('/users')) return jsonOk({'added': 2});
+      if (request.method == 'DELETE') {
+        return jsonBare({'message': 'Unsubscribed'});
+      }
+      return jsonBare({
+        'data': {'pageId': '1234', 'backfilled': 7}
+      }, status: 201);
+    }, recorder: seen);
+
+    final creative = await client.ads.createCreative(
+      workspaceId: 'ws_1',
+      connectionId: 'conn_1',
+      adAccountId: 'act_123',
+      pageId: '1234',
+      name: 'Carousel',
+      format: AdCreativeFormat.carousel,
+      text: 'Hi',
+      urlTags: 'utm_source=meta',
+      cards: const [
+        AdCreativeCard(mediaUrl: 'https://cdn.yourbrand.com/1.png'),
+        AdCreativeCard(mediaUrl: 'https://cdn.yourbrand.com/2.png'),
+      ],
+    );
+    final body = jsonDecode(seen.last.body) as Map<String, dynamic>;
+    expect(body['urlTags'], 'utm_source=meta');
+    expect((body['cards'] as List).length, 2);
+    expect(body.containsKey('callToAction'), isFalse);
+    expect(creative.callToAction, 'SHOP_NOW');
+
+    final page = await client.ads.subscribeLeadPage(
+        workspaceId: 'ws_1', connectionId: 'conn_1', pageId: '1234');
+    expect(page.backfilled, 7);
+
+    await client.ads.unsubscribeLeadPage('1234',
+        workspaceId: 'ws_1', connectionId: 'conn_1');
+    expect(seen.last.url.path, '/v1/ads/lead-pages/1234');
+    expect(seen.last.url.queryParameters['connection_id'], 'conn_1');
+
+    final added = await client.ads.addAudienceUsers('aud_1',
+        workspaceId: 'ws_1',
+        connectionId: 'conn_1',
+        emails: ['a@yourbrand.com', 'b@yourbrand.com']);
+    expect(added, 2);
+    expect(seen.last.url.path, '/v1/ads/audiences/aud_1/users');
+    client.close();
+  });
 }
