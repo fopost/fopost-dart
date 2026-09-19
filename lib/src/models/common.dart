@@ -13,14 +13,25 @@ class PageMeta {
   });
 
   /// Reads the `meta` block the API sends alongside a paginated `data` list.
-  factory PageMeta.fromJson(Map<String, dynamic> json) => PageMeta(
-        currentPage: asInt(json['current_page']),
-        perPage: asInt(json['per_page']),
-        total: asInt(json['total']),
-        lastPage: asInt(json['last_page']),
-        from: asInt(json['from']),
-        to: asInt(json['to']),
-      );
+  ///
+  /// The inbox lists send `page`, `perPage` and `total` instead; `lastPage`
+  /// is derived for them so [hasMore] still works.
+  factory PageMeta.fromJson(Map<String, dynamic> json) {
+    final perPage = asInt(json['per_page'] ?? json['perPage']);
+    final total = asInt(json['total']);
+    int? lastPage = asInt(json['last_page']);
+    if (lastPage == null && perPage != null && perPage > 0 && total != null) {
+      lastPage = (total / perPage).ceil();
+    }
+    return PageMeta(
+      currentPage: asInt(json['current_page'] ?? json['page']),
+      perPage: perPage,
+      total: total,
+      lastPage: lastPage,
+      from: asInt(json['from']),
+      to: asInt(json['to']),
+    );
+  }
 
   /// The page this response is.
   final int? currentPage;
