@@ -446,3 +446,105 @@ class AccountAnalyticsHistory {
   String toString() =>
       'AccountAnalyticsHistory($platform, ${history.length} points)';
 }
+
+/// A one-time code that connects a Telegram chat when sent to the bot.
+class TelegramConnectCode {
+  /// Creates a connect code.
+  const TelegramConnectCode({
+    required this.code,
+    required this.command,
+    this.botUsername,
+    this.deepLink,
+    this.groupLink,
+    this.expiresAt,
+  });
+
+  /// Reads a connect code.
+  factory TelegramConnectCode.fromJson(Map<String, dynamic> json) =>
+      TelegramConnectCode(
+        code: asString(json['code']) ?? '',
+        command: asString(json['command']) ?? '',
+        botUsername: asString(json['bot_username']),
+        deepLink: asString(json['deep_link']),
+        groupLink: asString(json['group_link']),
+        expiresAt: asDate(json['expires_at']),
+      );
+
+  /// The one-time code, valid for 15 minutes.
+  final String code;
+
+  /// What to send in the chat: `/connect <code>`.
+  final String command;
+
+  /// The publishing bot, without the @.
+  final String? botUsername;
+
+  /// Opens a private chat with the bot, code included.
+  final String? deepLink;
+
+  /// Adds the bot to a group, code included.
+  final String? groupLink;
+
+  /// When the code lapses.
+  final DateTime? expiresAt;
+
+  @override
+  String toString() => 'TelegramConnectCode($code)';
+}
+
+/// Where a Telegram connect code stands.
+class TelegramConnectStatus {
+  /// Creates a connect status.
+  const TelegramConnectStatus({
+    required this.status,
+    this.accountId,
+    this.reason,
+  });
+
+  /// Reads a connect status.
+  factory TelegramConnectStatus.fromJson(Map<String, dynamic> json) =>
+      TelegramConnectStatus(
+        status: asString(json['status']) ?? 'pending',
+        accountId: asString(json['account_id']),
+        reason: asString(json['reason']),
+      );
+
+  /// `pending`, `connected`, `failed`, or `expired`.
+  final String status;
+
+  /// The connected account, once `connected`.
+  final String? accountId;
+
+  /// Why the connection failed, when `failed`: `card_required`, `slot_taken`,
+  /// or `workspace_unavailable`.
+  final String? reason;
+
+  @override
+  String toString() => 'TelegramConnectStatus($status)';
+}
+
+/// One entry in a Telegram bot's command menu.
+class TelegramBotCommand {
+  /// Creates a command.
+  const TelegramBotCommand({required this.command, required this.description});
+
+  /// Reads a command.
+  factory TelegramBotCommand.fromJson(Map<String, dynamic> json) =>
+      TelegramBotCommand(
+        command: asString(json['command']) ?? '',
+        description: asString(json['description']) ?? '',
+      );
+
+  /// 1-32 lowercase letters, digits or underscores, without the slash.
+  final String command;
+
+  /// 1-256 characters.
+  final String description;
+
+  /// The request body shape.
+  Map<String, dynamic> toJson() =>
+      {'command': command, 'description': description};
+
+  @override
+  String toString() => 'TelegramBotCommand(/$command)';
+}
