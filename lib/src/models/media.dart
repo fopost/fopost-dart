@@ -113,3 +113,55 @@ class UploadedMedia {
   @override
   String toString() => 'UploadedMedia($name)';
 }
+
+/// A presigned direct-upload slot from `POST /media/presign`.
+///
+/// `PUT` the file's bytes to [uploadUrl] with exactly [headers] and a
+/// `Content-Length` equal to the declared size, without an API key, then call
+/// `client.media.complete(uploadId)` before [expiresAt].
+class PresignedUpload {
+  /// Creates a presigned upload.
+  const PresignedUpload({
+    required this.uploadId,
+    required this.uploadUrl,
+    required this.method,
+    required this.headers,
+    this.expiresAt,
+  });
+
+  /// Reads a presigned upload.
+  factory PresignedUpload.fromJson(Map<String, dynamic> json) {
+    final raw = json['headers'];
+    final headers = <String, String>{};
+    if (raw is Map) {
+      raw.forEach((key, value) {
+        if (value is String) headers['$key'] = value;
+      });
+    }
+    return PresignedUpload(
+      uploadId: asString(json['uploadId']) ?? '',
+      uploadUrl: asString(json['uploadUrl']) ?? '',
+      method: asString(json['method']) ?? 'PUT',
+      headers: headers,
+      expiresAt: asDate(json['expiresAt']),
+    );
+  }
+
+  /// The id to pass to `complete` once the bytes are stored.
+  final String uploadId;
+
+  /// Where to send the bytes.
+  final String uploadUrl;
+
+  /// The HTTP method to use, `PUT`.
+  final String method;
+
+  /// The headers the upload request must carry, e.g. `Content-Type`.
+  final Map<String, String> headers;
+
+  /// When the slot stops accepting bytes.
+  final DateTime? expiresAt;
+
+  @override
+  String toString() => 'PresignedUpload($uploadId)';
+}
