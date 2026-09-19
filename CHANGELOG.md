@@ -6,6 +6,16 @@
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
   Needs the `accounts` scope.
+- Added: `accounts.redditSubreddits`, `redditSubredditRules`, `redditFlairs`
+  and `setRedditDefaultSubreddit` for the subreddits a Reddit account is in, a
+  subreddit's rules and post flairs, and where posts go when a post names no
+  subreddit. Needs the `accounts` scope.
+- Added: `validate.subreddit`, which answers whether a subreddit exists and
+  takes a post from an account. Needs the `posts` scope.
+- Added: `inbox.vote`, which votes an item up or down, or takes the vote back
+  with `none`. Needs `inbox` and `publish`.
+- Added: `Account.reconnectRequired`, and `vote` and `canVote` on an inbox
+  item.
 
 ## 0.3.0
 

@@ -228,6 +228,18 @@ class InboxResource {
   Future<InboxItem> unlike(String id) async => InboxItem.fromJson(
       await _http.object('POST', '/inbox/${segment(id)}/unlike'));
 
+  /// Votes an item up or down where the network ranks by votes (Reddit), or
+  /// takes an earlier vote back with `none`.
+  ///
+  /// Only where `canVote` is true. An upvote is the same call a like makes, so
+  /// `liked` moves with it. Needs the `publish` scope.
+  Future<InboxItem> vote(String id, String direction) async =>
+      InboxItem.fromJson(await _http.object(
+        'POST',
+        '/inbox/${segment(id)}/vote',
+        body: {'direction': direction},
+      ));
+
   /// Pins our own comment on the platform. Needs the `publish` scope.
   Future<InboxItem> pin(String id) async => InboxItem.fromJson(
       await _http.object('POST', '/inbox/${segment(id)}/pin'));

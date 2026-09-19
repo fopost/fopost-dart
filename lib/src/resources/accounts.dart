@@ -150,6 +150,56 @@ class AccountsResource {
       _commands(await _http.object(
           'DELETE', '/accounts/${segment(id)}/telegram/commands'));
 
+  /// Returns the subreddits a Reddit account is subscribed to, busiest first,
+  /// plus its own profile page.
+  ///
+  /// [RedditSubreddit.canPost] is false where the account may read but not
+  /// submit, and [RedditSubreddit.isDefault] marks the subreddit posts go to
+  /// when a post names none. A 409 `reconnect_required` means the account has
+  /// to be reconnected first.
+  Future<List<RedditSubreddit>> redditSubreddits(String id) async {
+    final rows = await _http.objects(
+        'GET', '/accounts/${segment(id)}/reddit/subreddits');
+    return rows.map(RedditSubreddit.fromJson).toList();
+  }
+
+  /// Returns the rules a subreddit publishes, in its own order. [subreddit]
+  /// carries no `r/` prefix.
+  Future<List<RedditSubredditRule>> redditSubredditRules(
+      String id, String subreddit) async {
+    final json = await _http.object('GET',
+        '/accounts/${segment(id)}/reddit/subreddits/${segment(subreddit)}/rules');
+    return asModelList(json['rules'], RedditSubredditRule.fromJson);
+  }
+
+  /// Returns the post flairs one subreddit offers.
+  ///
+  /// A flair id is valid only in the subreddit it came from: pass it as
+  /// `flair_id` in the post's Reddit platform settings, and preflight rejects
+  /// an id from anywhere else.
+  Future<List<RedditFlair>> redditFlairs(String id, String subreddit) async {
+    final json = await _http.object(
+      'GET',
+      '/accounts/${segment(id)}/reddit/flairs',
+      query: {'subreddit': subreddit},
+    );
+    return asModelList(json['flairs'], RedditFlair.fromJson);
+  }
+
+  /// Sets where posts from a Reddit account go when a post names no subreddit.
+  ///
+  /// Passing null falls back to the account's own profile page, which always
+  /// takes a post. Returns the subreddit that is now in effect.
+  Future<String?> setRedditDefaultSubreddit(
+      String id, String? subreddit) async {
+    final json = await _http.object(
+      'PUT',
+      '/accounts/${segment(id)}/reddit/default-subreddit',
+      body: {'subreddit': subreddit},
+    );
+    return asString(json['subreddit']);
+  }
+
   /// Returns the channels the Slack app can post to: every public channel,
   /// and private ones the app was invited to. A 409 `webhook_connection`
   /// means the account posts through a webhook.

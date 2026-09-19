@@ -5,7 +5,7 @@ import '../json.dart';
 import '../models/validate.dart';
 
 /// Standalone checks that store nothing: a draft against its platforms, a
-/// text's length, or a media URL.
+/// text's length, a media URL, or a subreddit.
 ///
 /// Every call needs the `posts` scope. Reach it as `client.validate`.
 class ValidateResource {
@@ -46,4 +46,20 @@ class ValidateResource {
   Future<ValidateMediaResult> media({required String url}) async =>
       ValidateMediaResult.fromJson(
           await _http.object('POST', '/validate/media', body: {'url': url}));
+
+  /// Checks whether the subreddit [name] exists and takes a post from
+  /// [accountId].
+  ///
+  /// The check runs with that account's own token, so the account has to be one
+  /// the key can see. A private, banned or missing subreddit still answers
+  /// `200`, with [ValidateSubredditResult.exists] false.
+  Future<ValidateSubredditResult> subreddit({
+    required String accountId,
+    required String name,
+  }) async =>
+      ValidateSubredditResult.fromJson(await _http.object(
+        'GET',
+        '/validate/subreddit',
+        query: {'account_id': accountId, 'name': name},
+      ));
 }

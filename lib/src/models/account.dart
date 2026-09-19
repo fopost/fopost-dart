@@ -15,6 +15,7 @@ class Account {
     this.active = true,
     this.healthStatus,
     this.lastHealthCheck,
+    this.reconnectRequired = false,
   });
 
   /// Reads an account.
@@ -30,6 +31,7 @@ class Account {
         active: asBool(json['active']) ?? true,
         healthStatus: asString(json['healthStatus']),
         lastHealthCheck: asDate(json['lastHealthCheck']),
+        reconnectRequired: asBool(json['reconnectRequired']) ?? false,
       );
 
   /// The account's id.
@@ -64,6 +66,10 @@ class Account {
 
   /// When the health was last checked.
   final DateTime? lastHealthCheck;
+
+  /// Whether the account was connected before FoPost asked for a permission it
+  /// now needs. Reconnecting it is the fix.
+  final bool reconnectRequired;
 
   @override
   String toString() => 'Account($platform/$username)';
@@ -655,4 +661,118 @@ class SlackIdentity {
 
   @override
   String toString() => 'SlackIdentity($username)';
+}
+
+/// A subreddit a Reddit account can post to.
+class RedditSubreddit {
+  /// Creates a subreddit.
+  const RedditSubreddit({
+    required this.name,
+    this.title,
+    this.subscribers,
+    this.over18 = false,
+    this.canPost = false,
+    this.flairEnabled = false,
+    this.iconUrl,
+    this.isDefault = false,
+  });
+
+  /// Reads a subreddit.
+  factory RedditSubreddit.fromJson(Map<String, dynamic> json) =>
+      RedditSubreddit(
+        name: asString(json['name']) ?? '',
+        title: asString(json['title']),
+        subscribers: asInt(json['subscribers']),
+        over18: asBool(json['over18']) ?? false,
+        canPost: asBool(json['canPost']) ?? false,
+        flairEnabled: asBool(json['flairEnabled']) ?? false,
+        iconUrl: asString(json['iconUrl']),
+        isDefault: asBool(json['isDefault']) ?? false,
+      );
+
+  /// The subreddit name, without the `r/` prefix.
+  final String name;
+
+  /// The subreddit's own title.
+  final String? title;
+
+  /// How many people are subscribed.
+  final int? subscribers;
+
+  /// Whether the subreddit is marked over 18.
+  final bool over18;
+
+  /// Whether this account may submit here, rather than only read.
+  final bool canPost;
+
+  /// Whether the subreddit offers post flairs.
+  final bool flairEnabled;
+
+  /// The subreddit's icon.
+  final String? iconUrl;
+
+  /// Whether this is the account's default subreddit.
+  final bool isDefault;
+
+  @override
+  String toString() => 'RedditSubreddit(r/$name)';
+}
+
+/// One rule a subreddit publishes.
+class RedditSubredditRule {
+  /// Creates a rule.
+  const RedditSubredditRule({
+    required this.name,
+    this.description,
+    this.appliesTo = 'all',
+  });
+
+  /// Reads a rule.
+  factory RedditSubredditRule.fromJson(Map<String, dynamic> json) =>
+      RedditSubredditRule(
+        name: asString(json['name']) ?? '',
+        description: asString(json['description']),
+        appliesTo: asString(json['appliesTo']) ?? 'all',
+      );
+
+  /// The rule's short name.
+  final String name;
+
+  /// The rule in full, where the subreddit wrote one.
+  final String? description;
+
+  /// What the rule covers: `link`, `comment`, or `all`.
+  final String appliesTo;
+
+  @override
+  String toString() => 'RedditSubredditRule($name)';
+}
+
+/// A post flair a subreddit offers.
+class RedditFlair {
+  /// Creates a flair.
+  const RedditFlair({
+    required this.id,
+    required this.text,
+    this.editable = false,
+  });
+
+  /// Reads a flair.
+  factory RedditFlair.fromJson(Map<String, dynamic> json) => RedditFlair(
+        id: asString(json['id']) ?? '',
+        text: asString(json['text']) ?? '',
+        editable: asBool(json['editable']) ?? false,
+      );
+
+  /// The flair id, valid only in the subreddit it came from.
+  final String id;
+
+  /// The flair's label.
+  final String text;
+
+  /// Whether the label may be replaced with your own text.
+  final bool editable;
+
+  @override
+  String toString() => 'RedditFlair($id, $text)';
 }

@@ -220,12 +220,14 @@ class InboxItem {
     this.canReply,
     this.hidden,
     this.liked,
+    this.vote,
     this.pinned,
     this.reaction,
     this.editedAt,
     this.canHide,
     this.canDelete,
     this.canLike,
+    this.canVote,
     this.canPin,
     this.canEdit,
     this.canReact,
@@ -261,12 +263,14 @@ class InboxItem {
         canReply: asBool(json['canReply']),
         hidden: asBool(json['hidden']),
         liked: asBool(json['liked']),
+        vote: asString(json['vote']),
         pinned: asBool(json['pinned']),
         reaction: asString(json['reaction']),
         editedAt: asDate(json['editedAt']),
         canHide: asBool(json['canHide']),
         canDelete: asBool(json['canDelete']),
         canLike: asBool(json['canLike']),
+        canVote: asBool(json['canVote']),
         canPin: asBool(json['canPin']),
         canEdit: asBool(json['canEdit']),
         canReact: asBool(json['canReact']),
@@ -344,6 +348,9 @@ class InboxItem {
   /// Whether the account has liked it.
   final bool? liked;
 
+  /// How the account voted, where the network ranks by votes: `up` or `down`.
+  final String? vote;
+
   /// Whether our own comment is pinned.
   final bool? pinned;
 
@@ -362,6 +369,9 @@ class InboxItem {
 
   /// Whether the platform lets the account like it.
   final bool? canLike;
+
+  /// Whether up and down votes are available, where the network ranks by them.
+  final bool? canVote;
 
   /// Whether the platform lets the account pin it (our own comment only).
   final bool? canPin;
