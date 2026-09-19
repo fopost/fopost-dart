@@ -110,4 +110,46 @@ class AccountsResource {
         '/accounts/${segment(id)}/analytics',
         query: {'limit': limit},
       ));
+
+  /// Mints a one-time code, valid for 15 minutes. Sending `/connect <code>` to
+  /// the bot in a chat connects that chat. Omit [workspaceId] for a key bound
+  /// to one workspace.
+  Future<TelegramConnectCode> createTelegramConnectCode(
+          {String? workspaceId}) async =>
+      TelegramConnectCode.fromJson(await _http.object(
+        'POST',
+        '/accounts/telegram/connect-code',
+        body: pruned({'workspaceId': workspaceId}),
+      ));
+
+  /// Returns where a Telegram connect code stands: `pending`, `connected`,
+  /// `failed`, or `expired`.
+  Future<TelegramConnectStatus> getTelegramConnectStatus(String code) async =>
+      TelegramConnectStatus.fromJson(await _http.object(
+        'GET',
+        '/accounts/telegram/connect-code/status',
+        query: {'code': code},
+      ));
+
+  /// Returns the command menu the bot shows in a connected Telegram chat.
+  Future<List<TelegramBotCommand>> getTelegramBotCommands(String id) async =>
+      _commands(await _http.object(
+          'GET', '/accounts/${segment(id)}/telegram/commands'));
+
+  /// Replaces the command menu for a connected Telegram chat (1-100 commands).
+  Future<List<TelegramBotCommand>> setTelegramBotCommands(
+          String id, List<TelegramBotCommand> commands) async =>
+      _commands(await _http.object(
+        'PUT',
+        '/accounts/${segment(id)}/telegram/commands',
+        body: {'commands': commands.map((c) => c.toJson()).toList()},
+      ));
+
+  /// Clears the command menu for a connected Telegram chat.
+  Future<List<TelegramBotCommand>> deleteTelegramBotCommands(String id) async =>
+      _commands(await _http.object(
+          'DELETE', '/accounts/${segment(id)}/telegram/commands'));
+
+  List<TelegramBotCommand> _commands(Map<String, dynamic> json) =>
+      asModelList(json['commands'], TelegramBotCommand.fromJson);
 }
