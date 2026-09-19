@@ -9,6 +9,7 @@ class Account {
     required this.username,
     this.workspaceId,
     this.name,
+    this.platformName,
     this.avatar,
     this.isPrimary = false,
     this.active = true,
@@ -23,6 +24,7 @@ class Account {
         username: asString(json['username']) ?? '',
         workspaceId: asString(json['workspaceId'] ?? json['workspace_id']),
         name: asString(json['name']),
+        platformName: asString(json['platformName'] ?? json['platform_name']),
         avatar: asString(json['avatar']),
         isPrimary: asBool(json['isPrimary']) ?? false,
         active: asBool(json['active']) ?? true,
@@ -42,8 +44,11 @@ class Account {
   /// The workspace it belongs to.
   final String? workspaceId;
 
-  /// The account's display name.
+  /// The display name override when set, else [platformName].
   final String? name;
+
+  /// The name the platform itself reports.
+  final String? platformName;
 
   /// The account's avatar URL.
   final String? avatar;
@@ -73,6 +78,7 @@ class AccountDetail {
     required this.username,
     this.workspaceId,
     this.name,
+    this.platformName,
     this.avatar,
     this.workspaceName,
     this.workspaceSlug,
@@ -90,6 +96,7 @@ class AccountDetail {
       workspaceId: asString(
           json['workspace_id'] ?? json['workspaceId'] ?? workspace['id']),
       name: asString(json['name']),
+      platformName: asString(json['platform_name'] ?? json['platformName']),
       avatar: asString(json['avatar']),
       workspaceName: asString(workspace['name']),
       workspaceSlug: asString(workspace['slug']),
@@ -110,8 +117,11 @@ class AccountDetail {
   /// The workspace it belongs to.
   final String? workspaceId;
 
-  /// The account's display name.
+  /// The display name override when set, else [platformName].
   final String? name;
+
+  /// The name the platform itself reports.
+  final String? platformName;
 
   /// The account's avatar URL.
   final String? avatar;
@@ -130,6 +140,52 @@ class AccountDetail {
 
   @override
   String toString() => 'AccountDetail($platform/$username)';
+}
+
+/// An account's names after `AccountsResource.rename`.
+class RenamedAccount {
+  /// Creates a rename result.
+  const RenamedAccount({required this.id, this.name, this.platformName});
+
+  /// Reads a rename result.
+  factory RenamedAccount.fromJson(Map<String, dynamic> json) => RenamedAccount(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']),
+        platformName: asString(json['platform_name'] ?? json['platformName']),
+      );
+
+  /// The account's id.
+  final String id;
+
+  /// The name FoPost now shows.
+  final String? name;
+
+  /// The name the platform itself reports.
+  final String? platformName;
+
+  @override
+  String toString() => 'RenamedAccount($id, $name)';
+}
+
+/// Where an account lives after `AccountsResource.move`.
+class MovedAccount {
+  /// Creates a move result.
+  const MovedAccount({required this.id, this.workspaceId});
+
+  /// Reads a move result.
+  factory MovedAccount.fromJson(Map<String, dynamic> json) => MovedAccount(
+        id: asString(json['id']) ?? '',
+        workspaceId: asString(json['workspace_id'] ?? json['workspaceId']),
+      );
+
+  /// The account's id.
+  final String id;
+
+  /// The workspace it now belongs to.
+  final String? workspaceId;
+
+  @override
+  String toString() => 'MovedAccount($id, $workspaceId)';
 }
 
 /// One account's connection health.

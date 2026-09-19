@@ -16,10 +16,10 @@ class AccountsResource {
   final FoPostHttp _http;
 
   /// Returns the connected accounts the key can reach, optionally narrowed to
-  /// one workspace.
-  Future<List<Account>> list({String? workspaceId}) async {
-    final rows = await _http
-        .objects('GET', '/accounts', query: {'workspaceId': workspaceId});
+  /// one workspace or one account group.
+  Future<List<Account>> list({String? workspaceId, String? groupId}) async {
+    final rows = await _http.objects('GET', '/accounts',
+        query: {'workspaceId': workspaceId, 'group_id': groupId});
     return rows.map(Account.fromJson).toList();
   }
 
@@ -49,6 +49,22 @@ class AccountsResource {
     return AccountDetail.fromJson(
         await _http.object('POST', '/accounts', body: body));
   }
+
+  /// Sets the name FoPost shows for an account. A null or empty
+  /// [displayName] restores the platform's own name.
+  Future<RenamedAccount> rename(String id, String? displayName) async =>
+      RenamedAccount.fromJson(await _http.object(
+          'PATCH', '/accounts/${segment(id)}',
+          body: {'display_name': displayName}));
+
+  /// Moves an account to another workspace the caller owns.
+  ///
+  /// A 409 with the code `move_blocked` lists the reasons under
+  /// `blocking_tables` in [FoPostException.bodyMap].
+  Future<MovedAccount> move(String id, {required String workspaceId}) async =>
+      MovedAccount.fromJson(await _http.object(
+          'POST', '/accounts/${segment(id)}/move',
+          body: {'workspace_id': workspaceId}));
 
   /// Disconnects an account.
   Future<void> delete(String id) =>
