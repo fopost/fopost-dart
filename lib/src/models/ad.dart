@@ -1080,3 +1080,801 @@ class LeadsPage {
   @override
   String toString() => 'LeadsPage(${leads.length})';
 }
+
+/// The levels of the campaign tree `bulkSetStatus` can act on.
+abstract final class AdObjectLevel {
+  /// A campaign.
+  static const String campaign = 'campaign';
+
+  /// An ad set.
+  static const String adSet = 'ad_set';
+
+  /// An ad inside an ad set.
+  static const String ad = 'ad';
+}
+
+/// How an insights report can be split.
+abstract final class AdInsightsBreakdown {
+  /// By age bracket.
+  static const String age = 'age';
+
+  /// By gender.
+  static const String gender = 'gender';
+
+  /// By placement.
+  static const String placement = 'placement';
+
+  /// By country.
+  static const String country = 'country';
+}
+
+/// The creative formats `createCreative` builds.
+abstract final class AdCreativeFormat {
+  /// A single image.
+  static const String image = 'image';
+
+  /// A single video.
+  static const String video = 'video';
+
+  /// Two to ten cards.
+  static const String carousel = 'carousel';
+}
+
+/// An ad inside an ad set, by the platform's id. Read live, never stored.
+class NetworkAd {
+  /// Creates an ad.
+  const NetworkAd({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.campaignId,
+    this.adSetId,
+    this.creativeId,
+    this.effectiveStatus,
+    this.createdAt,
+  });
+
+  /// Reads an ad.
+  factory NetworkAd.fromJson(Map<String, dynamic> json) => NetworkAd(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        status: asString(json['status']) ?? '',
+        campaignId: asString(json['campaignId']),
+        adSetId: asString(json['adSetId']),
+        creativeId: asString(json['creativeId']),
+        effectiveStatus: asString(json['effectiveStatus']),
+        createdAt: asString(json['createdAt']),
+      );
+
+  /// The platform's ad id.
+  final String id;
+
+  /// The ad's name.
+  final String name;
+
+  /// The status set on the platform.
+  final String status;
+
+  /// The campaign it sits in.
+  final String? campaignId;
+
+  /// The ad set it sits in.
+  final String? adSetId;
+
+  /// The creative it shows.
+  final String? creativeId;
+
+  /// The status the platform reports.
+  final String? effectiveStatus;
+
+  /// When it was created, as the platform formats it.
+  final String? createdAt;
+
+  @override
+  String toString() => 'NetworkAd($id, $name)';
+}
+
+/// An ad set, by the platform's id. Read live, never stored.
+class AdSet {
+  /// Creates an ad set.
+  const AdSet({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.campaignId,
+    this.effectiveStatus,
+    this.budgetMinor,
+    this.budgetType,
+    this.endAt,
+    this.optimizationGoal,
+    this.createdAt,
+    this.ads = const [],
+  });
+
+  /// Reads an ad set.
+  factory AdSet.fromJson(Map<String, dynamic> json) => AdSet(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        status: asString(json['status']) ?? '',
+        campaignId: asString(json['campaignId']),
+        effectiveStatus: asString(json['effectiveStatus']),
+        budgetMinor: asInt(json['budgetMinor']),
+        budgetType: asString(json['budgetType']),
+        endAt: asString(json['endAt']),
+        optimizationGoal: asString(json['optimizationGoal']),
+        createdAt: asString(json['createdAt']),
+        ads: asModelList(json['ads'], NetworkAd.fromJson),
+      );
+
+  /// The platform's ad set id.
+  final String id;
+
+  /// The ad set's name.
+  final String name;
+
+  /// The status set on the platform.
+  final String status;
+
+  /// The campaign it sits in.
+  final String? campaignId;
+
+  /// The status the platform reports.
+  final String? effectiveStatus;
+
+  /// The budget, in minor units of the ad account's currency.
+  final int? budgetMinor;
+
+  /// One of [AdBudgetType].
+  final String? budgetType;
+
+  /// When a lifetime budget stops, as the platform formats it.
+  final String? endAt;
+
+  /// What the platform optimizes delivery for.
+  final String? optimizationGoal;
+
+  /// When it was created, as the platform formats it.
+  final String? createdAt;
+
+  /// Its ads; filled only in `accountTree`.
+  final List<NetworkAd> ads;
+
+  @override
+  String toString() => 'AdSet($id, $name)';
+}
+
+/// A campaign, by the platform's id. Read live, never stored.
+class AdCampaign {
+  /// Creates a campaign.
+  const AdCampaign({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.effectiveStatus,
+    this.objective,
+    this.budgetMinor,
+    this.budgetType,
+    this.createdAt,
+    this.adSets = const [],
+  });
+
+  /// Reads a campaign.
+  factory AdCampaign.fromJson(Map<String, dynamic> json) => AdCampaign(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        status: asString(json['status']) ?? '',
+        effectiveStatus: asString(json['effectiveStatus']),
+        objective: asString(json['objective']),
+        budgetMinor: asInt(json['budgetMinor']),
+        budgetType: asString(json['budgetType']),
+        createdAt: asString(json['createdAt']),
+        adSets: asModelList(json['adSets'], AdSet.fromJson),
+      );
+
+  /// The platform's campaign id.
+  final String id;
+
+  /// The campaign's name.
+  final String name;
+
+  /// `ACTIVE`, `PAUSED`, `DELETED` or `ARCHIVED`.
+  final String status;
+
+  /// The status the platform reports.
+  final String? effectiveStatus;
+
+  /// The campaign's objective.
+  final String? objective;
+
+  /// The budget in minor units; null when it lives on the ad sets.
+  final int? budgetMinor;
+
+  /// One of [AdBudgetType].
+  final String? budgetType;
+
+  /// When it was created, as the platform formats it.
+  final String? createdAt;
+
+  /// Its ad sets; filled only in `accountTree`.
+  final List<AdSet> adSets;
+
+  @override
+  String toString() => 'AdCampaign($id, $name)';
+}
+
+/// An ad account's campaigns, each with its ad sets and their ads.
+class AdAccountTree {
+  /// Creates a tree.
+  const AdAccountTree({
+    required this.adAccountId,
+    this.currency,
+    this.workspaceId,
+    this.campaigns = const [],
+  });
+
+  /// Reads a tree.
+  factory AdAccountTree.fromJson(Map<String, dynamic> json) => AdAccountTree(
+        adAccountId: asString(json['adAccountId']) ?? '',
+        currency: asString(json['currency']),
+        workspaceId: asString(json['workspaceId']),
+        campaigns: asModelList(json['campaigns'], AdCampaign.fromJson),
+      );
+
+  /// The ad account.
+  final String adAccountId;
+
+  /// The ad account's currency.
+  final String? currency;
+
+  /// The workspace the connection belongs to.
+  final String? workspaceId;
+
+  /// The campaigns.
+  final List<AdCampaign> campaigns;
+
+  @override
+  String toString() => 'AdAccountTree($adAccountId, ${campaigns.length})';
+}
+
+/// A campaign, ad set or ad named in `bulkSetStatus`.
+class AdObjectRef {
+  /// Creates a reference. [level] is one of [AdObjectLevel].
+  const AdObjectRef({required this.id, required this.level});
+
+  /// The platform's id.
+  final String id;
+
+  /// One of [AdObjectLevel].
+  final String level;
+
+  /// Renders the reference for a request body.
+  Map<String, dynamic> toJson() => {'id': id, 'level': level};
+
+  @override
+  String toString() => 'AdObjectRef($level, $id)';
+}
+
+/// What happened to one object in `bulkSetStatus`.
+class BulkAdStatusResult {
+  /// Creates a result.
+  const BulkAdStatusResult(
+      {required this.id, required this.level, required this.ok, this.error});
+
+  /// Reads a result.
+  factory BulkAdStatusResult.fromJson(Map<String, dynamic> json) =>
+      BulkAdStatusResult(
+        id: asString(json['id']) ?? '',
+        level: asString(json['level']) ?? '',
+        ok: asBool(json['ok']) ?? false,
+        error: asString(json['error']),
+      );
+
+  /// The platform's id.
+  final String id;
+
+  /// One of [AdObjectLevel].
+  final String level;
+
+  /// Whether the status was set.
+  final bool ok;
+
+  /// Why it was not, when it was not.
+  final String? error;
+
+  @override
+  String toString() => 'BulkAdStatusResult($id, $ok)';
+}
+
+/// A creative in an ad account's library.
+class AdCreative {
+  /// Creates a creative.
+  const AdCreative({
+    required this.id,
+    required this.name,
+    required this.format,
+    this.status,
+    this.title,
+    this.body,
+    this.link,
+    this.thumbnailUrl,
+    this.callToAction,
+    this.urlTags,
+  });
+
+  /// Reads a creative.
+  factory AdCreative.fromJson(Map<String, dynamic> json) => AdCreative(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        format: asString(json['format']) ?? '',
+        status: asString(json['status']),
+        title: asString(json['title']),
+        body: asString(json['body']),
+        link: asString(json['link']),
+        thumbnailUrl: asString(json['thumbnailUrl']),
+        callToAction: asString(json['callToAction']),
+        urlTags: asString(json['urlTags']),
+      );
+
+  /// The creative's id.
+  final String id;
+
+  /// The creative's name.
+  final String name;
+
+  /// `image`, `video`, `carousel`, `post` or `other`.
+  final String format;
+
+  /// The status the platform reports.
+  final String? status;
+
+  /// The headline.
+  final String? title;
+
+  /// The primary text.
+  final String? body;
+
+  /// Where it links to.
+  final String? link;
+
+  /// A thumbnail of its media.
+  final String? thumbnailUrl;
+
+  /// The button, e.g. `LEARN_MORE`.
+  final String? callToAction;
+
+  /// The query string appended to every link.
+  final String? urlTags;
+
+  @override
+  String toString() => 'AdCreative($id, $format)';
+}
+
+/// The creatives on an ad account.
+class AdCreativesResult {
+  /// Creates a result.
+  const AdCreativesResult({this.creatives = const [], this.workspaceId});
+
+  /// Reads a result.
+  factory AdCreativesResult.fromJson(Map<String, dynamic> json) =>
+      AdCreativesResult(
+        creatives: asModelList(json['creatives'], AdCreative.fromJson),
+        workspaceId: asString(json['workspaceId']),
+      );
+
+  /// The creatives.
+  final List<AdCreative> creatives;
+
+  /// The workspace the connection belongs to.
+  final String? workspaceId;
+
+  @override
+  String toString() => 'AdCreativesResult(${creatives.length})';
+}
+
+/// One card of a carousel creative.
+class AdCreativeCard {
+  /// Creates a card. [mediaUrl] is a media library image.
+  const AdCreativeCard({
+    required this.mediaUrl,
+    this.destinationUrl,
+    this.headline,
+    this.description,
+  });
+
+  /// A media library image.
+  final String mediaUrl;
+
+  /// Where the card links to.
+  final String? destinationUrl;
+
+  /// The card's headline.
+  final String? headline;
+
+  /// The card's description.
+  final String? description;
+
+  /// Renders the card for a request body.
+  Map<String, dynamic> toJson() => pruned({
+        'mediaUrl': mediaUrl,
+        'destinationUrl': destinationUrl,
+        'headline': headline,
+        'description': description,
+      });
+
+  @override
+  String toString() => 'AdCreativeCard($mediaUrl)';
+}
+
+/// How many people a targeting spec could reach.
+class ReachEstimate {
+  /// Creates an estimate.
+  const ReachEstimate({this.lower, this.upper, this.ready = false});
+
+  /// Reads an estimate.
+  factory ReachEstimate.fromJson(Map<String, dynamic> json) => ReachEstimate(
+        lower: asInt(json['lower']),
+        upper: asInt(json['upper']),
+        ready: asBool(json['ready']) ?? false,
+      );
+
+  /// The lower bound.
+  final int? lower;
+
+  /// The upper bound.
+  final int? upper;
+
+  /// False while the platform is still estimating.
+  final bool ready;
+
+  @override
+  String toString() => 'ReachEstimate($lower-$upper)';
+}
+
+/// Delivery numbers over a date range.
+class InsightsMetrics {
+  /// Creates metrics.
+  const InsightsMetrics({
+    this.impressions = 0,
+    this.reach = 0,
+    this.clicks = 0,
+    this.spendMinor = 0,
+    this.ctr = 0,
+    this.leads = 0,
+  });
+
+  /// Reads metrics.
+  factory InsightsMetrics.fromJson(Map<String, dynamic> json) =>
+      InsightsMetrics(
+        impressions: asInt(json['impressions']) ?? 0,
+        reach: asInt(json['reach']) ?? 0,
+        clicks: asInt(json['clicks']) ?? 0,
+        spendMinor: asInt(json['spendMinor']) ?? 0,
+        ctr: asDouble(json['ctr']) ?? 0,
+        leads: asInt(json['leads']) ?? 0,
+      );
+
+  /// Times shown.
+  final int impressions;
+
+  /// People reached.
+  final int reach;
+
+  /// Clicks.
+  final int clicks;
+
+  /// Spend, in minor units of the ad account's currency.
+  final int spendMinor;
+
+  /// Clicks per impression, as a percentage.
+  final double ctr;
+
+  /// Leads collected.
+  final int leads;
+
+  @override
+  String toString() => 'InsightsMetrics($impressions impressions)';
+}
+
+/// One slice of a broken-down report, or one day of a daily one.
+class InsightsRow {
+  /// Creates a row.
+  const InsightsRow({required this.key, required this.metrics});
+
+  /// Reads a row; [keyField] is `key` for a breakdown, `date` for a day.
+  factory InsightsRow.fromJson(Map<String, dynamic> json, String keyField) =>
+      InsightsRow(
+        key: asString(json[keyField]) ?? '',
+        metrics: InsightsMetrics.fromJson(asMap(json['metrics'])),
+      );
+
+  /// The slice, e.g. `25-34`, or the day as `YYYY-MM-DD`.
+  final String key;
+
+  /// The numbers for it.
+  final InsightsMetrics metrics;
+
+  @override
+  String toString() => 'InsightsRow($key)';
+}
+
+/// Insights for one campaign, ad set or ad over a date range.
+class AdInsightsReport {
+  /// Creates a report.
+  const AdInsightsReport({
+    required this.objectId,
+    required this.since,
+    required this.until,
+    this.currency,
+    this.breakdownBy,
+    this.totals,
+    this.breakdown = const [],
+    this.timeline = const [],
+  });
+
+  /// Reads a report.
+  factory AdInsightsReport.fromJson(Map<String, dynamic> json) =>
+      AdInsightsReport(
+        objectId: asString(json['objectId']) ?? '',
+        since: asString(json['since']) ?? '',
+        until: asString(json['until']) ?? '',
+        currency: asString(json['currency']),
+        breakdownBy: asString(json['breakdownBy']),
+        totals: json['totals'] is Map
+            ? InsightsMetrics.fromJson(asMap(json['totals']))
+            : null,
+        breakdown: asModelList(
+            json['breakdown'], (row) => InsightsRow.fromJson(row, 'key')),
+        timeline: asModelList(
+            json['timeline'], (row) => InsightsRow.fromJson(row, 'date')),
+      );
+
+  /// The object the report is for.
+  final String objectId;
+
+  /// The first day, `YYYY-MM-DD`.
+  final String since;
+
+  /// The last day, `YYYY-MM-DD`.
+  final String until;
+
+  /// The ad account's currency.
+  final String? currency;
+
+  /// One of [AdInsightsBreakdown], when the report is split.
+  final String? breakdownBy;
+
+  /// The totals; null when nothing was delivered.
+  final InsightsMetrics? totals;
+
+  /// One row per slice, when the report is split.
+  final List<InsightsRow> breakdown;
+
+  /// One row per day, when asked for daily.
+  final List<InsightsRow> timeline;
+
+  @override
+  String toString() => 'AdInsightsReport($objectId, $since..$until)';
+}
+
+/// An instant lead form with its settings.
+class LeadFormDetail {
+  /// Creates a form.
+  const LeadFormDetail({
+    required this.id,
+    required this.name,
+    this.status,
+    this.leadsCount = 0,
+    this.createdAt,
+    this.questions = const [],
+    this.pageId,
+    this.privacyPolicyUrl,
+    this.locale,
+  });
+
+  /// Reads a form.
+  factory LeadFormDetail.fromJson(Map<String, dynamic> json) => LeadFormDetail(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        status: asString(json['status']),
+        leadsCount: asInt(json['leadsCount']) ?? 0,
+        createdAt: asString(json['createdAt']),
+        questions: asStringList(json['questions']),
+        pageId: asString(json['pageId']),
+        privacyPolicyUrl: asString(json['privacyPolicyUrl']),
+        locale: asString(json['locale']),
+      );
+
+  /// The form's id.
+  final String id;
+
+  /// The form's name.
+  final String name;
+
+  /// The status the platform reports.
+  final String? status;
+
+  /// How many leads it has collected.
+  final int leadsCount;
+
+  /// When it was created, as the platform formats it.
+  final String? createdAt;
+
+  /// The questions it asks.
+  final List<String> questions;
+
+  /// The Page it lives on.
+  final String? pageId;
+
+  /// The privacy policy it links to.
+  final String? privacyPolicyUrl;
+
+  /// The form's locale.
+  final String? locale;
+
+  @override
+  String toString() => 'LeadFormDetail($id, $name)';
+}
+
+/// A lead stored from a subscribed Page.
+class FeedLead {
+  /// Creates a lead.
+  const FeedLead({
+    required this.id,
+    required this.leadId,
+    this.connectionId,
+    this.pageId,
+    this.formId,
+    this.adId,
+    this.adName,
+    this.campaignName,
+    this.platform,
+    this.isOrganic,
+    this.fields = const [],
+    this.submittedAt,
+    this.workspaceId,
+  });
+
+  /// Reads a lead.
+  factory FeedLead.fromJson(Map<String, dynamic> json) => FeedLead(
+        id: asString(json['id']) ?? '',
+        leadId: asString(json['leadId']) ?? '',
+        connectionId: asString(json['connectionId']),
+        pageId: asString(json['pageId']),
+        formId: asString(json['formId']),
+        adId: asString(json['adId']),
+        adName: asString(json['adName']),
+        campaignName: asString(json['campaignName']),
+        platform: asString(json['platform']),
+        isOrganic: asBool(json['isOrganic']),
+        fields: asModelList(json['fields'], LeadField.fromJson),
+        submittedAt: asDate(json['submittedAt']),
+        workspaceId: asString(json['workspaceId']),
+      );
+
+  /// FoPost's id for the stored lead.
+  final String id;
+
+  /// The platform's lead id.
+  final String leadId;
+
+  /// The ad connection it arrived through.
+  final String? connectionId;
+
+  /// The Page it came from.
+  final String? pageId;
+
+  /// The form it came from.
+  final String? formId;
+
+  /// The ad it came through.
+  final String? adId;
+
+  /// The ad's name.
+  final String? adName;
+
+  /// The campaign's name.
+  final String? campaignName;
+
+  /// The network it came from.
+  final String? platform;
+
+  /// Whether it came from an unpaid placement.
+  final bool? isOrganic;
+
+  /// The answers.
+  final List<LeadField> fields;
+
+  /// When it was submitted.
+  final DateTime? submittedAt;
+
+  /// The workspace it belongs to.
+  final String? workspaceId;
+
+  @override
+  String toString() => 'FeedLead($id)';
+}
+
+/// One page of the stored leads feed.
+class LeadsFeedPage {
+  /// Creates a page.
+  const LeadsFeedPage({this.leads = const [], this.nextCursor});
+
+  /// Reads a page.
+  factory LeadsFeedPage.fromJson(Map<String, dynamic> json) => LeadsFeedPage(
+        leads: asModelList(json['leads'], FeedLead.fromJson),
+        nextCursor: asString(json['nextCursor']),
+      );
+
+  /// The leads on this page.
+  final List<FeedLead> leads;
+
+  /// Pass back as `cursor` for the next page; null on the last.
+  final String? nextCursor;
+
+  /// Whether another page follows this one.
+  bool get hasMore => nextCursor != null && nextCursor!.isNotEmpty;
+
+  @override
+  String toString() => 'LeadsFeedPage(${leads.length})';
+}
+
+/// A Page whose leads are stored into the feed as they arrive.
+class LeadPage {
+  /// Creates a subscribed Page.
+  const LeadPage({
+    required this.pageId,
+    this.connectionId,
+    this.pageName,
+    this.createdAt,
+    this.workspaceId,
+  });
+
+  /// Reads a subscribed Page.
+  factory LeadPage.fromJson(Map<String, dynamic> json) => LeadPage(
+        pageId: asString(json['pageId']) ?? '',
+        connectionId: asString(json['connectionId']),
+        pageName: asString(json['pageName']),
+        createdAt: asDate(json['createdAt']),
+        workspaceId: asString(json['workspaceId']),
+      );
+
+  /// The Page's id.
+  final String pageId;
+
+  /// The ad connection it is read through.
+  final String? connectionId;
+
+  /// The Page's name.
+  final String? pageName;
+
+  /// When it was subscribed.
+  final DateTime? createdAt;
+
+  /// The workspace it belongs to.
+  final String? workspaceId;
+
+  @override
+  String toString() => 'LeadPage($pageId)';
+}
+
+/// What subscribing a Page returned.
+class LeadPageSubscription {
+  /// Creates a result.
+  const LeadPageSubscription({required this.pageId, this.backfilled = 0});
+
+  /// Reads a result.
+  factory LeadPageSubscription.fromJson(Map<String, dynamic> json) =>
+      LeadPageSubscription(
+        pageId: asString(json['pageId']) ?? '',
+        backfilled: asInt(json['backfilled']) ?? 0,
+      );
+
+  /// The Page's id.
+  final String pageId;
+
+  /// Recent leads stored on subscribing.
+  final int backfilled;
+
+  @override
+  String toString() => 'LeadPageSubscription($pageId, $backfilled)';
+}

@@ -2,6 +2,17 @@
 
 ## 0.3.0
 
+- Added: the ads campaign tree (`accountTree`; get, create, update, delete
+  and duplicate for campaigns, ad sets and network ads; `bulkSetStatus`),
+  creatives (`creatives`, `createCreative`, `creative`, `deleteCreative`),
+  audience management (`audience`, `updateAudience`, `deleteAudience`,
+  `addAudienceUsers`), `estimateReach`, date-range `insights` and
+  `adInsights`, and lead forms with the stored leads feed (`leadForm`,
+  `archiveLeadForm`, `leadsFeed`, `leadPages`, `subscribeLeadPage`,
+  `unsubscribeLeadPage`). Campaign, ad set and network ad writes and bulk
+  status need the `publish` scope on top of `ads`.
+- Added: `urlTags` on `ads.create`, a query string appended to every link in
+  the ad.
 - Added: `validate` resource (`post`, `length`, `media`) for standalone checks
   that store nothing. Needs the `posts` scope.
 - Added: `accountGroups` resource (`list`, `get`, `create`, `update`,
