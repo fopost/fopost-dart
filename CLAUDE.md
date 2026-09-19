@@ -111,13 +111,13 @@ Bump `version:` in `pubspec.yaml`, add a `CHANGELOG.md` entry, then tag
 `v<version>`. `.github/workflows/release.yml` runs analyze and tests and then
 `dart pub publish --force`.
 
-**No repository secret is needed.** Publishing uses pub.dev's OIDC automated
-publishing, which requires a one-time setup on pub.dev rather than in GitHub:
+**No repository secret is needed.** The package exists on pub.dev (0.2.0 at the
+time of writing) and releases go through the tag workflow. Publishing uses
+pub.dev's OIDC automated publishing, configured on pub.dev rather than in GitHub:
 
-1. Publish `0.1.0` manually once (`dart pub publish`) so the package exists.
-2. On <https://pub.dev/packages/fopost/admin>, enable **Automated publishing**
-   → *Publishing from GitHub Actions*.
-3. Set the repository to `fopost/fopost-dart` and the tag pattern to
+1. On <https://pub.dev/packages/fopost/admin>, **Automated publishing**
+   → *Publishing from GitHub Actions* is enabled.
+2. The repository is set to `fopost/fopost-dart` and the tag pattern to
    `v{{version}}`.
 
 The workflow's `permissions: id-token: write` is what lets `setup-dart`
