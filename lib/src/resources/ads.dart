@@ -58,10 +58,13 @@ class AdsResource {
     return rows.map(AdSource.fromJson).toList();
   }
 
-  /// Starts a Meta ads connection: returns the login URL the user finishes in
-  /// their own browser. [method] is `business` or `user`.
-  Future<String> authorizeMeta({
+  /// Starts an ad connection: returns the login URL the user finishes in their
+  /// own browser. [provider] names the ad network and defaults to `meta`;
+  /// [method] is the network's own login method, `business` or `user` on Meta.
+  /// A network that is not available on the deployment answers 503.
+  Future<String> authorize({
     required String workspaceId,
+    String provider = 'meta',
     String? method,
     String? returnTo,
   }) async {
@@ -70,10 +73,20 @@ class AdsResource {
       'method': method,
       'returnTo': returnTo,
     });
-    final result = await _http.object('POST', '/ads/connections/meta/authorize',
+    final result = await _http.object(
+        'POST', '/ads/connections/${segment(provider)}/authorize',
         body: body);
     return asString(result['url']) ?? '';
   }
+
+  /// Starts a Meta ads connection.
+  @Deprecated('Use authorize, which takes a provider')
+  Future<String> authorizeMeta({
+    required String workspaceId,
+    String? method,
+    String? returnTo,
+  }) =>
+      authorize(workspaceId: workspaceId, method: method, returnTo: returnTo);
 
   /// Removes a connection, and with it every ad record created through it.
   Future<void> deleteConnection(String id, {required String workspaceId}) =>

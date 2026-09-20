@@ -217,12 +217,16 @@ void main() {
     expect(sources.single.adAccounts.single.currency, 'USD');
     expect(sources.single.pages.single.instagramUserId, isNull);
 
-    final url = await client.ads.authorizeMeta(
-        workspaceId: 'ws_1', method: 'business', returnTo: '/ads');
+    final url = await client.ads
+        .authorize(workspaceId: 'ws_1', method: 'business', returnTo: '/ads');
     expect(seen.last.url.path, '/v1/ads/connections/meta/authorize');
     expect(jsonDecode(seen.last.body),
         {'workspaceId': 'ws_1', 'method': 'business', 'returnTo': '/ads'});
     expect(url, startsWith('https://www.facebook.com/'));
+
+    // The provider names the path, so a connection is not Meta-only.
+    await client.ads.authorize(workspaceId: 'ws_1', provider: 'pinterest');
+    expect(seen.last.url.path, '/v1/ads/connections/pinterest/authorize');
 
     await client.ads.deleteConnection('conn_1', workspaceId: 'ws_1');
     expect(seen.last.method, 'DELETE');

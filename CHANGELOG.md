@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added: `ads.authorize` takes a `provider`, so a connection can be started on
+  any ad network the API lists, not only Meta. `ads.authorizeMeta` still works
+  and is deprecated.
+
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
