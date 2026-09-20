@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added: `InboxItem.moderationStatus` carries the platform's own state for a
+  comment (`published`, `held`, `spam`, `rejected`), and
+  `InboxAccount.reconnectRequired` flags an account connected before the inbox
+  asked for a permission it needs.
 - Added: `broadcasts` — one message into every conversation the workspace
   already has with a segment of its contacts. `list`, `get`, `create`,
   `update`, `delete`, `send`, `cancel` and `recipients`. Reading needs the

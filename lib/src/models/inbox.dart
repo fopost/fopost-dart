@@ -237,6 +237,7 @@ class InboxItem {
     this.canSendMedia,
     this.canQuickReply,
     this.canPrivateReply,
+    this.moderationStatus,
     this.post,
     this.postContext,
     this.account,
@@ -279,6 +280,7 @@ class InboxItem {
         canSendMedia: asBool(json['canSendMedia']),
         canQuickReply: asBool(json['canQuickReply']),
         canPrivateReply: asBool(json['canPrivateReply']),
+        moderationStatus: asString(json['moderationStatus']),
         post: asMapOrNull(json['post']),
         postContext: _postContext(json['postContext']),
         account: _accountRef(json['account']),
@@ -389,6 +391,10 @@ class InboxItem {
 
   /// Whether a DM can be opened with `startConversation(commentId: ...)`.
   final bool? canPrivateReply;
+
+  /// The platform's own state for a comment: `published`, `held`, `spam` or
+  /// `rejected`. Null where the platform does not report one.
+  final String? moderationStatus;
 
   /// The FoPost post it sits under, when it was published through FoPost.
   final Map<String, dynamic>? post;
@@ -581,6 +587,7 @@ class InboxAccount {
     this.dmSupported,
     this.dmPendingReason,
     this.canStartConversation,
+    this.reconnectRequired,
   });
 
   /// Reads an account.
@@ -596,6 +603,7 @@ class InboxAccount {
         dmSupported: asBool(json['dmSupported']),
         dmPendingReason: asString(json['dmPendingReason']),
         canStartConversation: asBool(json['canStartConversation']),
+        reconnectRequired: asBool(json['reconnectRequired']),
       );
 
   /// The account's id.
@@ -630,6 +638,9 @@ class InboxAccount {
 
   /// Whether a new DM can be opened from it by handle.
   final bool? canStartConversation;
+
+  /// The grant predates a permission the inbox read needs; reconnect it once.
+  final bool? reconnectRequired;
 
   @override
   String toString() => 'InboxAccount($platform, $id)';
