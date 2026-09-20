@@ -14,6 +14,16 @@
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
   Needs the `accounts` scope.
+- Added: the Discord bot surface on `accounts` — `discordChannels`,
+  `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`,
+  `discordPins`, `deleteDiscordMessage`, `pinDiscordMessage`,
+  `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`,
+  `sendDiscordDirectMessage`, `discordEvents`, `getDiscordEvent`,
+  `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`,
+  `discordMembers`, `discordMember`, `discordRoles`, `createDiscordRole`,
+  `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole` and
+  `removeDiscordMemberRole`. Needs the `accounts` scope, plus `publish` for
+  anything that posts; a webhook connection answers `409 webhook_connection`.
 
 ## 0.3.0
 
