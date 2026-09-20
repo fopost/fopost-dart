@@ -3,6 +3,7 @@ import 'package:meta/meta.dart';
 import '../http.dart';
 import '../json.dart';
 import '../models/account.dart';
+import '../models/platform_extras.dart';
 import 'base.dart';
 
 /// Connected social accounts.
@@ -581,4 +582,247 @@ class AccountsResource {
 
   List<MetaGreetingText> _greeting(Map<String, dynamic> json) =>
       asModelList(json['greeting'], MetaGreetingText.fromJson);
+  // --- Per-network extras ---------------------------------------------
+
+  /// Returns the boards this Pinterest connection can pin to.
+  Future<List<PinterestBoard>> pinterestBoards(String id) async {
+    final rows =
+        await _http.objects('GET', '/accounts/${segment(id)}/pinterest/boards');
+    return rows.map(PinterestBoard.fromJson).toList();
+  }
+
+  /// Creates a board. [privacy] is PUBLIC, PROTECTED or SECRET.
+  Future<PinterestBoard> createPinterestBoard(
+    String id, {
+    required String name,
+    String? description,
+    String? privacy,
+  }) async {
+    final body = <String, dynamic>{'name': name};
+    if (description != null) body['description'] = description;
+    if (privacy != null) body['privacy'] = privacy;
+    return PinterestBoard.fromJson(
+      await _http.object('POST', '/accounts/${segment(id)}/pinterest/boards',
+          body: body),
+    );
+  }
+
+  /// Returns the channel's own playlists, with the stored default marked.
+  Future<List<YouTubePlaylist>> youtubePlaylists(String id) async {
+    final rows = await _http.objects(
+        'GET', '/accounts/${segment(id)}/youtube/playlists');
+    return rows.map(YouTubePlaylist.fromJson).toList();
+  }
+
+  /// Creates a playlist. [privacy] is public, unlisted or private.
+  Future<YouTubePlaylist> createYouTubePlaylist(
+    String id, {
+    required String title,
+    String? description,
+    String? privacy,
+  }) async {
+    final body = <String, dynamic>{'title': title};
+    if (description != null) body['description'] = description;
+    if (privacy != null) body['privacy'] = privacy;
+    return YouTubePlaylist.fromJson(
+      await _http.object('POST', '/accounts/${segment(id)}/youtube/playlists',
+          body: body),
+    );
+  }
+
+  /// Stores the playlist a new video joins when the post picks none. A null
+  /// [playlistId] clears it; the stored value comes back.
+  Future<String?> setDefaultYouTubePlaylist(
+      String id, String? playlistId) async {
+    final data = await _http.object(
+      'PUT',
+      '/accounts/${segment(id)}/youtube/playlists/default',
+      body: <String, dynamic>{'playlist_id': playlistId},
+    );
+    return asString(data['playlist_id']);
+  }
+
+  /// Returns the caption tracks on one of the channel's videos.
+  Future<List<YouTubeCaptionTrack>> youtubeCaptions(
+    String id,
+    String videoId,
+  ) async {
+    final rows = await _http.objects(
+      'GET',
+      '/accounts/${segment(id)}/youtube/videos/${segment(videoId)}/captions',
+    );
+    return rows.map(YouTubeCaptionTrack.fromJson).toList();
+  }
+
+  /// Uploads a caption track. [body] is the subtitle file itself; YouTube
+  /// reads SRT and WebVTT and works out which from the bytes.
+  Future<YouTubeCaptionTrack> uploadYouTubeCaptions(
+    String id,
+    String videoId, {
+    required String language,
+    required String body,
+    String? name,
+    bool? isDraft,
+  }) async {
+    final payload = <String, dynamic>{'language': language, 'body': body};
+    if (name != null) payload['name'] = name;
+    if (isDraft != null) payload['is_draft'] = isDraft;
+    return YouTubeCaptionTrack.fromJson(
+      await _http.object(
+        'POST',
+        '/accounts/${segment(id)}/youtube/videos/${segment(videoId)}/captions',
+        body: payload,
+      ),
+    );
+  }
+
+  /// Returns one caption track as text.
+  Future<YouTubeTranscript> youtubeTranscript(
+    String id,
+    String captionId,
+  ) async =>
+      YouTubeTranscript.fromJson(
+        await _http.object(
+          'GET',
+          '/accounts/${segment(id)}/youtube/captions/${segment(captionId)}',
+        ),
+      );
+
+  /// Returns what a post from this Bluesky connection is written in when the
+  /// post itself does not say.
+  Future<BlueskyLanguages> blueskyLanguages(String id) async =>
+      BlueskyLanguages.fromJson(
+        await _http.object('GET', '/accounts/${segment(id)}/bluesky/languages'),
+      );
+
+  /// Stores up to three BCP-47 tags. An empty list clears the default.
+  Future<BlueskyLanguages> setBlueskyLanguages(
+    String id,
+    List<String> languages,
+  ) async =>
+      BlueskyLanguages.fromJson(
+        await _http.object(
+          'PUT',
+          '/accounts/${segment(id)}/bluesky/languages',
+          body: <String, dynamic>{'languages': languages},
+        ),
+      );
+
+  /// Returns the switches TikTok enforces at publish time, which are changed
+  /// in the TikTok app.
+  Future<TikTokCreatorInfo> tiktokCreatorInfo(String id) async =>
+      TikTokCreatorInfo.fromJson(
+        await _http.object(
+          'GET',
+          '/accounts/${segment(id)}/tiktok/creator-info',
+        ),
+      );
+
+  /// Searches TikTok's Commercial Music Library.
+  ///
+  /// Needs the Marketing API product on the TikTok app; without it the call
+  /// throws rather than answering an empty list.
+  Future<List<TikTokMusic>> tiktokMusic(
+    String id, {
+    required String query,
+    int? limit,
+  }) async {
+    final rows = await _http.objects(
+      'GET',
+      '/accounts/${segment(id)}/tiktok/music',
+      query: <String, dynamic>{'q': query, 'limit': limit},
+    );
+    return rows.map(TikTokMusic.fromJson).toList();
+  }
+
+  /// Searches the places a post can be tagged with.
+  ///
+  /// Same TikTok product as the music library.
+  Future<List<TikTokPlace>> tiktokLocations(
+    String id, {
+    required String query,
+    int? limit,
+  }) async {
+    final rows = await _http.objects(
+      'GET',
+      '/accounts/${segment(id)}/tiktok/locations',
+      query: <String, dynamic>{'q': query, 'limit': limit},
+    );
+    return rows.map(TikTokPlace.fromJson).toList();
+  }
+
+  /// Resolves a share link to one of this account's own videos, for
+  /// repurposing.
+  Future<TikTokVideoSource> tiktokVideoLookup(String id, String url) async =>
+      TikTokVideoSource.fromJson(
+        await _http.object(
+          'POST',
+          '/accounts/${segment(id)}/tiktok/video-download',
+          body: <String, dynamic>{'url': url},
+        ),
+      );
+
+  /// Returns tracks a Reel can carry. With no [query] Instagram answers with
+  /// what is trending.
+  Future<List<InstagramAudio>> instagramAudio(
+    String id, {
+    String? query,
+    String? audioType,
+  }) async {
+    final rows = await _http.objects(
+      'GET',
+      '/accounts/${segment(id)}/instagram/audio',
+      query: <String, dynamic>{'q': query, 'audio_type': audioType},
+    );
+    return rows.map(InstagramAudio.fromJson).toList();
+  }
+
+  /// Returns how many posts are left before Instagram refuses the next one.
+  Future<InstagramPublishingLimit> instagramPublishingLimit(String id) async =>
+      InstagramPublishingLimit.fromJson(
+        await _http.object(
+          'GET',
+          '/accounts/${segment(id)}/instagram/publishing-limit',
+        ),
+      );
+
+  /// Returns stories still inside their 24 hours, posted through FoPost or
+  /// not. Asking for [insights] costs one extra call per story.
+  Future<List<InstagramStory>> instagramStories(
+    String id, {
+    bool insights = false,
+  }) async {
+    final rows = await _http.objects(
+      'GET',
+      '/accounts/${segment(id)}/instagram/stories',
+      query: insights ? <String, dynamic>{'insights': true} : null,
+    );
+    return rows.map(InstagramStory.fromJson).toList();
+  }
+
+  /// Returns the insight set for one story.
+  Future<InstagramStoryInsights> instagramStoryInsights(
+    String id,
+    String storyId,
+  ) async =>
+      InstagramStoryInsights.fromJson(
+        await _http.object(
+          'GET',
+          '/accounts/${segment(id)}/instagram/stories/${segment(storyId)}/insights',
+        ),
+      );
+
+  /// Returns organizations a LinkedIn post can mention. People are not
+  /// searchable: LinkedIn has no public person search.
+  Future<List<LinkedInMention>> linkedinMentions(
+    String id,
+    String query,
+  ) async {
+    final rows = await _http.objects(
+      'GET',
+      '/accounts/${segment(id)}/linkedin/mentions',
+      query: <String, dynamic>{'q': query},
+    );
+    return rows.map(LinkedInMention.fromJson).toList();
+  }
 }
