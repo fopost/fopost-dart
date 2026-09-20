@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added: `InboxItem.moderationStatus` carries the platform's own state for a
+  comment (`published`, `held`, `spam`, `rejected`), and
+  `InboxAccount.reconnectRequired` flags an account connected before the inbox
+  asked for a permission it needs.
+
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
