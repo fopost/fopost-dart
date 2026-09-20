@@ -9,6 +9,7 @@ import 'resources/analytics.dart';
 import 'resources/automations.dart';
 import 'resources/communities.dart';
 import 'resources/inbox.dart';
+import 'resources/knowledge.dart';
 import 'resources/labels.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
@@ -89,6 +90,7 @@ class FoPost {
     automations = AutomationsResource(_http);
     media = MediaResource(_http);
     inbox = InboxResource(_http);
+    knowledge = KnowledgeResource(_http);
     ads = AdsResource(_http);
     validate = ValidateResource(_http);
   }
@@ -130,6 +132,9 @@ class FoPost {
 
   /// Comments, mentions and direct messages on connected accounts.
   late final InboxResource inbox;
+
+  /// The workspace knowledge base, which grounds drafted replies.
+  late final KnowledgeResource knowledge;
 
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
