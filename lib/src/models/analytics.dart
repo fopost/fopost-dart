@@ -939,3 +939,660 @@ class CollectSummary {
   @override
   String toString() => 'CollectSummary($accounts accounts, $errors errors)';
 }
+
+// ─── Deeper analytics ────────────────────────────────────────────
+
+/// One age band of the content decay report.
+class DecayBand {
+  /// Creates an age band.
+  const DecayBand({
+    this.bucket = '',
+    this.label = '',
+    this.posts = 0,
+    this.avgEngagements = 0,
+    this.avgImpressions = 0,
+    this.shareOfFinal,
+  });
+
+  /// Reads an age band.
+  factory DecayBand.fromJson(Map<String, dynamic> json) => DecayBand(
+        bucket: asString(json['bucket']) ?? '',
+        label: asString(json['label']) ?? '',
+        posts: asInt(json['posts']) ?? 0,
+        avgEngagements: asDouble(json['avgEngagements']) ?? 0,
+        avgImpressions: asDouble(json['avgImpressions']) ?? 0,
+        shareOfFinal: asDouble(json['shareOfFinal']),
+      );
+
+  /// Which band this is, e.g. `under_1h`.
+  final String bucket;
+
+  /// The band's human label.
+  final String label;
+
+  /// Posts with at least one reading in this band.
+  final int posts;
+
+  /// Mean engagement the average post had reached by this age.
+  final double avgEngagements;
+
+  /// Mean impressions the average post had reached by this age.
+  final double avgImpressions;
+
+  /// Mean share of the post's final engagement reached by this age, 0-1.
+  ///
+  /// Null when nothing in the band had earned anything yet.
+  final double? shareOfFinal;
+
+  @override
+  String toString() => 'DecayBand($bucket, $posts posts)';
+}
+
+/// How engagement accumulates as a post ages.
+class ContentDecay {
+  /// Creates a decay report.
+  const ContentDecay({
+    this.days = 0,
+    this.postsMeasured = 0,
+    this.halfLifeBucket,
+    this.bands = const [],
+  });
+
+  /// Reads a decay report.
+  factory ContentDecay.fromJson(Map<String, dynamic> json) => ContentDecay(
+        days: asInt(json['days']) ?? 0,
+        postsMeasured: asInt(json['postsMeasured']) ?? 0,
+        halfLifeBucket: asString(json['halfLifeBucket']),
+        bands: asModelList(json['bands'], DecayBand.fromJson),
+      );
+
+  /// The window, in days, that posts were selected from.
+  final int days;
+
+  /// Posts with a publish time and at least one later reading.
+  final int postsMeasured;
+
+  /// First band where the average post had passed half its final engagement.
+  final String? halfLifeBucket;
+
+  /// One entry per age band, oldest band last.
+  final List<DecayBand> bands;
+
+  @override
+  String toString() => 'ContentDecay($postsMeasured posts, $halfLifeBucket)';
+}
+
+/// One week of posting. [weekStart] is the Monday, UTC, as `YYYY-MM-DD`.
+class FrequencyWeek {
+  /// Creates a week.
+  const FrequencyWeek({
+    this.weekStart = '',
+    this.posts = 0,
+    this.engagements = 0,
+    this.avgEngagementsPerPost = 0,
+  });
+
+  /// Reads a week.
+  factory FrequencyWeek.fromJson(Map<String, dynamic> json) => FrequencyWeek(
+        weekStart: asString(json['weekStart']) ?? '',
+        posts: asInt(json['posts']) ?? 0,
+        engagements: asInt(json['engagements']) ?? 0,
+        avgEngagementsPerPost: asDouble(json['avgEngagementsPerPost']) ?? 0,
+      );
+
+  /// The Monday of the week, UTC.
+  final String weekStart;
+
+  /// How many posts went out that week.
+  final int posts;
+
+  /// Engagement those posts earned.
+  final int engagements;
+
+  /// Engagement per post that week.
+  final double avgEngagementsPerPost;
+
+  @override
+  String toString() => 'FrequencyWeek($weekStart, $posts posts)';
+}
+
+/// The weeks that shared a cadence, folded together.
+class FrequencyBand {
+  /// Creates a cadence band.
+  const FrequencyBand({
+    this.band = '',
+    this.label = '',
+    this.weeks = 0,
+    this.posts = 0,
+    this.avgPostsPerWeek = 0,
+    this.avgEngagementsPerPost = 0,
+    this.engagementRate,
+  });
+
+  /// Reads a cadence band.
+  factory FrequencyBand.fromJson(Map<String, dynamic> json) => FrequencyBand(
+        band: asString(json['band']) ?? '',
+        label: asString(json['label']) ?? '',
+        weeks: asInt(json['weeks']) ?? 0,
+        posts: asInt(json['posts']) ?? 0,
+        avgPostsPerWeek: asDouble(json['avgPostsPerWeek']) ?? 0,
+        avgEngagementsPerPost: asDouble(json['avgEngagementsPerPost']) ?? 0,
+        engagementRate: asDouble(json['engagementRate']),
+      );
+
+  /// Which band this is, e.g. `under_3`.
+  final String band;
+
+  /// The band's human label.
+  final String label;
+
+  /// How many weeks fell into it.
+  final int weeks;
+
+  /// How many posts those weeks held.
+  final int posts;
+
+  /// Mean posts per week in the band.
+  final double avgPostsPerWeek;
+
+  /// Engagement the average post in the band earned.
+  final double avgEngagementsPerPost;
+
+  /// Engagements over reach, impressions as the stand-in; null with neither.
+  final double? engagementRate;
+
+  @override
+  String toString() => 'FrequencyBand($band, $posts posts)';
+}
+
+/// Weekly cadence set against what each cadence earned per post.
+class PostingFrequency {
+  /// Creates a cadence report.
+  const PostingFrequency({
+    this.days = 0,
+    this.weeks = const [],
+    this.bands = const [],
+    this.best,
+  });
+
+  /// Reads a cadence report.
+  factory PostingFrequency.fromJson(Map<String, dynamic> json) =>
+      PostingFrequency(
+        days: asInt(json['days']) ?? 0,
+        weeks: asModelList(json['weeks'], FrequencyWeek.fromJson),
+        bands: asModelList(json['bands'], FrequencyBand.fromJson),
+        best: json['best'] is Map
+            ? FrequencyBand.fromJson(asMap(json['best']))
+            : null,
+      );
+
+  /// The window, in days.
+  final int days;
+
+  /// Every week that held a post, oldest first.
+  final List<FrequencyWeek> weeks;
+
+  /// The cadence bands those weeks fell into.
+  final List<FrequencyBand> bands;
+
+  /// The cadence that earned the most per post; null without posts.
+  final FrequencyBand? best;
+
+  @override
+  String toString() => 'PostingFrequency(${weeks.length} weeks, ${best?.band})';
+}
+
+/// What moved between one reading and the one before it.
+class TimelineDelta {
+  /// Creates a delta.
+  const TimelineDelta({
+    this.impressions = 0,
+    this.reach = 0,
+    this.engagements = 0,
+    this.likes = 0,
+    this.comments = 0,
+    this.shares = 0,
+  });
+
+  /// Reads a delta.
+  factory TimelineDelta.fromJson(Map<String, dynamic> json) => TimelineDelta(
+        impressions: asInt(json['impressions']) ?? 0,
+        reach: asInt(json['reach']) ?? 0,
+        engagements: asInt(json['engagements']) ?? 0,
+        likes: asInt(json['likes']) ?? 0,
+        comments: asInt(json['comments']) ?? 0,
+        shares: asInt(json['shares']) ?? 0,
+      );
+
+  /// Impressions since the previous reading.
+  final int impressions;
+
+  /// Reach since the previous reading.
+  final int reach;
+
+  /// Engagement since the previous reading.
+  final int engagements;
+
+  /// Likes since the previous reading.
+  final int likes;
+
+  /// Comments since the previous reading.
+  final int comments;
+
+  /// Shares since the previous reading.
+  final int shares;
+
+  @override
+  String toString() => 'TimelineDelta(+$engagements)';
+}
+
+/// One reading of a post.
+class TimelinePoint {
+  /// Creates a reading.
+  const TimelinePoint({
+    this.at,
+    this.ageMinutes,
+    this.impressions,
+    this.reach,
+    this.engagements,
+    this.likes,
+    this.comments,
+    this.shares,
+    this.videoViews,
+    this.delta = const TimelineDelta(),
+  });
+
+  /// Reads a reading.
+  factory TimelinePoint.fromJson(Map<String, dynamic> json) => TimelinePoint(
+        at: asDate(json['at']),
+        ageMinutes: asInt(json['ageMinutes']),
+        impressions: asInt(json['impressions']),
+        reach: asInt(json['reach']),
+        engagements: asInt(json['engagements']),
+        likes: asInt(json['likes']),
+        comments: asInt(json['comments']),
+        shares: asInt(json['shares']),
+        videoViews: asInt(json['videoViews']),
+        delta: TimelineDelta.fromJson(asMap(json['delta'])),
+      );
+
+  /// When the reading was taken.
+  final DateTime? at;
+
+  /// Minutes since publication; null when the network never said when.
+  final int? ageMinutes;
+
+  /// Impressions at this reading.
+  final int? impressions;
+
+  /// Reach at this reading.
+  final int? reach;
+
+  /// Engagement at this reading.
+  final int? engagements;
+
+  /// Likes at this reading.
+  final int? likes;
+
+  /// Comments at this reading.
+  final int? comments;
+
+  /// Shares at this reading.
+  final int? shares;
+
+  /// Video views at this reading.
+  final int? videoViews;
+
+  /// What moved since the previous reading.
+  final TimelineDelta delta;
+
+  @override
+  String toString() => 'TimelinePoint(${ageMinutes}m, $engagements)';
+}
+
+/// One delivery's readings: the same post on two networks decays differently.
+class TimelineDelivery {
+  /// Creates a delivery timeline.
+  const TimelineDelivery({
+    this.accountId = '',
+    this.platform = '',
+    this.username = '',
+    this.externalPostId = '',
+    this.postedAt,
+    this.points = const [],
+  });
+
+  /// Reads a delivery timeline.
+  factory TimelineDelivery.fromJson(Map<String, dynamic> json) =>
+      TimelineDelivery(
+        accountId: asString(json['accountId']) ?? '',
+        platform: asString(json['platform']) ?? '',
+        username: asString(json['username']) ?? '',
+        externalPostId: asString(json['externalPostId']) ?? '',
+        postedAt: asDate(json['postedAt']),
+        points: asModelList(json['points'], TimelinePoint.fromJson),
+      );
+
+  /// The account this delivery went to.
+  final String accountId;
+
+  /// The network it went to.
+  final String platform;
+
+  /// The account's handle.
+  final String username;
+
+  /// The network's own id for the post.
+  final String externalPostId;
+
+  /// When the post went out.
+  final DateTime? postedAt;
+
+  /// Every reading, oldest first.
+  final List<TimelinePoint> points;
+
+  @override
+  String toString() => 'TimelineDelivery($platform, ${points.length} readings)';
+}
+
+/// Every reading held for one post, one timeline per delivery.
+class PostTimeline {
+  /// Creates a post timeline.
+  const PostTimeline({this.postId, this.deliveries = const []});
+
+  /// Reads a post timeline.
+  factory PostTimeline.fromJson(Map<String, dynamic> json) => PostTimeline(
+        postId: asString(json['postId']),
+        deliveries: asModelList(json['deliveries'], TimelineDelivery.fromJson),
+      );
+
+  /// Null when the post was made natively on the network.
+  final String? postId;
+
+  /// One timeline per delivery.
+  final List<TimelineDelivery> deliveries;
+
+  @override
+  String toString() => 'PostTimeline(${deliveries.length} deliveries)';
+}
+
+/// One reading, as the changes feed reports it.
+class MetricChange {
+  /// Creates a change.
+  const MetricChange({
+    this.accountId = '',
+    this.platform = '',
+    this.externalPostId = '',
+    this.postId,
+    this.postedAt,
+    this.fetchedAt,
+    this.impressions,
+    this.reach,
+    this.engagements,
+    this.likes,
+    this.comments,
+    this.shares,
+  });
+
+  /// Reads a change.
+  factory MetricChange.fromJson(Map<String, dynamic> json) => MetricChange(
+        accountId: asString(json['accountId']) ?? '',
+        platform: asString(json['platform']) ?? '',
+        externalPostId: asString(json['externalPostId']) ?? '',
+        postId: asString(json['postId']),
+        postedAt: asDate(json['postedAt']),
+        fetchedAt: asDate(json['fetchedAt']),
+        impressions: asInt(json['impressions']),
+        reach: asInt(json['reach']),
+        engagements: asInt(json['engagements']),
+        likes: asInt(json['likes']),
+        comments: asInt(json['comments']),
+        shares: asInt(json['shares']),
+      );
+
+  /// The account the reading belongs to.
+  final String accountId;
+
+  /// The network it came from.
+  final String platform;
+
+  /// The network's own id for the post.
+  final String externalPostId;
+
+  /// Null for a post made natively on the network.
+  final String? postId;
+
+  /// When the post went out.
+  final DateTime? postedAt;
+
+  /// When the reading was taken.
+  final DateTime? fetchedAt;
+
+  /// Impressions at this reading.
+  final int? impressions;
+
+  /// Reach at this reading.
+  final int? reach;
+
+  /// Engagement at this reading.
+  final int? engagements;
+
+  /// Likes at this reading.
+  final int? likes;
+
+  /// Comments at this reading.
+  final int? comments;
+
+  /// Shares at this reading.
+  final int? shares;
+
+  @override
+  String toString() => 'MetricChange($externalPostId, $engagements)';
+}
+
+/// One page of readings. Feed [cursor] back as the next `since`.
+class MetricChangePage {
+  /// Creates a page of readings.
+  const MetricChangePage({
+    this.since,
+    this.cursor,
+    this.hasMore = false,
+    this.changes = const [],
+  });
+
+  /// Reads a page of readings.
+  factory MetricChangePage.fromJson(Map<String, dynamic> json) =>
+      MetricChangePage(
+        since: asDate(json['since']),
+        cursor: asDate(json['cursor']),
+        hasMore: json['hasMore'] == true,
+        changes: asModelList(json['changes'], MetricChange.fromJson),
+      );
+
+  /// The instant the page started from.
+  final DateTime? since;
+
+  /// Feed back as the next `since`; null when nothing changed.
+  final DateTime? cursor;
+
+  /// Whether another page follows.
+  final bool hasMore;
+
+  /// The readings, oldest first.
+  final List<MetricChange> changes;
+
+  @override
+  String toString() => 'MetricChangePage(${changes.length}, more: $hasMore)';
+}
+
+/// What the on-demand refresh did for one delivery.
+class CollectPostDelivery {
+  /// Creates a refresh outcome.
+  const CollectPostDelivery({
+    this.accountId = '',
+    this.platform = '',
+    this.externalPostId = '',
+    this.collected = false,
+    this.fetchedAt,
+    this.message,
+  });
+
+  /// Reads a refresh outcome.
+  factory CollectPostDelivery.fromJson(Map<String, dynamic> json) =>
+      CollectPostDelivery(
+        accountId: asString(json['accountId']) ?? '',
+        platform: asString(json['platform']) ?? '',
+        externalPostId: asString(json['externalPostId']) ?? '',
+        collected: json['collected'] == true,
+        fetchedAt: asDate(json['fetchedAt']),
+        message: asString(json['message']),
+      );
+
+  /// The account this delivery went to.
+  final String accountId;
+
+  /// The network it went to.
+  final String platform;
+
+  /// The network's own id for the post.
+  final String externalPostId;
+
+  /// Whether a fresh reading was stored.
+  final bool collected;
+
+  /// When the fresh reading was taken.
+  final DateTime? fetchedAt;
+
+  /// Why the refresh did not happen.
+  final String? message;
+
+  @override
+  String toString() => 'CollectPostDelivery($platform, $collected)';
+}
+
+/// What one post's refresh managed.
+class CollectPostResult {
+  /// Creates a refresh result.
+  const CollectPostResult({this.collected = 0, this.deliveries = const []});
+
+  /// Reads a refresh result.
+  factory CollectPostResult.fromJson(Map<String, dynamic> json) =>
+      CollectPostResult(
+        collected: asInt(json['collected']) ?? 0,
+        deliveries:
+            asModelList(json['deliveries'], CollectPostDelivery.fromJson),
+      );
+
+  /// How many deliveries were refreshed.
+  final int collected;
+
+  /// What happened per delivery.
+  final List<CollectPostDelivery> deliveries;
+
+  @override
+  String toString() => 'CollectPostResult($collected refreshed)';
+}
+
+/// The freshest reading held for a post made outside FoPost.
+class NativePostMetrics {
+  /// Creates a metrics block.
+  const NativePostMetrics({
+    this.impressions,
+    this.reach,
+    this.engagements,
+    this.likes,
+    this.comments,
+    this.shares,
+    this.videoViews,
+  });
+
+  /// Reads a metrics block.
+  factory NativePostMetrics.fromJson(Map<String, dynamic> json) =>
+      NativePostMetrics(
+        impressions: asInt(json['impressions']),
+        reach: asInt(json['reach']),
+        engagements: asInt(json['engagements']),
+        likes: asInt(json['likes']),
+        comments: asInt(json['comments']),
+        shares: asInt(json['shares']),
+        videoViews: asInt(json['videoViews']),
+      );
+
+  /// Impressions.
+  final int? impressions;
+
+  /// Reach.
+  final int? reach;
+
+  /// Engagement.
+  final int? engagements;
+
+  /// Likes.
+  final int? likes;
+
+  /// Comments.
+  final int? comments;
+
+  /// Shares.
+  final int? shares;
+
+  /// Video views.
+  final int? videoViews;
+
+  @override
+  String toString() => 'NativePostMetrics($engagements)';
+}
+
+/// A post on the account that never went out through FoPost.
+class NativePost {
+  /// Creates a native post.
+  const NativePost({
+    this.externalPostId = '',
+    this.text,
+    this.permalink,
+    this.thumbnailUrl,
+    this.mediaType,
+    this.postedAt,
+    this.fetchedAt,
+    this.metrics = const NativePostMetrics(),
+  });
+
+  /// Reads a native post.
+  factory NativePost.fromJson(Map<String, dynamic> json) => NativePost(
+        externalPostId: asString(json['externalPostId']) ?? '',
+        text: asString(json['text']),
+        permalink: asString(json['permalink']),
+        thumbnailUrl: asString(json['thumbnailUrl']),
+        mediaType: asString(json['mediaType']),
+        postedAt: asDate(json['postedAt']),
+        fetchedAt: asDate(json['fetchedAt']),
+        metrics: NativePostMetrics.fromJson(asMap(json['metrics'])),
+      );
+
+  /// The network's own id for the post.
+  final String externalPostId;
+
+  /// The post's text, as the network reported it.
+  final String? text;
+
+  /// Where the post lives on the network.
+  final String? permalink;
+
+  /// A thumbnail, when the network gives one.
+  final String? thumbnailUrl;
+
+  /// What kind of media the post carries.
+  final String? mediaType;
+
+  /// When the post went out.
+  final DateTime? postedAt;
+
+  /// When the reading was taken.
+  final DateTime? fetchedAt;
+
+  /// The freshest reading held for it.
+  final NativePostMetrics metrics;
+
+  @override
+  String toString() => 'NativePost($externalPostId)';
+}

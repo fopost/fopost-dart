@@ -194,6 +194,43 @@ Everything else, including a 400 or a 404, throws on the first response, because
 the request itself is what needs changing. Backoff between attempts is
 exponential: 500ms, then 1s, capped at 60s.
 
+## Analytics
+
+```dart
+// How long a post keeps earning, from the repeated readings of each post
+final decay = await client.analytics.decay(days: 30);
+print(decay.halfLifeBucket); // e.g. "1h_3h"
+
+// Whether posting more earned more
+final cadence = await client.analytics.frequency(days: 90);
+print(cadence.best?.label); // e.g. "3-5 a week"
+
+// Every reading held for one post, with what moved between them
+final timeline = await client.analytics.timeline(post.id);
+
+// Mirror the metrics into your own store, without refetching everything
+String? cursor;
+while (true) {
+  final page = await client.analytics.changes(since: cursor);
+  save(page.changes);
+  if (!page.hasMore || page.cursor == null) break;
+  cursor = page.cursor!.toIso8601String();
+}
+
+// Refresh one post now instead of waiting for the next collection run
+await client.analytics.collectPost(post.id);
+
+// Posts on the account that never went out through FoPost
+final native = await client.analytics.nativePosts(accounts.first.id);
+```
+
+A post is addressed by its FoPost id or by its permalink, so a post made by
+hand on the network works the same way:
+
+```dart
+await client.analytics.timeline('https://x.com/acme/status/1');
+```
+
 ## Errors
 
 Every non-2xx response throws a subclass of `FoPostException`, carrying the
@@ -236,7 +273,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `communities` | `list`, `sync`, `search`, `add`, `remove`                                                                                                                                                                 |
 | `labels`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                               |
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
-| `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`                                                                                                   |
+| `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`                        |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                                                                                |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping` |
