@@ -91,6 +91,21 @@ class AccountsResource {
         query: {if (refresh) 'refresh': 'true'},
       ));
 
+  /// Returns the numbers only this account's network reports, in its own
+  /// vocabulary: ad-break earnings, story taps, a retention curve, the search
+  /// terms behind a listing. Keyed by the platform's own metric names, read from
+  /// the newest collected snapshot rather than fetched live. Needs the
+  /// `analytics` scope.
+  ///
+  /// A network whose metric access has not been granted yet answers `503`
+  /// (`platform_metrics_unavailable`) rather than an empty set.
+  Future<AccountPlatformMetrics> platformMetrics(String id) async =>
+      AccountPlatformMetrics.fromJson(await _http.object(
+        'GET',
+        '/accounts/${segment(id)}/insights',
+        query: {'raw': 'true'},
+      ));
+
   /// Returns the health of every account, optionally narrowed to one workspace.
   Future<AccountHealthSummary> healthSummary({String? workspaceId}) async =>
       AccountHealthSummary.fromJson(await _http.object(

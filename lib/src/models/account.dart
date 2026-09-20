@@ -1193,3 +1193,107 @@ class DiscordAck {
   @override
   String toString() => 'DiscordAck($deleted, $pinned, $assigned)';
 }
+
+/// One metric a network reports under its own name.
+///
+/// [key] is the platform's own name and is stable; [label] is ours and may be
+/// reworded, so match on the key. [value] is a number for every [kind] but
+/// `series`, which is a list of points.
+class PlatformMetricRow {
+  /// Creates a metric row.
+  const PlatformMetricRow({
+    required this.key,
+    required this.label,
+    required this.kind,
+    this.value,
+  });
+
+  /// Reads a metric row.
+  factory PlatformMetricRow.fromJson(Map<String, dynamic> json) =>
+      PlatformMetricRow(
+        key: asString(json['key']) ?? '',
+        label: asString(json['label']) ?? '',
+        kind: asString(json['kind']) ?? 'count',
+        value: json['value'],
+      );
+
+  /// The platform's own metric name.
+  final String key;
+
+  /// The name this SDK gives the metric.
+  final String label;
+
+  /// One of `count`, `duration_ms`, `currency_usd`, `ratio`, `series`.
+  final String kind;
+
+  /// The raw value, as the network reported it.
+  final Object? value;
+
+  /// The value as a number, or null for a series or a non-numeric answer.
+  double? get number => value is num ? (value! as num).toDouble() : null;
+
+  @override
+  String toString() => 'PlatformMetricRow($key)';
+}
+
+/// One side of a per-network metric set: the account itself, or its newest
+/// measured post. [externalPostId] is null on the account side.
+class PlatformMetricsBlock {
+  /// Creates a metric block.
+  const PlatformMetricsBlock({
+    this.fetchedAt,
+    this.externalPostId,
+    this.metrics = const <PlatformMetricRow>[],
+  });
+
+  /// Reads a metric block.
+  factory PlatformMetricsBlock.fromJson(Map<String, dynamic> json) =>
+      PlatformMetricsBlock(
+        fetchedAt: asString(json['fetched_at']),
+        externalPostId: asString(json['external_post_id']),
+        metrics: asModelList(json['metrics'], PlatformMetricRow.fromJson),
+      );
+
+  /// When the numbers were collected.
+  final String? fetchedAt;
+
+  /// The post the metrics describe, on the post side.
+  final String? externalPostId;
+
+  /// The metrics themselves, in the order the API reports them.
+  final List<PlatformMetricRow> metrics;
+
+  @override
+  String toString() => 'PlatformMetricsBlock(${metrics.length})';
+}
+
+/// What only this network reports, in its own vocabulary: ad-break earnings,
+/// story taps, a retention curve, the search terms behind a listing.
+class AccountPlatformMetrics {
+  /// Creates a metric set.
+  const AccountPlatformMetrics({
+    required this.platform,
+    required this.account,
+    required this.post,
+  });
+
+  /// Reads a metric set.
+  factory AccountPlatformMetrics.fromJson(Map<String, dynamic> json) =>
+      AccountPlatformMetrics(
+        platform: asString(json['platform']) ?? '',
+        account: PlatformMetricsBlock.fromJson(asMap(json['account'])),
+        post: PlatformMetricsBlock.fromJson(asMap(json['post'])),
+      );
+
+  /// The network the metrics belong to.
+  final String platform;
+
+  /// Account-level metrics from the newest snapshot.
+  final PlatformMetricsBlock account;
+
+  /// The newest measured post, for what only this network reports per post.
+  final PlatformMetricsBlock post;
+
+  @override
+  String toString() => 'AccountPlatformMetrics($platform)';
+}
