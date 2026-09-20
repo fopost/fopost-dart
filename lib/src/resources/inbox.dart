@@ -6,7 +6,8 @@ import '../models/common.dart';
 import '../models/inbox.dart';
 import 'base.dart';
 
-/// The inbox: comments, mentions and direct messages on connected accounts.
+/// The inbox: comments, mentions, reviews and direct messages on connected
+/// accounts.
 ///
 /// Every call needs the `inbox` scope. Reach it as `client.inbox`.
 class InboxResource {
@@ -52,7 +53,8 @@ class InboxResource {
       });
 
   /// Returns one row per post with comments; pass `kind: 'mentions'` for the
-  /// posts the account was tagged in instead.
+  /// posts the account was tagged in, or `kind: 'reviews'` for one row per
+  /// review left on the business.
   Future<Page<InboxThread>> threads({
     String? workspaceId,
     String? kind,
