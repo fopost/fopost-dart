@@ -656,3 +656,175 @@ class SlackIdentity {
   @override
   String toString() => 'SlackIdentity($username)';
 }
+
+/// A tappable prompt Messenger or Instagram shows before the first message.
+class MetaIceBreaker {
+  /// Creates an ice breaker.
+  const MetaIceBreaker({required this.question, required this.payload});
+
+  /// Reads an ice breaker.
+  factory MetaIceBreaker.fromJson(Map<String, dynamic> json) => MetaIceBreaker(
+        question: asString(json['question']) ?? '',
+        payload: asString(json['payload']) ?? '',
+      );
+
+  /// The prompt, up to 80 characters.
+  final String question;
+
+  /// What your webhook receives when the prompt is tapped.
+  final String payload;
+
+  /// The body the API takes.
+  Map<String, dynamic> toJson() => {'question': question, 'payload': payload};
+
+  @override
+  String toString() => 'MetaIceBreaker($question)';
+}
+
+/// A persistent-menu item: a `postback` carrying [payload], or a `web_url`
+/// carrying an http(s) [url]. The unused one stays null and is not sent.
+class MetaMenuItem {
+  /// Creates a menu item.
+  const MetaMenuItem({
+    required this.type,
+    required this.title,
+    this.payload,
+    this.url,
+  });
+
+  /// An item that sends [payload] to your webhook when tapped.
+  const MetaMenuItem.postback(
+      {required this.title, required String this.payload})
+      : type = 'postback',
+        url = null;
+
+  /// An item that opens [url].
+  const MetaMenuItem.link({required this.title, required String this.url})
+      : type = 'web_url',
+        payload = null;
+
+  /// Reads a menu item.
+  factory MetaMenuItem.fromJson(Map<String, dynamic> json) => MetaMenuItem(
+        type: asString(json['type']) ?? '',
+        title: asString(json['title']) ?? '',
+        payload: asString(json['payload']),
+        url: asString(json['url']),
+      );
+
+  /// `postback` or `web_url`.
+  final String type;
+
+  /// The label, up to 30 characters.
+  final String title;
+
+  /// Set on a postback item.
+  final String? payload;
+
+  /// Set on a web_url item.
+  final String? url;
+
+  /// The body the API takes.
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'title': title,
+        if (payload != null) 'payload': payload,
+        if (url != null) 'url': url,
+      };
+
+  @override
+  String toString() => 'MetaMenuItem($type, $title)';
+}
+
+/// One locale's menu; `default` is the fallback every language uses.
+class MetaPersistentMenuEntry {
+  /// Creates a menu entry.
+  const MetaPersistentMenuEntry({
+    required this.callToActions,
+    this.locale = 'default',
+    this.composerInputDisabled,
+  });
+
+  /// Reads a menu entry.
+  factory MetaPersistentMenuEntry.fromJson(Map<String, dynamic> json) =>
+      MetaPersistentMenuEntry(
+        locale: asString(json['locale']) ?? 'default',
+        callToActions:
+            asModelList(json['call_to_actions'], MetaMenuItem.fromJson),
+        composerInputDisabled: asBool(json['composer_input_disabled']),
+      );
+
+  /// The locale this menu applies to.
+  final String locale;
+
+  /// Up to three items.
+  final List<MetaMenuItem> callToActions;
+
+  /// Whether typing is disabled while the menu is shown.
+  final bool? composerInputDisabled;
+
+  /// The body the API takes.
+  Map<String, dynamic> toJson() => {
+        'locale': locale,
+        'call_to_actions': callToActions.map((i) => i.toJson()).toList(),
+        if (composerInputDisabled != null)
+          'composer_input_disabled': composerInputDisabled,
+      };
+
+  @override
+  String toString() => 'MetaPersistentMenuEntry($locale)';
+}
+
+/// One locale's greeting, up to 160 characters.
+class MetaGreetingText {
+  /// Creates a greeting.
+  const MetaGreetingText({required this.text, this.locale = 'default'});
+
+  /// Reads a greeting.
+  factory MetaGreetingText.fromJson(Map<String, dynamic> json) =>
+      MetaGreetingText(
+        locale: asString(json['locale']) ?? 'default',
+        text: asString(json['text']) ?? '',
+      );
+
+  /// The locale this greeting applies to.
+  final String locale;
+
+  /// The greeting, up to 160 characters.
+  final String text;
+
+  /// The body the API takes.
+  Map<String, dynamic> toJson() => {'locale': locale, 'text': text};
+
+  @override
+  String toString() => 'MetaGreetingText($locale)';
+}
+
+/// What the network delivers to the FoPost webhook for one account.
+class WebhookSubscription {
+  /// Creates a subscription report.
+  const WebhookSubscription({
+    required this.subscribed,
+    required this.fields,
+    required this.missingFields,
+  });
+
+  /// Reads a subscription report.
+  factory WebhookSubscription.fromJson(Map<String, dynamic> json) =>
+      WebhookSubscription(
+        subscribed: asBool(json['subscribed']) ?? false,
+        fields: asStringList(json['fields']),
+        missingFields: asStringList(json['missing_fields']),
+      );
+
+  /// False when the subscription lapsed or a required field is missing.
+  final bool subscribed;
+
+  /// The fields the network reports as subscribed.
+  final List<String> fields;
+
+  /// Required fields the network is not delivering.
+  final List<String> missingFields;
+
+  @override
+  String toString() => 'WebhookSubscription($subscribed)';
+}

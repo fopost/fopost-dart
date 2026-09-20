@@ -841,3 +841,24 @@ InboxPostContext? _postContext(Object? value) =>
 
 InboxAccountRef? _accountRef(Object? value) =>
     value is Map ? InboxAccountRef.fromJson(asMap(value)) : null;
+
+/// The outcome of a Messenger thread hand-over.
+class InboxHandover {
+  /// Creates a hand-over result.
+  const InboxHandover({required this.control, this.appId});
+
+  /// Reads a hand-over result.
+  factory InboxHandover.fromJson(Map<String, dynamic> json) => InboxHandover(
+        appId: asString(json['app_id']),
+        control: asString(json['control']) ?? '',
+      );
+
+  /// The app control went to, or null when it was taken back.
+  final String? appId;
+
+  /// `passed` or `taken`.
+  final String control;
+
+  @override
+  String toString() => 'InboxHandover($control)';
+}
