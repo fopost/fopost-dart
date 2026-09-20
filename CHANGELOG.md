@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added: Meta messaging settings on `accounts`: `iceBreakers`, `setIceBreakers` and
+  `deleteIceBreakers` (Facebook Pages and Instagram), plus `persistentMenu`,
+  `setPersistentMenu`, `deletePersistentMenu`, `greeting`, `setGreeting` and
+  `deleteGreeting` (Facebook Pages). A network without a field answers 400.
+- Added: `accounts.webhookSubscription` reports whether the network is still delivering
+  events for an account, and `resubscribeWebhook` puts a lapsed subscription back.
+- Added: `inbox.handover` passes a Messenger thread to another Meta app, or takes it back
+  when no `appId` is given (`inbox` scope, plus `publish`).
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
