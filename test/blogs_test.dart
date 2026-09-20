@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:fopost/fopost.dart';
 import 'package:test/test.dart';
 
 import 'support.dart';
