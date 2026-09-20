@@ -43,6 +43,8 @@
   `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole` and
   `removeDiscordMemberRole`. Needs the `accounts` scope, plus `publish` for
   anything that posts; a webhook connection answers `409 webhook_connection`.
+- Added: `DiscordChannel.canPost` — false when a channel permission in Discord shuts
+  the bot out. `switchDiscordChannel` answers `409 channel_not_writable` for one.
 
 ## 0.3.0
 

@@ -840,6 +840,7 @@ class DiscordChannel {
     this.type = 0,
     this.parentId,
     this.nsfw = false,
+    this.canPost = true,
     this.isCurrent = false,
   });
 
@@ -850,6 +851,7 @@ class DiscordChannel {
         type: asInt(json['type']) ?? 0,
         parentId: asString(json['parent_id']),
         nsfw: asBool(json['nsfw']) ?? false,
+        canPost: asBool(json['can_post']) ?? true,
         isCurrent: asBool(json['is_current']) ?? false,
       );
 
@@ -867,6 +869,9 @@ class DiscordChannel {
 
   /// Whether the channel is marked age-restricted.
   final bool nsfw;
+
+  /// False when a channel permission in Discord shuts the bot out.
+  final bool canPost;
 
   /// Whether this is the channel the account posts to.
   final bool isCurrent;
