@@ -42,6 +42,7 @@ export 'src/resources/automations.dart';
 export 'src/resources/broadcasts.dart';
 export 'src/resources/communities.dart';
 export 'src/resources/contacts.dart';
+export 'src/resources/google_business.dart';
 export 'src/resources/inbox.dart';
 export 'src/resources/knowledge.dart';
 export 'src/resources/labels.dart';

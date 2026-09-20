@@ -11,6 +11,7 @@ import 'resources/automations.dart';
 import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
 import 'resources/contacts.dart';
+import 'resources/google_business.dart';
 import 'resources/inbox.dart';
 import 'resources/knowledge.dart';
 import 'resources/labels.dart';
@@ -100,6 +101,7 @@ class FoPost {
     knowledge = KnowledgeResource(_http);
     ads = AdsResource(_http);
     validate = ValidateResource(_http);
+    googleBusiness = GoogleBusinessResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -161,6 +163,9 @@ class FoPost {
 
   /// Standalone checks on a draft, a text's length, or a media URL.
   late final ValidateResource validate;
+
+  /// Manage a connected Google Business Profile location.
+  late final GoogleBusinessResource googleBusiness;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;
