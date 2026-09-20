@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added: `contacts` — the people behind the inbox. `list`, `get`, `create`,
+  `update`, `delete`, `conversations` and `import`, plus `listFields`,
+  `createField`, `updateField` and `deleteField` for the columns a workspace
+  keeps about a person. Needs the `inbox` scope.
+- Added: `contacts.conversationAnalytics` — inbox volume and reply time per
+  thread. Needs the `analytics` scope, and each row's `key` is an opaque handle
+  for the thread rather than the id or handle the inbox groups on.
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
