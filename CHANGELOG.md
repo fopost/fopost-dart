@@ -33,6 +33,11 @@
   events for an account, and `resubscribeWebhook` puts a lapsed subscription back.
 - Added: `inbox.handover` passes a Messenger thread to another Meta app, or takes it back
   when no `appId` is given (`inbox` scope, plus `publish`).
+- Added: `client.googleAds` wraps the Google Ads surface: keywords and keyword
+  ideas, search terms, bid strategies, ad schedule, negative keyword lists,
+  assets, Performance Max asset groups, Local Services leads, conversions, and
+  `query` for a raw GAQL read.
+- Added: `client.ads.authorizeGoogle` starts a Google Ads connection.
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.

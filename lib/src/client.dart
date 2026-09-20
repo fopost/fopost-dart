@@ -11,6 +11,7 @@ import 'resources/automations.dart';
 import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
 import 'resources/contacts.dart';
+import 'resources/google_ads.dart';
 import 'resources/google_business.dart';
 import 'resources/inbox.dart';
 import 'resources/knowledge.dart';
@@ -100,6 +101,7 @@ class FoPost {
     sequences = SequencesResource(_http);
     knowledge = KnowledgeResource(_http);
     ads = AdsResource(_http);
+    googleAds = GoogleAdsResource(_http);
     validate = ValidateResource(_http);
     googleBusiness = GoogleBusinessResource(_http);
   }
@@ -160,6 +162,9 @@ class FoPost {
 
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
+
+  /// Google Ads only: keywords, assets, conversions and raw GAQL.
+  late final GoogleAdsResource googleAds;
 
   /// Standalone checks on a draft, a text's length, or a media URL.
   late final ValidateResource validate;
