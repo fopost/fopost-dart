@@ -31,6 +31,7 @@ export 'src/models/inbox.dart';
 export 'src/models/knowledge.dart';
 export 'src/models/label.dart';
 export 'src/models/media.dart';
+export 'src/models/platform_extras.dart';
 export 'src/models/post.dart';
 export 'src/models/validate.dart';
 export 'src/models/webhook.dart';

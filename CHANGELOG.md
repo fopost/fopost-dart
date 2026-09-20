@@ -54,6 +54,17 @@
   anything that posts; a webhook connection answers `409 webhook_connection`.
 - Added: `DiscordChannel.canPost` — false when a channel permission in Discord shuts
   the bot out. `switchDiscordChannel` answers `409 channel_not_writable` for one.
+- Added: per-network extras on `accounts`, all `accounts` scope: Pinterest boards
+  (`pinterestBoards`, `createPinterestBoard`), YouTube playlists and captions
+  (`youtubePlaylists`, `createYouTubePlaylist`, `setDefaultYouTubePlaylist`,
+  `youtubeCaptions`, `uploadYouTubeCaptions`, `youtubeTranscript`), Bluesky post
+  languages (`blueskyLanguages`, `setBlueskyLanguages`), TikTok music and place
+  search plus video lookup (`tiktokMusic`, `tiktokLocations`,
+  `tiktokVideoLookup`), TikTok creator info
+  (`tiktokCreatorInfo`), Instagram audio, publishing limit and stories
+  (`instagramAudio`, `instagramPublishingLimit`, `instagramStories`,
+  `instagramStoryInsights`) and LinkedIn mentions (`linkedinMentions`), with a
+  model each.
 
 ## 0.3.0
 
