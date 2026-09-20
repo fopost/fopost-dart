@@ -164,6 +164,7 @@ class AdTargeting {
     this.interests = const [],
     this.behaviors = const [],
     this.income = const [],
+    this.facets = const {},
   });
 
   /// Reads a targeting spec off an ad.
@@ -177,6 +178,7 @@ class AdTargeting {
         interests: asModelList(json['interests'], AdTargetingRef.fromJson),
         behaviors: asModelList(json['behaviors'], AdTargetingRef.fromJson),
         income: asModelList(json['income'], AdTargetingRef.fromJson),
+        facets: _facetsFromJson(json['facets']),
       );
 
   /// Country codes.
@@ -206,6 +208,12 @@ class AdTargeting {
   /// Income brackets to match.
   final List<AdTargetingRef> income;
 
+  /// Facets the network defines for itself, keyed by the targeting search type
+  /// they were found with. `client.ads.providers()` reports which a network
+  /// accepts — `job_title`, `company_size`, `industry` and the rest of the
+  /// business-to-business set.
+  final Map<String, List<AdTargetingRef>> facets;
+
   /// Renders the spec for a request body.
   Map<String, dynamic> toJson() => {
         'countries': countries,
@@ -220,10 +228,22 @@ class AdTargeting {
         if (behaviors.isNotEmpty)
           'behaviors': behaviors.map((b) => b.toJson()).toList(),
         if (income.isNotEmpty) 'income': income.map((i) => i.toJson()).toList(),
+        if (facets.isNotEmpty)
+          'facets': facets.map((key, entries) =>
+              MapEntry(key, entries.map((e) => e.toJson()).toList())),
       };
 
   @override
   String toString() => 'AdTargeting(${countries.join(',')}, $ageMin-$ageMax)';
+}
+
+Map<String, List<AdTargetingRef>> _facetsFromJson(dynamic value) {
+  if (value is! Map) return const {};
+  final out = <String, List<AdTargetingRef>>{};
+  value.forEach((key, entries) {
+    out['$key'] = asModelList(entries, AdTargetingRef.fromJson);
+  });
+  return out;
 }
 
 /// Lifetime delivery numbers from an ad's last refresh.
@@ -1877,4 +1897,477 @@ class LeadPageSubscription {
 
   @override
   String toString() => 'LeadPageSubscription($pageId, $backfilled)';
+}
+
+/// A token a network expands in a link's tracking parameters at delivery time.
+class AdTrackingMacro {
+  /// Creates a macro.
+  const AdTrackingMacro({required this.token, required this.description});
+
+  /// Reads a macro.
+  factory AdTrackingMacro.fromJson(Map<String, dynamic> json) =>
+      AdTrackingMacro(
+        token: asString(json['token']) ?? '',
+        description: asString(json['description']) ?? '',
+      );
+
+  /// The token, as it is written in a creative's tracking parameters.
+  final String token;
+
+  /// What the network puts in its place.
+  final String description;
+
+  @override
+  String toString() => 'AdTrackingMacro($token)';
+}
+
+/// An ad network from the API's registry.
+///
+/// [configured] false means the network is listed but cannot be connected on
+/// this deployment yet.
+class AdProvider {
+  /// Creates a provider.
+  const AdProvider({
+    required this.id,
+    required this.name,
+    this.logo,
+    this.configured = false,
+    this.connectMethods = const [],
+    this.capabilities = const {},
+    this.targetingFacets = const [],
+    this.trackingMacros = const [],
+  });
+
+  /// Reads a provider.
+  factory AdProvider.fromJson(Map<String, dynamic> json) => AdProvider(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        logo: asString(json['logo']),
+        configured: asBool(json['configured']) ?? false,
+        connectMethods: asStringList(json['connectMethods']),
+        capabilities: _boolMap(json['capabilities']),
+        targetingFacets: asStringList(json['targetingFacets']),
+        trackingMacros:
+            asModelList(json['trackingMacros'], AdTrackingMacro.fromJson),
+      );
+
+  /// The network id, as `authorize` takes it.
+  final String id;
+
+  /// The network's display name.
+  final String name;
+
+  /// Logo slug.
+  final String? logo;
+
+  /// False while the network cannot be connected on this deployment.
+  final bool configured;
+
+  /// The login routes this deployment can offer.
+  final List<String> connectMethods;
+
+  /// What the network supports: campaigns, audiences, conversions, forecasts,
+  /// adLibrary, and so on.
+  final Map<String, bool> capabilities;
+
+  /// What `searchTargeting` accepts here, in picker order.
+  final List<String> targetingFacets;
+
+  /// Macros the network expands in a creative's tracking parameters.
+  final List<AdTrackingMacro> trackingMacros;
+
+  @override
+  String toString() => 'AdProvider($id, configured: $configured)';
+}
+
+Map<String, bool> _boolMap(dynamic value) {
+  if (value is! Map) return const {};
+  final out = <String, bool>{};
+  value.forEach((key, entry) {
+    final flag = asBool(entry);
+    if (flag != null) out['$key'] = flag;
+  });
+  return out;
+}
+
+/// One row of a company-list upload.
+///
+/// At least one of [name], [domain], [pageUrl] or [ticker] is required. The
+/// rows travel with the request and are never stored.
+class AdCompany {
+  /// Creates a company row.
+  const AdCompany({
+    this.name,
+    this.domain,
+    this.pageUrl,
+    this.ticker,
+    this.country,
+  });
+
+  /// The company's name.
+  final String? name;
+
+  /// The company's domain.
+  final String? domain;
+
+  /// The company's page on the network.
+  final String? pageUrl;
+
+  /// Stock ticker, where the network matches on one.
+  final String? ticker;
+
+  /// ISO 3166-1 alpha-2 code.
+  final String? country;
+
+  /// Renders the row for a request body.
+  Map<String, dynamic> toJson() => {
+        if (name != null) 'name': name,
+        if (domain != null) 'domain': domain,
+        if (pageUrl != null) 'pageUrl': pageUrl,
+        if (ticker != null) 'ticker': ticker,
+        if (country != null) 'country': country,
+      };
+
+  @override
+  String toString() => 'AdCompany(${domain ?? name ?? pageUrl})';
+}
+
+/// What the auction costs, in minor units of the ad account currency.
+class BidPricing {
+  /// Creates a quote.
+  const BidPricing({
+    this.currency,
+    this.suggestedBidMinor,
+    this.minBidMinor,
+    this.maxBidMinor,
+    this.dailyBudgetFloorMinor,
+  });
+
+  /// Reads a quote.
+  factory BidPricing.fromJson(Map<String, dynamic> json) => BidPricing(
+        currency: asString(json['currency']),
+        suggestedBidMinor: asInt(json['suggestedBidMinor']),
+        minBidMinor: asInt(json['minBidMinor']),
+        maxBidMinor: asInt(json['maxBidMinor']),
+        dailyBudgetFloorMinor: asInt(json['dailyBudgetFloorMinor']),
+      );
+
+  /// The ad account currency.
+  final String? currency;
+
+  /// What the network recommends bidding.
+  final int? suggestedBidMinor;
+
+  /// The floor.
+  final int? minBidMinor;
+
+  /// The ceiling.
+  final int? maxBidMinor;
+
+  /// The smallest daily budget the network takes.
+  final int? dailyBudgetFloorMinor;
+
+  @override
+  String toString() => 'BidPricing($suggestedBidMinor $currency)';
+}
+
+/// What an audience would deliver at a budget, over the network's own window.
+class SupplyForecast {
+  /// Creates a forecast.
+  const SupplyForecast({
+    this.currency,
+    this.impressions,
+    this.clicks,
+    this.spendMinor,
+    this.windowDays,
+    this.ready = false,
+  });
+
+  /// Reads a forecast.
+  factory SupplyForecast.fromJson(Map<String, dynamic> json) => SupplyForecast(
+        currency: asString(json['currency']),
+        impressions: asInt(json['impressions']),
+        clicks: asInt(json['clicks']),
+        spendMinor: asInt(json['spendMinor']),
+        windowDays: asInt(json['windowDays']),
+        ready: asBool(json['ready']) ?? false,
+      );
+
+  /// The ad account currency.
+  final String? currency;
+
+  /// Impressions the budget would buy.
+  final int? impressions;
+
+  /// Clicks the budget would buy.
+  final int? clicks;
+
+  /// What the network expects to spend.
+  final int? spendMinor;
+
+  /// Days the numbers cover.
+  final int? windowDays;
+
+  /// False while the network has no answer for that audience.
+  final bool ready;
+
+  @override
+  String toString() => 'SupplyForecast($impressions impressions)';
+}
+
+/// How the network attributes a sale or a sign-up back to an ad set.
+class ConversionRule {
+  /// Creates a rule.
+  const ConversionRule({
+    required this.id,
+    required this.name,
+    this.type,
+    this.attribution,
+    this.postClickWindowDays = 30,
+    this.viewThroughWindowDays = 7,
+    this.valueMinor,
+    this.currency,
+    this.enabled = true,
+    this.createdAt,
+    this.campaignIds = const [],
+  });
+
+  /// Reads a rule.
+  factory ConversionRule.fromJson(Map<String, dynamic> json) => ConversionRule(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        type: asString(json['type']),
+        attribution: asString(json['attribution']),
+        postClickWindowDays: asInt(json['postClickWindowDays']) ?? 30,
+        viewThroughWindowDays: asInt(json['viewThroughWindowDays']) ?? 7,
+        valueMinor: asInt(json['valueMinor']),
+        currency: asString(json['currency']),
+        enabled: asBool(json['enabled']) ?? true,
+        createdAt: asString(json['createdAt']),
+        campaignIds: asStringList(json['campaignIds']),
+      );
+
+  /// The network's id for the rule.
+  final String id;
+
+  /// What the rule is called.
+  final String name;
+
+  /// `purchase`, `lead`, `sign_up`, `add_to_cart`, `download`, `install`,
+  /// `key_page_view` or `other`.
+  final String? type;
+
+  /// `last_touch` or `each_campaign`.
+  final String? attribution;
+
+  /// How long after a click a conversion still counts.
+  final int postClickWindowDays;
+
+  /// How long after an impression a conversion still counts.
+  final int viewThroughWindowDays;
+
+  /// What one conversion is worth, minor units.
+  final int? valueMinor;
+
+  /// The currency of [valueMinor].
+  final String? currency;
+
+  /// False once the rule is turned off.
+  final bool enabled;
+
+  /// When the rule was created.
+  final String? createdAt;
+
+  /// Ad sets this rule is attached to.
+  final List<String> campaignIds;
+
+  @override
+  String toString() => 'ConversionRule($id, $type)';
+}
+
+/// What a conversion rule recorded over a date range.
+class ConversionMetrics {
+  /// Creates a metrics row.
+  const ConversionMetrics({
+    this.conversions = 0,
+    this.postClickConversions = 0,
+    this.viewThroughConversions = 0,
+    this.valueMinor = 0,
+    this.costPerConversionMinor,
+  });
+
+  /// Reads a metrics row.
+  factory ConversionMetrics.fromJson(Map<String, dynamic> json) =>
+      ConversionMetrics(
+        conversions: asInt(json['conversions']) ?? 0,
+        postClickConversions: asInt(json['postClickConversions']) ?? 0,
+        viewThroughConversions: asInt(json['viewThroughConversions']) ?? 0,
+        valueMinor: asInt(json['valueMinor']) ?? 0,
+        costPerConversionMinor: asInt(json['costPerConversionMinor']),
+      );
+
+  /// Conversions in the range.
+  final int conversions;
+
+  /// Conversions attributed to a click.
+  final int postClickConversions;
+
+  /// Conversions attributed to an impression.
+  final int viewThroughConversions;
+
+  /// What they were worth, minor units.
+  final int valueMinor;
+
+  /// What each one cost.
+  final int? costPerConversionMinor;
+
+  @override
+  String toString() => 'ConversionMetrics($conversions)';
+}
+
+/// One conversion sent back to the network.
+///
+/// It needs an [email] or a [clickId]. The address is hashed inside the API,
+/// so the network never receives it and nothing about an event is stored.
+class ConversionEvent {
+  /// Creates an event.
+  const ConversionEvent({
+    required this.happenedAt,
+    this.valueMinor,
+    this.currency,
+    this.eventId,
+    this.email,
+    this.clickId,
+  });
+
+  /// Epoch milliseconds.
+  final int happenedAt;
+
+  /// What the conversion was worth, minor units.
+  final int? valueMinor;
+
+  /// The currency of [valueMinor].
+  final String? currency;
+
+  /// Your own id for the event, so a replay is counted once.
+  final String? eventId;
+
+  /// The buyer's address.
+  final String? email;
+
+  /// The network's click id, as the landing page received it.
+  final String? clickId;
+
+  /// Renders the event for a request body.
+  Map<String, dynamic> toJson() => {
+        'happenedAt': happenedAt,
+        if (valueMinor != null) 'valueMinor': valueMinor,
+        if (currency != null) 'currency': currency,
+        if (eventId != null) 'eventId': eventId,
+        if (email != null) 'email': email,
+        if (clickId != null) 'clickId': clickId,
+      };
+
+  @override
+  String toString() => 'ConversionEvent($happenedAt)';
+}
+
+/// A public ad from the network's own library, never a connection's own data.
+class AdLibraryAd {
+  /// Creates a library ad.
+  const AdLibraryAd({
+    required this.id,
+    this.advertiserName,
+    this.advertiserUrl,
+    this.headline,
+    this.body,
+    this.type,
+    this.thumbnailUrl,
+    this.firstImpressionAt,
+    this.lastImpressionAt,
+    this.countries = const [],
+    this.detailsUrl,
+    this.payer,
+    this.impressionsRange,
+  });
+
+  /// Reads a library ad.
+  factory AdLibraryAd.fromJson(Map<String, dynamic> json) => AdLibraryAd(
+        id: asString(json['id']) ?? '',
+        advertiserName: asString(json['advertiserName']),
+        advertiserUrl: asString(json['advertiserUrl']),
+        headline: asString(json['headline']),
+        body: asString(json['body']),
+        type: asString(json['type']),
+        thumbnailUrl: asString(json['thumbnailUrl']),
+        firstImpressionAt: asString(json['firstImpressionAt']),
+        lastImpressionAt: asString(json['lastImpressionAt']),
+        countries: asStringList(json['countries']),
+        detailsUrl: asString(json['detailsUrl']),
+        payer: asString(json['payer']),
+        impressionsRange: asString(json['impressionsRange']),
+      );
+
+  /// The library's id for the ad.
+  final String id;
+
+  /// Who ran it.
+  final String? advertiserName;
+
+  /// The advertiser's page.
+  final String? advertiserUrl;
+
+  /// The ad's headline.
+  final String? headline;
+
+  /// The ad's copy.
+  final String? body;
+
+  /// What kind of ad it is.
+  final String? type;
+
+  /// A still from the ad.
+  final String? thumbnailUrl;
+
+  /// When it first ran.
+  final String? firstImpressionAt;
+
+  /// When it last ran.
+  final String? lastImpressionAt;
+
+  /// Where it ran.
+  final List<String> countries;
+
+  /// The library entry.
+  final String? detailsUrl;
+
+  /// The paying entity, where the network discloses one.
+  final String? payer;
+
+  /// How many impressions it got, as a band.
+  final String? impressionsRange;
+
+  @override
+  String toString() => 'AdLibraryAd($id)';
+}
+
+/// One page of ad-library results.
+class AdLibraryPage {
+  /// Creates a page.
+  const AdLibraryPage({this.ads = const [], this.nextCursor});
+
+  /// Reads a page.
+  factory AdLibraryPage.fromJson(Map<String, dynamic> json) => AdLibraryPage(
+        ads: asModelList(json['ads'], AdLibraryAd.fromJson),
+        nextCursor: asString(json['nextCursor']),
+      );
+
+  /// The ads on this page.
+  final List<AdLibraryAd> ads;
+
+  /// Pass this back as the cursor for the next page.
+  final String? nextCursor;
+
+  @override
+  String toString() => 'AdLibraryPage(${ads.length})';
 }

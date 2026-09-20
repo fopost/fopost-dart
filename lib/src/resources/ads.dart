@@ -58,9 +58,17 @@ class AdsResource {
     return rows.map(AdSource.fromJson).toList();
   }
 
-  /// Starts a Meta ads connection: returns the login URL the user finishes in
-  /// their own browser. [method] is `business` or `user`.
-  Future<String> authorizeMeta({
+  /// The ad networks this deployment knows, with what each one supports.
+  Future<List<AdProvider>> providers() async {
+    final rows = await _http.objects('GET', '/ads/providers');
+    return rows.map(AdProvider.fromJson).toList();
+  }
+
+  /// Starts an ads connection on one network: returns the login URL the user
+  /// finishes in their own browser. [method] is one of the network's own
+  /// connect methods.
+  Future<String> authorize(
+    String provider, {
     required String workspaceId,
     String? method,
     String? returnTo,
@@ -70,10 +78,21 @@ class AdsResource {
       'method': method,
       'returnTo': returnTo,
     });
-    final result = await _http.object('POST', '/ads/connections/meta/authorize',
+    final result = await _http.object(
+        'POST', '/ads/connections/${segment(provider)}/authorize',
         body: body);
     return asString(result['url']) ?? '';
   }
+
+  /// Starts a Meta ads connection.
+  @Deprecated("Use authorize('meta', ...).")
+  Future<String> authorizeMeta({
+    required String workspaceId,
+    String? method,
+    String? returnTo,
+  }) =>
+      authorize('meta',
+          workspaceId: workspaceId, method: method, returnTo: returnTo);
 
   /// Removes a connection, and with it every ad record created through it.
   Future<void> deleteConnection(String id, {required String workspaceId}) =>
@@ -669,6 +688,283 @@ class AdsResource {
     );
     return asInt(result['added']) ?? 0;
   }
+
+  /// Adds companies to a company-list audience; answers how many the network
+  /// took. The rows travel with the request and are never stored.
+  Future<int> addAudienceCompanies(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required List<AdCompany> companies,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/audiences/${segment(id)}/companies',
+      body: {'companies': companies.map((c) => c.toJson()).toList()},
+      query: _meta(workspaceId, connectionId),
+    );
+    return asInt(result['added']) ?? 0;
+  }
+
+  /// What the auction currently costs for [targeting].
+  Future<BidPricing> bidPricing({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String goal,
+    required AdTargeting targeting,
+    List<String>? placements,
+    String? bidType,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/linkedin/bid-pricing',
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'goal': goal,
+        'targeting': targeting.toJson(),
+        'placements': placements,
+        'bidType': bidType,
+      }),
+    );
+    return BidPricing.fromJson(result);
+  }
+
+  /// What [targeting] would deliver at [budgetMinor].
+  Future<SupplyForecast> supplyForecast({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String goal,
+    required AdTargeting targeting,
+    List<String>? placements,
+    int? budgetMinor,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/linkedin/supply-forecast',
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'goal': goal,
+        'targeting': targeting.toJson(),
+        'placements': placements,
+        'budgetMinor': budgetMinor,
+      }),
+    );
+    return SupplyForecast.fromJson(result);
+  }
+
+  /// The conversion rules on one ad account.
+  Future<List<ConversionRule>> conversionRules({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects(
+      'GET',
+      '/ads/linkedin/conversion-rules',
+      query: {
+        ..._meta(workspaceId, connectionId),
+        'ad_account_id': adAccountId,
+      },
+    );
+    return rows.map(ConversionRule.fromJson).toList();
+  }
+
+  /// Creates a conversion rule; answers its id.
+  ///
+  /// [type] is `purchase`, `lead`, `sign_up`, `add_to_cart`, `download`,
+  /// `install`, `key_page_view` or `other`; [attribution] is `last_touch` or
+  /// `each_campaign`.
+  Future<String> createConversionRule({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+    required String type,
+    required String attribution,
+    int? postClickWindowDays,
+    int? viewThroughWindowDays,
+    int? valueMinor,
+    String? currency,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/linkedin/conversion-rules',
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'name': name,
+        'type': type,
+        'attribution': attribution,
+        'postClickWindowDays': postClickWindowDays,
+        'viewThroughWindowDays': viewThroughWindowDays,
+        'valueMinor': valueMinor,
+        'currency': currency,
+      }),
+    );
+    return asString(result['id']) ?? '';
+  }
+
+  /// One rule, with the ad sets it is attached to.
+  Future<ConversionRule> conversionRule(
+    String id, {
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', _rulePath(id),
+        query: _meta(workspaceId, connectionId));
+    return ConversionRule.fromJson(result);
+  }
+
+  /// Changes a rule. Only the fields you pass move.
+  Future<ConversionRule> updateConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    String? name,
+    String? type,
+    String? attribution,
+    int? postClickWindowDays,
+    int? viewThroughWindowDays,
+    int? valueMinor,
+    String? currency,
+    bool? enabled,
+  }) async {
+    final result = await _http.object(
+      'PATCH',
+      _rulePath(id),
+      body: pruned({
+        'name': name,
+        'type': type,
+        'attribution': attribution,
+        'postClickWindowDays': postClickWindowDays,
+        'viewThroughWindowDays': viewThroughWindowDays,
+        'valueMinor': valueMinor,
+        'currency': currency,
+        'enabled': enabled,
+      }),
+      query: _meta(workspaceId, connectionId),
+    );
+    return ConversionRule.fromJson(result);
+  }
+
+  /// Turns a rule off. The network keeps the history.
+  Future<void> deleteConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+  }) =>
+      _http.discard('DELETE', _rulePath(id),
+          query: _meta(workspaceId, connectionId));
+
+  /// Attaches a rule to an ad set on the same connection.
+  Future<ConversionRule> attachConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String campaignId,
+  }) =>
+      _association('POST', id, workspaceId, connectionId, campaignId);
+
+  /// Detaches a rule from an ad set.
+  Future<ConversionRule> detachConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String campaignId,
+  }) =>
+      _association('DELETE', id, workspaceId, connectionId, campaignId);
+
+  /// What a rule recorded between two `YYYY-MM-DD` days, inclusive.
+  Future<ConversionMetrics> conversionMetrics(
+    String id, {
+    required String connectionId,
+    required String since,
+    required String until,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object(
+      'GET',
+      _rulePath(id, '/metrics'),
+      query: {
+        ..._meta(workspaceId, connectionId),
+        'since': since,
+        'until': until,
+      },
+    );
+    return ConversionMetrics.fromJson(result);
+  }
+
+  /// Sends conversions back to the network; answers how many it took.
+  ///
+  /// Each event needs an email or a click id. The address is hashed inside the
+  /// API and nothing about an event is stored.
+  Future<int> sendConversionEvents(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required List<ConversionEvent> events,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      _rulePath(id, '/events'),
+      body: {'events': events.map((e) => e.toJson()).toList()},
+      query: _meta(workspaceId, connectionId),
+    );
+    return asInt(result['accepted']) ?? 0;
+  }
+
+  /// The network's own public ad library, not the connection's ads.
+  Future<AdLibraryPage> adLibrary({
+    required String connectionId,
+    String? workspaceId,
+    String? keyword,
+    String? advertiser,
+    List<String>? countries,
+    String? since,
+    String? until,
+    String? cursor,
+  }) async {
+    final result = await _http.object(
+      'GET',
+      '/ads/ad-library',
+      query: {
+        ..._meta(workspaceId, connectionId),
+        'keyword': keyword,
+        'advertiser': advertiser,
+        'countries': countries?.join(','),
+        'since': since,
+        'until': until,
+        'cursor': cursor,
+      },
+    );
+    return AdLibraryPage.fromJson(result);
+  }
+
+  Future<ConversionRule> _association(
+    String method,
+    String id,
+    String workspaceId,
+    String connectionId,
+    String campaignId,
+  ) async {
+    final result = await _http.object(
+      method,
+      _rulePath(id, '/associations'),
+      body: {'campaignId': campaignId},
+      query: _meta(workspaceId, connectionId),
+    );
+    return ConversionRule.fromJson(result);
+  }
+
+  String _rulePath(String id, [String suffix = '']) =>
+      '/ads/linkedin/conversion-rules/${segment(id)}$suffix';
 
   /// How many people [targeting] could reach from an ad account.
   Future<ReachEstimate> estimateReach({
