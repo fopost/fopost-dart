@@ -4,6 +4,7 @@ import 'env/env.dart';
 import 'http.dart';
 import 'resources/account_groups.dart';
 import 'resources/accounts.dart';
+import 'resources/activity.dart';
 import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
@@ -83,6 +84,7 @@ class FoPost {
     accounts = AccountsResource(_http);
     communities = CommunitiesResource(_http);
     labels = LabelsResource(_http);
+    activity = ActivityResource(_http);
     accountGroups = AccountGroupsResource(_http);
     webhooks = WebhooksResource(_http);
     analytics = AnalyticsResource(_http);
@@ -112,6 +114,9 @@ class FoPost {
 
   /// Campaign labels.
   late final LabelsResource labels;
+
+  /// What happened in a workspace, and the security audit log.
+  late final ActivityResource activity;
 
   /// Named sets of accounts a post can target at once.
   late final AccountGroupsResource accountGroups;

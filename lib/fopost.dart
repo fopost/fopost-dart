@@ -17,6 +17,7 @@ export 'src/errors.dart';
 export 'src/file.dart';
 export 'src/models/account.dart';
 export 'src/models/account_group.dart';
+export 'src/models/activity.dart';
 export 'src/models/ad.dart';
 export 'src/models/analytics.dart';
 export 'src/models/automation.dart';
