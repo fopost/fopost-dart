@@ -8,6 +8,7 @@ import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
 import 'resources/communities.dart';
+import 'resources/google_ads.dart';
 import 'resources/inbox.dart';
 import 'resources/labels.dart';
 import 'resources/media.dart';
@@ -90,6 +91,7 @@ class FoPost {
     media = MediaResource(_http);
     inbox = InboxResource(_http);
     ads = AdsResource(_http);
+    googleAds = GoogleAdsResource(_http);
     validate = ValidateResource(_http);
   }
 
@@ -133,6 +135,9 @@ class FoPost {
 
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
+
+  /// Google Ads only: keywords, assets, conversions and raw GAQL.
+  late final GoogleAdsResource googleAds;
 
   /// Standalone checks on a draft, a text's length, or a media URL.
   late final ValidateResource validate;

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- `client.googleAds` wraps the Google Ads surface: keywords and keyword ideas, search
+  terms, bid strategies, ad schedule, negative keyword lists, assets, Performance Max
+  asset groups, Local Services leads, conversions, and `query` for a raw GAQL read.
+- `client.ads.authorizeGoogle` starts a Google Ads connection.
+
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.

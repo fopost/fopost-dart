@@ -75,6 +75,18 @@ class AdsResource {
     return asString(result['url']) ?? '';
   }
 
+  /// The Google login URL. The caller finishes it in their own browser
+  /// session: the callback checks that the same user came back.
+  Future<String> authorizeGoogle({
+    required String workspaceId,
+    String? returnTo,
+  }) async {
+    final body = pruned({'workspaceId': workspaceId, 'returnTo': returnTo});
+    final result = await _http
+        .object('POST', '/ads/connections/google/authorize', body: body);
+    return asString(result['url']) ?? '';
+  }
+
   /// Removes a connection, and with it every ad record created through it.
   Future<void> deleteConnection(String id, {required String workspaceId}) =>
       _http.discard('DELETE', '/ads/connections/${segment(id)}',
