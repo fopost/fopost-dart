@@ -7,6 +7,7 @@ import 'resources/accounts.dart';
 import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
+import 'resources/blogs.dart';
 import 'resources/communities.dart';
 import 'resources/inbox.dart';
 import 'resources/labels.dart';
@@ -83,6 +84,7 @@ class FoPost {
     accounts = AccountsResource(_http);
     communities = CommunitiesResource(_http);
     labels = LabelsResource(_http);
+    blogs = BlogsResource(_http);
     accountGroups = AccountGroupsResource(_http);
     webhooks = WebhooksResource(_http);
     analytics = AnalyticsResource(_http);
@@ -112,6 +114,9 @@ class FoPost {
 
   /// Campaign labels.
   late final LabelsResource labels;
+
+  /// Articles and products on a connected site, by the platform's own ids.
+  late final BlogsResource blogs;
 
   /// Named sets of accounts a post can target at once.
   late final AccountGroupsResource accountGroups;

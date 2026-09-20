@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added: `client.blogs` for content that already lives on a connected site —
+  `listBlogs`, `listArticles`, `getArticle`, `createArticle`, `updateArticle`,
+  `deleteArticle`, `listProducts` and `updateProduct`, with `RemoteBlog`,
+  `RemoteArticle` and `RemoteProduct`. Reads need the `posts` scope; the writes
+  need `posts` and `publish`. Updating an article changes the live one in place
+  and never creates a duplicate.
+
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
