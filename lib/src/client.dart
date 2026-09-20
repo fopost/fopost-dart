@@ -7,6 +7,7 @@ import 'resources/accounts.dart';
 import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
+import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
 import 'resources/contacts.dart';
 import 'resources/inbox.dart';
@@ -91,6 +92,8 @@ class FoPost {
     media = MediaResource(_http);
     inbox = InboxResource(_http);
     contacts = ContactsResource(_http);
+    broadcasts = BroadcastsResource(_http);
+    sequences = SequencesResource(_http);
     ads = AdsResource(_http);
     validate = ValidateResource(_http);
   }
@@ -135,6 +138,13 @@ class FoPost {
 
   /// The people behind that inbox, and the fields a workspace keeps about them.
   late final ContactsResource contacts;
+
+  /// One message into every conversation the workspace already has with a
+  /// segment of its contacts.
+  late final BroadcastsResource broadcasts;
+
+  /// A series of messages on a delay, walked per enrolled contact.
+  late final SequencesResource sequences;
 
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
