@@ -14,6 +14,7 @@ import 'resources/media.dart';
 import 'resources/posts.dart';
 import 'resources/validate.dart';
 import 'resources/webhooks.dart';
+import 'resources/whatsapp.dart';
 import 'resources/workspaces.dart';
 import 'version.dart';
 
@@ -91,6 +92,7 @@ class FoPost {
     inbox = InboxResource(_http);
     ads = AdsResource(_http);
     validate = ValidateResource(_http);
+    whatsapp = WhatsappResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -136,6 +138,9 @@ class FoPost {
 
   /// Standalone checks on a draft, a text's length, or a media URL.
   late final ValidateResource validate;
+
+  /// WhatsApp Business: templates, flows, groups, blocking and commerce.
+  late final WhatsappResource whatsapp;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;

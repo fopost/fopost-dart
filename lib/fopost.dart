@@ -28,6 +28,8 @@ export 'src/models/media.dart';
 export 'src/models/post.dart';
 export 'src/models/validate.dart';
 export 'src/models/webhook.dart';
+
+export 'src/models/whatsapp.dart';
 export 'src/models/workspace.dart';
 export 'src/resources/account_groups.dart';
 export 'src/resources/accounts.dart';
@@ -41,5 +43,7 @@ export 'src/resources/media.dart';
 export 'src/resources/posts.dart';
 export 'src/resources/validate.dart';
 export 'src/resources/webhooks.dart';
+
+export 'src/resources/whatsapp.dart';
 export 'src/resources/workspaces.dart';
 export 'src/version.dart';
