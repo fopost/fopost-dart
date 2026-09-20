@@ -130,6 +130,7 @@ class AdsResource {
     String? destinationUrl,
     String? mediaUrl,
     String? urlTags,
+    String? sparkPostId,
     bool? paused,
   }) async {
     final body = pruned({
@@ -146,6 +147,7 @@ class AdsResource {
       'destinationUrl': destinationUrl,
       'mediaUrl': mediaUrl,
       'urlTags': urlTags,
+      'sparkPostId': sparkPostId,
       'paused': paused,
     });
     return Ad.fromJson(await _http.object('POST', '/ads', body: body));
@@ -229,6 +231,130 @@ class AdsResource {
     return rows.map(TargetingOption.fromJson).toList();
   }
 
+  /// TikTok's Business Centers. The one network-named read on this resource,
+  /// because no other network groups ad accounts this way.
+  Future<List<AdBusinessCenter>> tiktokBusinessCenters({
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/tiktok/business-centers',
+        query: {'workspace_id': workspaceId, 'connection_id': connectionId});
+    return rows.map(AdBusinessCenter.fromJson).toList();
+  }
+
+  /// The accounts an ad can run as; an identity id is a `pageId`.
+  Future<List<AdIdentity>> tiktokIdentities({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/tiktok/identities', query: {
+      'workspace_id': workspaceId,
+      'connection_id': connectionId,
+      'ad_account_id': adAccountId,
+    });
+    return rows.map(AdIdentity.fromJson).toList();
+  }
+
+  /// Posts already live under an identity, each a candidate Spark ad.
+  Future<List<SparkPost>> sparkPosts({
+    required String connectionId,
+    required String adAccountId,
+    required String identityId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/spark-posts', query: {
+      'workspace_id': workspaceId,
+      'connection_id': connectionId,
+      'ad_account_id': adAccountId,
+      'identity_id': identityId,
+    });
+    return rows.map(SparkPost.fromJson).toList();
+  }
+
+  /// Offline conversions against a pixel the ad account owns. Identifiers are
+  /// hashed before anything leaves FoPost; returns how many the network took.
+  Future<int> uploadConversions({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String pixelId,
+    required List<Map<String, dynamic>> events,
+  }) async {
+    final data = await _http.object('POST', '/ads/conversions', body: {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adAccountId': adAccountId,
+      'pixelId': pixelId,
+      'events': events,
+    });
+    return asInt(data['accepted']) ?? 0;
+  }
+
+  /// One page of an ad's comments; pass `nextCursor` back as [after].
+  Future<AdCommentsPage> comments({
+    required String connectionId,
+    required String adId,
+    String? after,
+    String? workspaceId,
+  }) async =>
+      AdCommentsPage.fromJson(
+          await _http.object('GET', '/ads/comments', query: {
+        'workspace_id': workspaceId,
+        'connection_id': connectionId,
+        'ad_id': adId,
+        'after': after,
+      }));
+
+  /// Answers a comment on an ad; returns the reply's id on the network. Needs
+  /// the `publish` scope as well as `ads`.
+  Future<String> replyToComment(
+    String commentId, {
+    required String workspaceId,
+    required String connectionId,
+    required String adId,
+    required String text,
+  }) async {
+    final data = await _http
+        .object('POST', '/ads/comments/${segment(commentId)}/reply', body: {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adId': adId,
+      'text': text,
+    });
+    return asString(data['replyId']) ?? '';
+  }
+
+  /// Hides or shows a comment on an ad. Needs the `publish` scope as well as
+  /// `ads`.
+  Future<void> setCommentHidden(
+    String commentId, {
+    required String workspaceId,
+    required String connectionId,
+    required String adId,
+    required bool hidden,
+  }) =>
+      _http.discard('POST', '/ads/comments/${segment(commentId)}/hide', body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adId': adId,
+        'hidden': hidden,
+      });
+
+  /// Removes a comment from the ad on the network. One already gone succeeds.
+  /// Needs the `publish` scope as well as `ads`.
+  Future<void> deleteComment(
+    String commentId, {
+    required String workspaceId,
+    required String connectionId,
+    required String adId,
+  }) =>
+      _http.discard('DELETE', '/ads/comments/${segment(commentId)}', body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adId': adId,
+      });
+
   /// Each connection's Page with the lead forms on it.
   Future<List<LeadFormSource>> leadForms({String? workspaceId}) async {
     final rows = await _http.objects('GET', '/ads/lead-forms',
@@ -303,6 +429,7 @@ class AdsResource {
     required String name,
     required String goal,
     bool? paused,
+    bool? smartPlus,
   }) async {
     final body = pruned({
       'workspaceId': workspaceId,
@@ -311,6 +438,7 @@ class AdsResource {
       'name': name,
       'goal': goal,
       'paused': paused,
+      'smartPlus': smartPlus,
     });
     return AdCampaign.fromJson(
         await _http.object('POST', '/ads/campaigns', body: body));
