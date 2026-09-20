@@ -211,4 +211,147 @@ void main() {
     );
     client.close();
   });
+
+  test('discord channels list and the channel switch', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (request) async => request.method == 'GET'
+            ? jsonOk([
+                {
+                  'id': 'c2',
+                  'name': 'launches',
+                  'type': 0,
+                  'parent_id': null,
+                  'nsfw': false,
+                  'is_current': true,
+                }
+              ])
+            : jsonOk({'id': 'c2', 'name': 'launches', 'is_current': true}),
+        recorder: seen);
+
+    final channels = await client.accounts.discordChannels('acc_1');
+    expect(seen.last.url.path, '/v1/accounts/acc_1/discord/channels');
+    expect(channels.single.isCurrent, isTrue);
+
+    await client.accounts.switchDiscordChannel('acc_1', 'c2');
+    expect(seen.last.method, 'PATCH');
+    expect(seen.last.url.path, '/v1/accounts/acc_1/discord/channels/current');
+    expect(jsonDecode(seen.last.body), {'channel_id': 'c2'});
+    client.close();
+  });
+
+  test('discord identity update omits unset fields', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk({'username': 'Release Bot', 'avatar_url': null}),
+        recorder: seen);
+
+    final updated = await client.accounts
+        .updateDiscordIdentity('acc_1', username: 'Release Bot');
+    expect(seen.last.method, 'PATCH');
+    expect(seen.last.url.path, '/v1/accounts/acc_1/discord/identity');
+    // An unset field never reaches the wire, so Discord keeps it.
+    expect(jsonDecode(seen.last.body), {'username': 'Release Bot'});
+    expect(updated.username, 'Release Bot');
+    client.close();
+  });
+
+  test('a discord scheduled event round-trips', () async {
+    final seen = RecordedRequests();
+    final event = {
+      'id': 'e1',
+      'name': 'Launch stream',
+      'description': null,
+      'channel_id': null,
+      'location': 'https://example.com/live',
+      'start_time': '2026-10-01T18:00:00.000Z',
+      'end_time': '2026-10-01T19:00:00.000Z',
+      'status': 'scheduled',
+      'user_count': 0,
+    };
+    final client = fakeClient((request) async {
+      if (request.method == 'GET') return jsonOk([event]);
+      if (request.method == 'DELETE') return jsonOk({'deleted': true});
+      if (request.method == 'PATCH') {
+        return jsonOk({...event, 'status': 'canceled'});
+      }
+      return jsonOk(event);
+    }, recorder: seen);
+
+    final created = await client.accounts.createDiscordEvent(
+      'acc_1',
+      name: 'Launch stream',
+      startTime: '2026-10-01T18:00:00.000Z',
+      endTime: '2026-10-01T19:00:00.000Z',
+      location: 'https://example.com/live',
+    );
+    expect(created.id, 'e1');
+    expect(jsonDecode(seen.last.body), {
+      'name': 'Launch stream',
+      'start_time': '2026-10-01T18:00:00.000Z',
+      'end_time': '2026-10-01T19:00:00.000Z',
+      'location': 'https://example.com/live',
+    });
+
+    expect((await client.accounts.discordEvents('acc_1')).single.id, 'e1');
+
+    final updated = await client.accounts
+        .updateDiscordEvent('acc_1', 'e1', status: 'canceled');
+    expect(updated.status, 'canceled');
+    expect(jsonDecode(seen.last.body), {'status': 'canceled'});
+
+    final ack = await client.accounts.deleteDiscordEvent('acc_1', 'e1');
+    expect(ack.deleted, isTrue);
+    expect(seen.last.url.path, '/v1/accounts/acc_1/discord/events/e1');
+    client.close();
+  });
+
+  test('discord members, roles and direct messages', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient((request) async {
+      if (request.url.path.endsWith('/members')) {
+        return jsonOk([
+          {
+            'id': 'u7',
+            'username': 'ada',
+            'is_bot': false,
+            'roles': ['r1']
+          }
+        ]);
+      }
+      if (request.url.path.endsWith('/dm')) {
+        return jsonOk({'id': 'm1', 'channel_id': 'dm1'});
+      }
+      return jsonOk({'assigned': true});
+    }, recorder: seen);
+
+    final members = await client.accounts.discordMembers('acc_1', query: 'ada');
+    expect(seen.last.url.query, 'q=ada');
+    expect(members.single.roles, ['r1']);
+
+    final assigned =
+        await client.accounts.addDiscordMemberRole('acc_1', 'r1', 'u7');
+    expect(assigned.assigned, isTrue);
+    expect(seen.last.method, 'PUT');
+    expect(
+        seen.last.url.path, '/v1/accounts/acc_1/discord/roles/r1/members/u7');
+
+    final sent =
+        await client.accounts.sendDiscordDirectMessage('acc_1', 'u7', 'hi');
+    expect(sent.channelId, 'dm1');
+    expect(jsonDecode(seen.last.body), {'member_id': 'u7', 'content': 'hi'});
+    client.close();
+  });
+
+  test('discord calls surface a webhook connection as a 409', () async {
+    final client = fakeClient(
+        (_) async => jsonError(409, 'webhook_connection', 'Upgrade it'));
+
+    await expectLater(
+      client.accounts.discordChannels('acc_1'),
+      throwsA(predicate<FoPostException>(
+          (e) => e.statusCode == 409 && e.code == 'webhook_connection')),
+    );
+    client.close();
+  });
 }

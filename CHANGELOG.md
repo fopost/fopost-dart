@@ -2,10 +2,47 @@
 
 ## Unreleased
 
+- Added: `broadcasts` — one message into every conversation the workspace
+  already has with a segment of its contacts. `list`, `get`, `create`,
+  `update`, `delete`, `send`, `cancel` and `recipients`. Reading needs the
+  `inbox` scope; `send` and `cancel` also need `publish`.
+- Added: `sequences` — a series of messages on a delay. `list`, `get`,
+  `create`, `update`, `delete`, `enroll`, `unenroll` and `enrollments`.
+  `enroll` and `unenroll` need `publish`.
+- Added: both honour each network's messaging window server-side. Messenger
+  and Instagram take a business-initiated message only within 24 hours of the
+  contact's last one, so recipients outside it come back skipped with
+  `window_closed` and nothing is attempted — the number sent is often lower
+  than the audience.
+- Added: `contacts` — the people behind the inbox. `list`, `get`, `create`,
+  `update`, `delete`, `conversations` and `import`, plus `listFields`,
+  `createField`, `updateField` and `deleteField` for the columns a workspace
+  keeps about a person. Needs the `inbox` scope.
+- Added: `contacts.conversationAnalytics` — inbox volume and reply time per
+  thread. Needs the `analytics` scope, and each row's `key` is an opaque handle
+  for the thread rather than the id or handle the inbox groups on.
+- Added: Meta messaging settings on `accounts`: `iceBreakers`, `setIceBreakers` and
+  `deleteIceBreakers` (Facebook Pages and Instagram), plus `persistentMenu`,
+  `setPersistentMenu`, `deletePersistentMenu`, `greeting`, `setGreeting` and
+  `deleteGreeting` (Facebook Pages). A network without a field answers 400.
+- Added: `accounts.webhookSubscription` reports whether the network is still delivering
+  events for an account, and `resubscribeWebhook` puts a lapsed subscription back.
+- Added: `inbox.handover` passes a Messenger thread to another Meta app, or takes it back
+  when no `appId` is given (`inbox` scope, plus `publish`).
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
   Needs the `accounts` scope.
+- Added: the Discord bot surface on `accounts` — `discordChannels`,
+  `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`,
+  `discordPins`, `deleteDiscordMessage`, `pinDiscordMessage`,
+  `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`,
+  `sendDiscordDirectMessage`, `discordEvents`, `getDiscordEvent`,
+  `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`,
+  `discordMembers`, `discordMember`, `discordRoles`, `createDiscordRole`,
+  `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole` and
+  `removeDiscordMemberRole`. Needs the `accounts` scope, plus `publish` for
+  anything that posts; a webhook connection answers `409 webhook_connection`.
 
 ## 0.3.0
 
