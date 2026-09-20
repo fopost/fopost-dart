@@ -194,6 +194,83 @@ class AccountsResource {
         },
       ));
 
+  // ─── Meta messaging settings (Facebook Pages, Instagram) ─────────
+
+  /// Returns the prompts shown before the first message. A network without
+  /// them answers 400.
+  Future<List<MetaIceBreaker>> iceBreakers(String id) async =>
+      _iceBreakers(await _http.object(
+          'GET', '/accounts/${segment(id)}/messaging/ice-breakers'));
+
+  /// Replaces the ice breakers, up to four.
+  Future<List<MetaIceBreaker>> setIceBreakers(
+    String id,
+    List<MetaIceBreaker> iceBreakers,
+  ) async =>
+      _iceBreakers(await _http.object(
+        'PUT',
+        '/accounts/${segment(id)}/messaging/ice-breakers',
+        body: {'ice_breakers': iceBreakers.map((b) => b.toJson()).toList()},
+      ));
+
+  /// Clears the ice breakers.
+  Future<List<MetaIceBreaker>> deleteIceBreakers(String id) async =>
+      _iceBreakers(await _http.object(
+          'DELETE', '/accounts/${segment(id)}/messaging/ice-breakers'));
+
+  /// Returns the always-visible Messenger menu. Facebook Pages only.
+  Future<List<MetaPersistentMenuEntry>> persistentMenu(String id) async =>
+      _menu(await _http.object(
+          'GET', '/accounts/${segment(id)}/messaging/persistent-menu'));
+
+  /// Replaces the menu, one entry per locale, up to three items each.
+  Future<List<MetaPersistentMenuEntry>> setPersistentMenu(
+    String id,
+    List<MetaPersistentMenuEntry> menu,
+  ) async =>
+      _menu(await _http.object(
+        'PUT',
+        '/accounts/${segment(id)}/messaging/persistent-menu',
+        body: {'persistent_menu': menu.map((e) => e.toJson()).toList()},
+      ));
+
+  /// Clears the menu.
+  Future<List<MetaPersistentMenuEntry>> deletePersistentMenu(String id) async =>
+      _menu(await _http.object(
+          'DELETE', '/accounts/${segment(id)}/messaging/persistent-menu'));
+
+  /// Returns the text shown before a Messenger conversation starts.
+  /// Facebook Pages only.
+  Future<List<MetaGreetingText>> greeting(String id) async => _greeting(
+      await _http.object('GET', '/accounts/${segment(id)}/messaging/greeting'));
+
+  /// Replaces the greeting, one entry per locale, each up to 160 characters.
+  Future<List<MetaGreetingText>> setGreeting(
+    String id,
+    List<MetaGreetingText> greeting,
+  ) async =>
+      _greeting(await _http.object(
+        'PUT',
+        '/accounts/${segment(id)}/messaging/greeting',
+        body: {'greeting': greeting.map((g) => g.toJson()).toList()},
+      ));
+
+  /// Clears the greeting.
+  Future<List<MetaGreetingText>> deleteGreeting(String id) async =>
+      _greeting(await _http.object(
+          'DELETE', '/accounts/${segment(id)}/messaging/greeting'));
+
+  /// Returns what the network is delivering to the FoPost webhook for this
+  /// account.
+  Future<WebhookSubscription> webhookSubscription(String id) async =>
+      WebhookSubscription.fromJson(await _http.object(
+          'GET', '/accounts/${segment(id)}/webhook-subscription'));
+
+  /// Subscribes to every field this account needs, lapsed or not.
+  Future<WebhookSubscription> resubscribeWebhook(String id) async =>
+      WebhookSubscription.fromJson(await _http.object(
+          'POST', '/accounts/${segment(id)}/webhook-subscription'));
+
   // ─── Discord (bot connections) ──────────────────────────────────────
 
   /// Returns the text channels the bot can post to in the connected server.
@@ -495,4 +572,13 @@ class AccountsResource {
 
   List<TelegramBotCommand> _commands(Map<String, dynamic> json) =>
       asModelList(json['commands'], TelegramBotCommand.fromJson);
+
+  List<MetaIceBreaker> _iceBreakers(Map<String, dynamic> json) =>
+      asModelList(json['ice_breakers'], MetaIceBreaker.fromJson);
+
+  List<MetaPersistentMenuEntry> _menu(Map<String, dynamic> json) =>
+      asModelList(json['persistent_menu'], MetaPersistentMenuEntry.fromJson);
+
+  List<MetaGreetingText> _greeting(Map<String, dynamic> json) =>
+      asModelList(json['greeting'], MetaGreetingText.fromJson);
 }
