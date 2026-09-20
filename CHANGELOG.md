@@ -21,10 +21,28 @@
 - Added: `contacts.conversationAnalytics` — inbox volume and reply time per
   thread. Needs the `analytics` scope, and each row's `key` is an opaque handle
   for the thread rather than the id or handle the inbox groups on.
+- Added: Meta messaging settings on `accounts`: `iceBreakers`, `setIceBreakers` and
+  `deleteIceBreakers` (Facebook Pages and Instagram), plus `persistentMenu`,
+  `setPersistentMenu`, `deletePersistentMenu`, `greeting`, `setGreeting` and
+  `deleteGreeting` (Facebook Pages). A network without a field answers 400.
+- Added: `accounts.webhookSubscription` reports whether the network is still delivering
+  events for an account, and `resubscribeWebhook` puts a lapsed subscription back.
+- Added: `inbox.handover` passes a Messenger thread to another Meta app, or takes it back
+  when no `appId` is given (`inbox` scope, plus `publish`).
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
   Needs the `accounts` scope.
+- Added: the Discord bot surface on `accounts` — `discordChannels`,
+  `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`,
+  `discordPins`, `deleteDiscordMessage`, `pinDiscordMessage`,
+  `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`,
+  `sendDiscordDirectMessage`, `discordEvents`, `getDiscordEvent`,
+  `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`,
+  `discordMembers`, `discordMember`, `discordRoles`, `createDiscordRole`,
+  `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole` and
+  `removeDiscordMemberRole`. Needs the `accounts` scope, plus `publish` for
+  anything that posts; a webhook connection answers `409 webhook_connection`.
 
 ## 0.3.0
 

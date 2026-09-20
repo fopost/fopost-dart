@@ -284,6 +284,24 @@ class InboxResource {
     return asBool(result['typing']) ?? false;
   }
 
+  /// Passes a Messenger thread to another Meta app, or takes it back when no
+  /// [appId] is given. Also needs the `publish` scope.
+  Future<InboxHandover> handover(
+    String conversationId, {
+    required String accountId,
+    String? appId,
+    String? metadata,
+  }) async =>
+      InboxHandover.fromJson(await _http.object(
+        'POST',
+        '/inbox/conversations/${segment(conversationId)}/handover',
+        body: pruned({
+          'account_id': accountId,
+          'app_id': appId,
+          'metadata': metadata,
+        }),
+      ));
+
   Future<Page<T>> _page<T>(
     String path,
     T Function(Map<String, dynamic>) parse,

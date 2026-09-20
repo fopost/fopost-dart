@@ -11,6 +11,7 @@ import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
 import 'resources/contacts.dart';
 import 'resources/inbox.dart';
+import 'resources/knowledge.dart';
 import 'resources/labels.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
@@ -94,6 +95,7 @@ class FoPost {
     contacts = ContactsResource(_http);
     broadcasts = BroadcastsResource(_http);
     sequences = SequencesResource(_http);
+    knowledge = KnowledgeResource(_http);
     ads = AdsResource(_http);
     validate = ValidateResource(_http);
   }
@@ -145,6 +147,9 @@ class FoPost {
 
   /// A series of messages on a delay, walked per enrolled contact.
   late final SequencesResource sequences;
+
+  /// The workspace knowledge base, which grounds drafted replies.
+  late final KnowledgeResource knowledge;
 
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
