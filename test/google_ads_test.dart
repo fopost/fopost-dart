@@ -124,6 +124,47 @@ void main() {
     expect(seen.last.url.path, '/v1/ads/insights/query');
   });
 
+  test('recommendations join the types filter', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+      (_) async => jsonBare({
+        'data': [
+          {
+            'id': 'customers/1234567890/recommendations/ABC~1',
+            'type': 'KEYWORD',
+            'campaignId': '1234567890~campaign~55',
+            'dismissed': false,
+            'impact': {'baseClicks': 10, 'potentialClicks': 25},
+          }
+        ]
+      }),
+      recorder: seen,
+    );
+
+    final rows = await client.googleAds
+        .recommendations(scope, types: ['KEYWORD', 'TARGET_CPA_OPT_IN']);
+
+    expect(rows.first.type, 'KEYWORD');
+    expect(rows.first.impact?.potentialClicks, 25);
+    expect(seen.last.url.queryParameters['types'], 'KEYWORD,TARGET_CPA_OPT_IN');
+  });
+
+  test('apply recommendations sends the ids', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+      (_) async => jsonBare({
+        'data': {'applied': 1}
+      }),
+      recorder: seen,
+    );
+
+    final applied = await client.googleAds.applyRecommendations(scope,
+        ids: ['customers/1234567890/recommendations/ABC~1']);
+
+    expect(applied, 1);
+    expect(seen.last.url.path, '/v1/ads/google/recommendations/apply');
+  });
+
   test('authorize google has its own route', () async {
     final seen = RecordedRequests();
     final client = fakeClient(

@@ -469,3 +469,159 @@ class GoogleConversionAction {
   /// Its default value, in minor units.
   final int? valueMinor;
 }
+
+/// What Google projects applying a recommendation would change. A null field
+/// is one Google does not estimate for that recommendation.
+class GoogleRecommendationImpact {
+  /// Creates one.
+  const GoogleRecommendationImpact({
+    this.baseClicks,
+    this.potentialClicks,
+    this.baseCostMinor,
+    this.potentialCostMinor,
+    this.baseConversions,
+    this.potentialConversions,
+  });
+
+  /// Reads one from an API response.
+  factory GoogleRecommendationImpact.fromJson(Map<String, dynamic> json) =>
+      GoogleRecommendationImpact(
+        baseClicks: asDouble(json['baseClicks']),
+        potentialClicks: asDouble(json['potentialClicks']),
+        baseCostMinor: asInt(json['baseCostMinor']),
+        potentialCostMinor: asInt(json['potentialCostMinor']),
+        baseConversions: asDouble(json['baseConversions']),
+        potentialConversions: asDouble(json['potentialConversions']),
+      );
+
+  /// Clicks as they stand.
+  final double? baseClicks;
+
+  /// Clicks if it were applied.
+  final double? potentialClicks;
+
+  /// Spend as it stands, in minor units.
+  final int? baseCostMinor;
+
+  /// Spend if it were applied, in minor units.
+  final int? potentialCostMinor;
+
+  /// Conversions as they stand.
+  final double? baseConversions;
+
+  /// Conversions if it were applied.
+  final double? potentialConversions;
+}
+
+/// One of Google's own recommendations for the account.
+///
+/// [id] is the Google resource name rather than the `~` form other objects use,
+/// because a recommendation is not an object you address again: it is what
+/// apply and dismiss take.
+class GoogleRecommendation {
+  /// Creates one.
+  const GoogleRecommendation({
+    required this.id,
+    required this.type,
+    this.campaignId,
+    this.adGroupId,
+    this.dismissed = false,
+    this.impact,
+  });
+
+  /// Reads one from an API response.
+  factory GoogleRecommendation.fromJson(Map<String, dynamic> json) {
+    final impact = json['impact'];
+    return GoogleRecommendation(
+      id: asString(json['id']) ?? '',
+      type: asString(json['type']) ?? '',
+      campaignId: asString(json['campaignId']),
+      adGroupId: asString(json['adGroupId']),
+      dismissed: json['dismissed'] == true,
+      impact: impact is Map
+          ? GoogleRecommendationImpact.fromJson(
+              Map<String, dynamic>.from(impact))
+          : null,
+    );
+  }
+
+  /// The Google resource name, which apply and dismiss take.
+  final String id;
+
+  /// Which recommendation it is.
+  final String type;
+
+  /// The campaign it affects, where it names one.
+  final String? campaignId;
+
+  /// The ad group it affects, where it names one.
+  final String? adGroupId;
+
+  /// Whether it has been hidden.
+  final bool dismissed;
+
+  /// What applying it would change.
+  final GoogleRecommendationImpact? impact;
+}
+
+/// One campaign's optimization score.
+class GoogleOptimizationScoreCampaign {
+  /// Creates one.
+  const GoogleOptimizationScoreCampaign({
+    required this.id,
+    required this.name,
+    this.score,
+  });
+
+  /// Reads one from an API response.
+  factory GoogleOptimizationScoreCampaign.fromJson(Map<String, dynamic> json) =>
+      GoogleOptimizationScoreCampaign(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        score: asDouble(json['score']),
+      );
+
+  /// Its id.
+  final String id;
+
+  /// What it is called.
+  final String name;
+
+  /// Its score, 0 to 1.
+  final double? score;
+}
+
+/// Google's estimate of how well the account is set up, from 0 to 1.
+class GoogleOptimizationScore {
+  /// Creates one.
+  const GoogleOptimizationScore({
+    this.score,
+    this.weight,
+    this.campaigns = const [],
+  });
+
+  /// Reads one from an API response.
+  factory GoogleOptimizationScore.fromJson(Map<String, dynamic> json) {
+    final campaigns = json['campaigns'];
+    return GoogleOptimizationScore(
+      score: asDouble(json['score']),
+      weight: asDouble(json['weight']),
+      campaigns: campaigns is List
+          ? campaigns
+              .whereType<Map>()
+              .map((e) => GoogleOptimizationScoreCampaign.fromJson(
+                  Map<String, dynamic>.from(e)))
+              .toList()
+          : const [],
+    );
+  }
+
+  /// The account's score.
+  final double? score;
+
+  /// How much it counts against others under the same manager.
+  final double? weight;
+
+  /// Each live campaign's score.
+  final List<GoogleOptimizationScoreCampaign> campaigns;
+}
