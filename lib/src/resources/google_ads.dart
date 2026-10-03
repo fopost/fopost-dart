@@ -374,6 +374,47 @@ class GoogleAdsResource {
       _uploaded('/ads/google/conversions/adjustments',
           {...scope.body, 'adjustments': adjustments});
 
+  // ── Recommendations ──
+
+  /// Google's own read on what the account should change next; [types] narrows
+  /// to those recommendation types.
+  Future<List<GoogleRecommendation>> recommendations(
+    GoogleAdsScope scope, {
+    List<String> types = const [],
+  }) async {
+    final rows =
+        await _http.objects('GET', '/ads/google/recommendations', query: {
+      ...scope.query,
+      if (types.isNotEmpty) 'types': types.join(','),
+    });
+    return rows.map(GoogleRecommendation.fromJson).toList();
+  }
+
+  /// The account's score and weight, and the score of each live campaign.
+  Future<GoogleOptimizationScore> optimizationScore(
+      GoogleAdsScope scope) async {
+    final result = await _http.object('GET', '/ads/google/optimization-score',
+        query: scope.query);
+    return GoogleOptimizationScore.fromJson(result);
+  }
+
+  /// Applies each one, which changes what the live account serves or bids, and
+  /// answers how many landed. Needs `publish` as well as `ads`.
+  Future<int> applyRecommendations(
+    GoogleAdsScope scope, {
+    required List<String> ids,
+  }) =>
+      _counted('/ads/google/recommendations/apply', 'applied',
+          {...scope.body, 'ids': ids});
+
+  /// Hides each one so Google stops surfacing it. Needs `publish`.
+  Future<int> dismissRecommendations(
+    GoogleAdsScope scope, {
+    required List<String> ids,
+  }) =>
+      _counted('/ads/google/recommendations/dismiss', 'dismissed',
+          {...scope.body, 'ids': ids});
+
   // ── GAQL ──
 
   /// Runs a read-only GAQL SELECT; rows come back as Google sends them.
@@ -397,8 +438,12 @@ class GoogleAdsResource {
     return asString(result['id']) ?? '';
   }
 
-  Future<int> _uploaded(String path, Map<String, dynamic> body) async {
+  Future<int> _uploaded(String path, Map<String, dynamic> body) =>
+      _counted(path, 'uploaded', body);
+
+  Future<int> _counted(
+      String path, String key, Map<String, dynamic> body) async {
     final result = await _http.object('POST', path, body: body);
-    return asInt(result['uploaded']) ?? 0;
+    return asInt(result[key]) ?? 0;
   }
 }
