@@ -2272,102 +2272,180 @@ class ConversionEvent {
   String toString() => 'ConversionEvent($happenedAt)';
 }
 
-/// A public ad from the network's own library, never a connection's own data.
-class AdLibraryAd {
-  /// Creates a library ad.
-  const AdLibraryAd({
+/// The account an ad runs as. Meta calls it a Page, TikTok an identity; an
+/// identity id is what every route calls a `pageId`.
+class AdIdentity {
+  /// Creates an identity.
+  const AdIdentity({
     required this.id,
-    this.advertiserName,
-    this.advertiserUrl,
-    this.headline,
-    this.body,
-    this.type,
-    this.thumbnailUrl,
-    this.firstImpressionAt,
-    this.lastImpressionAt,
-    this.countries = const [],
-    this.detailsUrl,
-    this.payer,
-    this.impressionsRange,
+    required this.type,
+    required this.name,
+    this.avatarUrl,
   });
 
-  /// Reads a library ad.
-  factory AdLibraryAd.fromJson(Map<String, dynamic> json) => AdLibraryAd(
+  /// Reads one.
+  factory AdIdentity.fromJson(Map<String, dynamic> json) => AdIdentity(
         id: asString(json['id']) ?? '',
-        advertiserName: asString(json['advertiserName']),
-        advertiserUrl: asString(json['advertiserUrl']),
-        headline: asString(json['headline']),
-        body: asString(json['body']),
-        type: asString(json['type']),
-        thumbnailUrl: asString(json['thumbnailUrl']),
-        firstImpressionAt: asString(json['firstImpressionAt']),
-        lastImpressionAt: asString(json['lastImpressionAt']),
-        countries: asStringList(json['countries']),
-        detailsUrl: asString(json['detailsUrl']),
-        payer: asString(json['payer']),
-        impressionsRange: asString(json['impressionsRange']),
+        type: asString(json['type']) ?? '',
+        name: asString(json['name']) ?? '',
+        avatarUrl: asString(json['avatarUrl']),
       );
 
-  /// The library's id for the ad.
+  /// The network's own id for it.
   final String id;
 
-  /// Who ran it.
-  final String? advertiserName;
+  /// The network's own identity kind, e.g. `CUSTOMIZED_USER`.
+  final String type;
 
-  /// The advertiser's page.
-  final String? advertiserUrl;
+  /// Its display name.
+  final String name;
 
-  /// The ad's headline.
-  final String? headline;
-
-  /// The ad's copy.
-  final String? body;
-
-  /// What kind of ad it is.
-  final String? type;
-
-  /// A still from the ad.
-  final String? thumbnailUrl;
-
-  /// When it first ran.
-  final String? firstImpressionAt;
-
-  /// When it last ran.
-  final String? lastImpressionAt;
-
-  /// Where it ran.
-  final List<String> countries;
-
-  /// The library entry.
-  final String? detailsUrl;
-
-  /// The paying entity, where the network discloses one.
-  final String? payer;
-
-  /// How many impressions it got, as a band.
-  final String? impressionsRange;
-
-  @override
-  String toString() => 'AdLibraryAd($id)';
+  /// Its avatar, when the network has one.
+  final String? avatarUrl;
 }
 
-/// One page of ad-library results.
-class AdLibraryPage {
-  /// Creates a page.
-  const AdLibraryPage({this.ads = const [], this.nextCursor});
+/// A Business Center, or the network's equivalent grouping of ad accounts.
+class AdBusinessCenter {
+  /// Creates a Business Center.
+  const AdBusinessCenter({required this.id, required this.name, this.role});
 
-  /// Reads a page.
-  factory AdLibraryPage.fromJson(Map<String, dynamic> json) => AdLibraryPage(
-        ads: asModelList(json['ads'], AdLibraryAd.fromJson),
+  /// Reads one.
+  factory AdBusinessCenter.fromJson(Map<String, dynamic> json) =>
+      AdBusinessCenter(
+        id: asString(json['id']) ?? '',
+        name: asString(json['name']) ?? '',
+        role: asString(json['role']),
+      );
+
+  /// The network's own id for it.
+  final String id;
+
+  /// Its name.
+  final String name;
+
+  /// The grant's role in it, when the network says.
+  final String? role;
+}
+
+/// A post already live on the network, offered as the source of a Spark ad.
+class SparkPost {
+  /// Creates a post.
+  const SparkPost({
+    required this.id,
+    required this.identityId,
+    this.caption,
+    this.thumbnailUrl,
+    this.createdAt,
+    this.views,
+  });
+
+  /// Reads one.
+  factory SparkPost.fromJson(Map<String, dynamic> json) => SparkPost(
+        id: asString(json['id']) ?? '',
+        identityId: asString(json['identityId']) ?? '',
+        caption: asString(json['caption']),
+        thumbnailUrl: asString(json['thumbnailUrl']),
+        createdAt: asString(json['createdAt']),
+        views: asInt(json['views']),
+      );
+
+  /// The post's id on the network.
+  final String id;
+
+  /// The identity that owns it.
+  final String identityId;
+
+  /// Its caption.
+  final String? caption;
+
+  /// Its cover image.
+  final String? thumbnailUrl;
+
+  /// When it went up.
+  final String? createdAt;
+
+  /// How many times it has been watched.
+  final int? views;
+}
+
+/// A comment on an ad, read live from the network and never stored.
+class AdComment {
+  /// Creates a comment.
+  const AdComment({
+    required this.id,
+    required this.text,
+    required this.likes,
+    required this.replyCount,
+    required this.hidden,
+    this.adId,
+    this.authorName,
+    this.authorAvatarUrl,
+    this.createdAt,
+    this.parentId,
+  });
+
+  /// Reads one.
+  factory AdComment.fromJson(Map<String, dynamic> json) => AdComment(
+        id: asString(json['id']) ?? '',
+        text: asString(json['text']) ?? '',
+        likes: asInt(json['likes']) ?? 0,
+        replyCount: asInt(json['replyCount']) ?? 0,
+        hidden: asBool(json['hidden']) ?? false,
+        adId: asString(json['adId']),
+        authorName: asString(json['authorName']),
+        authorAvatarUrl: asString(json['authorAvatarUrl']),
+        createdAt: asString(json['createdAt']),
+        parentId: asString(json['parentId']),
+      );
+
+  /// The comment's id on the network.
+  final String id;
+
+  /// What it says.
+  final String text;
+
+  /// How many people liked it.
+  final int likes;
+
+  /// How many replies hang off it.
+  final int replyCount;
+
+  /// Whether it is hidden from the public.
+  final bool hidden;
+
+  /// The ad it sits on.
+  final String? adId;
+
+  /// Who wrote it.
+  final String? authorName;
+
+  /// Their avatar.
+  final String? authorAvatarUrl;
+
+  /// When it was written.
+  final String? createdAt;
+
+  /// The comment this one answers, when it is not on the ad itself.
+  final String? parentId;
+}
+
+/// One page of an ad's comments; pass [nextCursor] back as `after`.
+class AdCommentsPage {
+  /// Creates a page.
+  const AdCommentsPage({required this.comments, this.nextCursor});
+
+  /// Reads one.
+  factory AdCommentsPage.fromJson(Map<String, dynamic> json) => AdCommentsPage(
+        comments: (json['comments'] as List<dynamic>? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(AdComment.fromJson)
+            .toList(),
         nextCursor: asString(json['nextCursor']),
       );
 
-  /// The ads on this page.
-  final List<AdLibraryAd> ads;
+  /// The comments on this page.
+  final List<AdComment> comments;
 
-  /// Pass this back as the cursor for the next page.
+  /// The cursor for the next page, or null at the end.
   final String? nextCursor;
-
-  @override
-  String toString() => 'AdLibraryPage(${ads.length})';
 }
