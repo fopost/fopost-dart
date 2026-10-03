@@ -232,16 +232,24 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `posts`       | `list`, `stream`, `get`, `create`, `update`, `delete`, `duplicate`, `publish`, `retry`, `cancel`, `preflight`, `deliveries`, `publishRuns`, `analytics`, `bulkShift`, `bulkLabel`, `bulkDelete`, `validateBulkImport`, `commitBulkImport`, `rollbackBulkImport` |
 | `workspaces`  | `list`, `get`, `create`, `update`, `delete`, `analytics`                                                                                                                                                  |
 | `accountGroups`| `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                                  |
-| `accounts`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `setPrimary`, `validate`, `health`, `healthSummary`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `slackChannels`, `slackMembers`, `getSlackIdentity`, `updateSlackIdentity` |
+| `accounts`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `setPrimary`, `validate`, `health`, `healthSummary`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `slackChannels`, `slackMembers`, `getSlackIdentity`, `updateSlackIdentity`, `iceBreakers`, `setIceBreakers`, `deleteIceBreakers`, `persistentMenu`, `setPersistentMenu`, `deletePersistentMenu`, `greeting`, `setGreeting`, `deleteGreeting`, `webhookSubscription`, `resubscribeWebhook`, `discordChannels`, `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`, `discordPins`, `deleteDiscordMessage`, `pinDiscordMessage`, `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`, `sendDiscordDirectMessage`, `discordEvents`, `getDiscordEvent`, `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`, `discordMembers`, `discordMember`, `discordRoles`, `createDiscordRole`, `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole`, `removeDiscordMemberRole`, `platformMetrics` |
 | `communities` | `list`, `sync`, `search`, `add`, `remove`                                                                                                                                                                 |
 | `labels`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                               |
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`                                                                                                   |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                                                                                |
+| `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `handover` |
+| `contacts`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `import`, `listFields`, `createField`, `updateField`, `deleteField`, `conversationAnalytics` |
+| `broadcasts`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
+| `sequences`   | `list`, `get`, `create`, `update`, `delete`, `enroll`, `unenroll`, `enrollments` |
+| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `estimateReach`, `insights`, `adInsights`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `goals`, `catalogs`, `createCatalog`, `catalog`, `updateCatalog`, `deleteCatalog`, `catalogProducts`, `writeCatalogProducts`, `productFeeds`, `createProductFeed`, `deleteProductFeed`, `feedUploads`, `startFeedUpload`, `productSets`, `createProductSet`, `updateProductSet`, `deleteProductSet`, `reachFrequency`, `createReachFrequency`, `reachFrequencyPrediction`, `reserveReachFrequency`, `cancelReachFrequency`, `library`, `partnershipCreators`, `requestPartnership`, `revokePartnership`, `accountActivity`, `labels`, `createLabel`, `updateLabel`, `deleteLabel`, `applyLabel`, `studies`, `createStudy`, `study`, `deleteStudy`, `iosCampaignLimits`, `highDemandPeriods`, `createHighDemandPeriod`, `deleteHighDemandPeriod`, `valueRuleSets`, `createValueRuleSet`, `deleteValueRuleSet` |
+| `knowledge`   | `list`, `create`, `update`, `delete`, `sync`, `search`                                                                                                                                                    |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping` |
 | `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `estimateReach`, `insights`, `adInsights`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
+| `googleBusiness` | `getLocation`, `updateLocation`, `getAttributes`, `updateAttributes`, `getMenus`, `replaceMenus`, `getServices`, `replaceServices`, `listMedia`, `addMedia`, `deleteMedia`, `listPlaceActions`, `createPlaceAction`, `updatePlaceAction`, `deletePlaceAction`, `getVerificationOptions`, `startVerification`, `completeVerification`, `getPerformance`, `getSearchKeywords`, `assign` |
 | `validate`    | `post`, `length`, `media`                                                                                                                                                                                 |
+| `activity`    | `list`                                                                                                                                                                                                    |
 
 For an endpoint the SDK does not wrap yet, `request` sends an authenticated call
 and hands back the decoded body as it came, envelope and all:
@@ -259,7 +267,7 @@ created: `posts` (which also covers publishing, deliveries, media, and `validate
 `delete`, `bulkSetStatus`, and every create, update, delete and duplicate on
 campaigns, ad sets and network ads) needs `publish` as well, and anything
 created starts paused unless `paused: false` is passed. The inbox actions `editComment`, `like`, `unlike`,
-`pin`, `unpin`, `react`, `startConversation` and `setTyping`, deleting our own
+`pin`, `unpin`, `react`, `startConversation`, `setTyping` and `handover`, deleting our own
 reply, and a reply with `mediaIds` or `quickReplies` need `publish` as well.
 A key may also be bound to a single workspace, in which case naming any other
 one returns `403`.
@@ -277,6 +285,22 @@ publishes it on request:
 export FOPOST_API_KEY=fp_...
 dart run example/example.dart "Hello from the Dart SDK" --publish
 ```
+
+## Chatbots and the inbox
+
+The [chat adapter](https://fopost.com/docs/sdks/chat-adapter) turns the FoPost inbox into one send/receive channel for a chatbot
+framework. It ships in the TypeScript and Python SDKs. There is no dedicated adapter here and no
+API change behind it, so the same loop is three pieces with this client:
+
+1. **Verify** the `inbox.message_received` webhook. The payload is ids only, on purpose, so
+   nothing a customer wrote sits in your logs. The [signing scheme](https://fopost.com/docs/webhooks/verification)
+   is HMAC-SHA256 over `{timestamp}.{body}`, refused past a five minute tolerance.
+2. **Read** the item back with `client.inbox.list(…)`, filtered to the payload's
+   `accountId` and matched on its `itemId`.
+3. **Answer** with `client.inbox.reply(item.id, text)`, or open a thread with
+   `client.inbox.startConversation(…)`.
+
+Reading needs the `inbox` scope; answering needs `publish` as well.
 
 ## Contributing
 
@@ -300,3 +324,34 @@ MIT. See [LICENSE](LICENSE).
 Docs at [fopost.com/docs](https://fopost.com/docs). Questions or a problem:
 [fopost.com/contact](https://fopost.com/contact) or
 [GitHub issues](https://github.com/fopost/fopost-dart/issues).
+
+### Google Ads
+
+Campaigns, ad groups, ads, audiences and insights are on `client.ads` and dispatch by
+connection. What only Google has is on `client.googleAds`:
+
+```dart
+const scope = GoogleAdsScope(
+  connectionId: 'c4d5e6f7-…',
+  customerId: '1234567890',
+);
+
+final keywords = await client.googleAds.keywords(scope);
+
+await client.googleAds.createKeyword(
+  const GoogleAdsScope(
+    workspaceId: '7d2b8c11-…',
+    connectionId: 'c4d5e6f7-…',
+    customerId: '1234567890',
+  ),
+  adGroupId: '1234567890~adGroup~77',
+  text: 'running shoes',
+  matchType: 'EXACT',
+);
+```
+
+Also `keywordIdeas`, `keywordMetrics`, `searchTerms`, `bidStrategies`, `adSchedule` and
+`setAdSchedule`, the negative keyword lists, `assets` and `assetGroups`,
+`localServicesLeads`, the conversion methods, and `query` for a raw read-only GAQL SELECT.
+Changes need the `publish` scope as well as `ads`; `customerId` has to name an account the
+connection's grant reaches.
