@@ -3,10 +3,12 @@ import 'package:meta/meta.dart';
 import '../http.dart';
 import '../json.dart';
 import '../models/ad.dart';
+import '../models/ad_extras.dart';
 import 'base.dart';
 
-/// Ads: boosts, standalone ads, the campaign tree, creatives, audiences,
-/// insights and lead forms on connected ad accounts.
+/// Ads: boosts, standalone ads, the campaign tree, creatives, catalogs,
+/// audiences, predictions, the public ad archive, insights and lead forms on
+/// connected ad accounts.
 ///
 /// Every call needs the `ads` scope. [boost], [create], [setStatus],
 /// [delete], [bulkSetStatus] and every create, update, delete and duplicate
@@ -58,9 +60,17 @@ class AdsResource {
     return rows.map(AdSource.fromJson).toList();
   }
 
-  /// Starts a Meta ads connection: returns the login URL the user finishes in
-  /// their own browser. [method] is `business` or `user`.
-  Future<String> authorizeMeta({
+  /// The ad networks this deployment knows, with what each one supports.
+  Future<List<AdProvider>> providers() async {
+    final rows = await _http.objects('GET', '/ads/providers');
+    return rows.map(AdProvider.fromJson).toList();
+  }
+
+  /// Starts an ads connection on one network: returns the login URL the user
+  /// finishes in their own browser. [method] is one of the network's own
+  /// connect methods.
+  Future<String> authorize(
+    String provider, {
     required String workspaceId,
     String? method,
     String? returnTo,
@@ -70,8 +80,31 @@ class AdsResource {
       'method': method,
       'returnTo': returnTo,
     });
-    final result = await _http.object('POST', '/ads/connections/meta/authorize',
+    final result = await _http.object(
+        'POST', '/ads/connections/${segment(provider)}/authorize',
         body: body);
+    return asString(result['url']) ?? '';
+  }
+
+  /// Starts a Meta ads connection.
+  @Deprecated("Use authorize('meta', ...).")
+  Future<String> authorizeMeta({
+    required String workspaceId,
+    String? method,
+    String? returnTo,
+  }) =>
+      authorize('meta',
+          workspaceId: workspaceId, method: method, returnTo: returnTo);
+
+  /// The Google login URL. The caller finishes it in their own browser
+  /// session: the callback checks that the same user came back.
+  Future<String> authorizeGoogle({
+    required String workspaceId,
+    String? returnTo,
+  }) async {
+    final body = pruned({'workspaceId': workspaceId, 'returnTo': returnTo});
+    final result = await _http
+        .object('POST', '/ads/connections/google/authorize', body: body);
     return asString(result['url']) ?? '';
   }
 
@@ -130,6 +163,7 @@ class AdsResource {
     String? destinationUrl,
     String? mediaUrl,
     String? urlTags,
+    String? sparkPostId,
     bool? paused,
   }) async {
     final body = pruned({
@@ -146,6 +180,7 @@ class AdsResource {
       'destinationUrl': destinationUrl,
       'mediaUrl': mediaUrl,
       'urlTags': urlTags,
+      'sparkPostId': sparkPostId,
       'paused': paused,
     });
     return Ad.fromJson(await _http.object('POST', '/ads', body: body));
@@ -229,6 +264,130 @@ class AdsResource {
     return rows.map(TargetingOption.fromJson).toList();
   }
 
+  /// TikTok's Business Centers. The one network-named read on this resource,
+  /// because no other network groups ad accounts this way.
+  Future<List<AdBusinessCenter>> tiktokBusinessCenters({
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/tiktok/business-centers',
+        query: {'workspace_id': workspaceId, 'connection_id': connectionId});
+    return rows.map(AdBusinessCenter.fromJson).toList();
+  }
+
+  /// The accounts an ad can run as; an identity id is a `pageId`.
+  Future<List<AdIdentity>> tiktokIdentities({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/tiktok/identities', query: {
+      'workspace_id': workspaceId,
+      'connection_id': connectionId,
+      'ad_account_id': adAccountId,
+    });
+    return rows.map(AdIdentity.fromJson).toList();
+  }
+
+  /// Posts already live under an identity, each a candidate Spark ad.
+  Future<List<SparkPost>> sparkPosts({
+    required String connectionId,
+    required String adAccountId,
+    required String identityId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/spark-posts', query: {
+      'workspace_id': workspaceId,
+      'connection_id': connectionId,
+      'ad_account_id': adAccountId,
+      'identity_id': identityId,
+    });
+    return rows.map(SparkPost.fromJson).toList();
+  }
+
+  /// Offline conversions against a pixel the ad account owns. Identifiers are
+  /// hashed before anything leaves FoPost; returns how many the network took.
+  Future<int> uploadConversions({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String pixelId,
+    required List<Map<String, dynamic>> events,
+  }) async {
+    final data = await _http.object('POST', '/ads/conversions', body: {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adAccountId': adAccountId,
+      'pixelId': pixelId,
+      'events': events,
+    });
+    return asInt(data['accepted']) ?? 0;
+  }
+
+  /// One page of an ad's comments; pass `nextCursor` back as [after].
+  Future<AdCommentsPage> comments({
+    required String connectionId,
+    required String adId,
+    String? after,
+    String? workspaceId,
+  }) async =>
+      AdCommentsPage.fromJson(
+          await _http.object('GET', '/ads/comments', query: {
+        'workspace_id': workspaceId,
+        'connection_id': connectionId,
+        'ad_id': adId,
+        'after': after,
+      }));
+
+  /// Answers a comment on an ad; returns the reply's id on the network. Needs
+  /// the `publish` scope as well as `ads`.
+  Future<String> replyToComment(
+    String commentId, {
+    required String workspaceId,
+    required String connectionId,
+    required String adId,
+    required String text,
+  }) async {
+    final data = await _http
+        .object('POST', '/ads/comments/${segment(commentId)}/reply', body: {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adId': adId,
+      'text': text,
+    });
+    return asString(data['replyId']) ?? '';
+  }
+
+  /// Hides or shows a comment on an ad. Needs the `publish` scope as well as
+  /// `ads`.
+  Future<void> setCommentHidden(
+    String commentId, {
+    required String workspaceId,
+    required String connectionId,
+    required String adId,
+    required bool hidden,
+  }) =>
+      _http.discard('POST', '/ads/comments/${segment(commentId)}/hide', body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adId': adId,
+        'hidden': hidden,
+      });
+
+  /// Removes a comment from the ad on the network. One already gone succeeds.
+  /// Needs the `publish` scope as well as `ads`.
+  Future<void> deleteComment(
+    String commentId, {
+    required String workspaceId,
+    required String connectionId,
+    required String adId,
+  }) =>
+      _http.discard('DELETE', '/ads/comments/${segment(commentId)}', body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adId': adId,
+      });
+
   /// Each connection's Page with the lead forms on it.
   Future<List<LeadFormSource>> leadForms({String? workspaceId}) async {
     final rows = await _http.objects('GET', '/ads/lead-forms',
@@ -303,6 +462,7 @@ class AdsResource {
     required String name,
     required String goal,
     bool? paused,
+    bool? smartPlus,
   }) async {
     final body = pruned({
       'workspaceId': workspaceId,
@@ -311,6 +471,7 @@ class AdsResource {
       'name': name,
       'goal': goal,
       'paused': paused,
+      'smartPlus': smartPlus,
     });
     return AdCampaign.fromJson(
         await _http.object('POST', '/ads/campaigns', body: body));
@@ -670,6 +831,256 @@ class AdsResource {
     return asInt(result['added']) ?? 0;
   }
 
+  /// Adds companies to a company-list audience; answers how many the network
+  /// took. The rows travel with the request and are never stored.
+  Future<int> addAudienceCompanies(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required List<AdCompany> companies,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/audiences/${segment(id)}/companies',
+      body: {'companies': companies.map((c) => c.toJson()).toList()},
+      query: _meta(workspaceId, connectionId),
+    );
+    return asInt(result['added']) ?? 0;
+  }
+
+  /// What the auction currently costs for [targeting].
+  Future<BidPricing> bidPricing({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String goal,
+    required AdTargeting targeting,
+    List<String>? placements,
+    String? bidType,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/linkedin/bid-pricing',
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'goal': goal,
+        'targeting': targeting.toJson(),
+        'placements': placements,
+        'bidType': bidType,
+      }),
+    );
+    return BidPricing.fromJson(result);
+  }
+
+  /// What [targeting] would deliver at [budgetMinor].
+  Future<SupplyForecast> supplyForecast({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String goal,
+    required AdTargeting targeting,
+    List<String>? placements,
+    int? budgetMinor,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/linkedin/supply-forecast',
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'goal': goal,
+        'targeting': targeting.toJson(),
+        'placements': placements,
+        'budgetMinor': budgetMinor,
+      }),
+    );
+    return SupplyForecast.fromJson(result);
+  }
+
+  /// The conversion rules on one ad account.
+  Future<List<ConversionRule>> conversionRules({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects(
+      'GET',
+      '/ads/linkedin/conversion-rules',
+      query: {
+        ..._meta(workspaceId, connectionId),
+        'ad_account_id': adAccountId,
+      },
+    );
+    return rows.map(ConversionRule.fromJson).toList();
+  }
+
+  /// Creates a conversion rule; answers its id.
+  ///
+  /// [type] is `purchase`, `lead`, `sign_up`, `add_to_cart`, `download`,
+  /// `install`, `key_page_view` or `other`; [attribution] is `last_touch` or
+  /// `each_campaign`.
+  Future<String> createConversionRule({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+    required String type,
+    required String attribution,
+    int? postClickWindowDays,
+    int? viewThroughWindowDays,
+    int? valueMinor,
+    String? currency,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/linkedin/conversion-rules',
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'name': name,
+        'type': type,
+        'attribution': attribution,
+        'postClickWindowDays': postClickWindowDays,
+        'viewThroughWindowDays': viewThroughWindowDays,
+        'valueMinor': valueMinor,
+        'currency': currency,
+      }),
+    );
+    return asString(result['id']) ?? '';
+  }
+
+  /// One rule, with the ad sets it is attached to.
+  Future<ConversionRule> conversionRule(
+    String id, {
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', _rulePath(id),
+        query: _meta(workspaceId, connectionId));
+    return ConversionRule.fromJson(result);
+  }
+
+  /// Changes a rule. Only the fields you pass move.
+  Future<ConversionRule> updateConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    String? name,
+    String? type,
+    String? attribution,
+    int? postClickWindowDays,
+    int? viewThroughWindowDays,
+    int? valueMinor,
+    String? currency,
+    bool? enabled,
+  }) async {
+    final result = await _http.object(
+      'PATCH',
+      _rulePath(id),
+      body: pruned({
+        'name': name,
+        'type': type,
+        'attribution': attribution,
+        'postClickWindowDays': postClickWindowDays,
+        'viewThroughWindowDays': viewThroughWindowDays,
+        'valueMinor': valueMinor,
+        'currency': currency,
+        'enabled': enabled,
+      }),
+      query: _meta(workspaceId, connectionId),
+    );
+    return ConversionRule.fromJson(result);
+  }
+
+  /// Turns a rule off. The network keeps the history.
+  Future<void> deleteConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+  }) =>
+      _http.discard('DELETE', _rulePath(id),
+          query: _meta(workspaceId, connectionId));
+
+  /// Attaches a rule to an ad set on the same connection.
+  Future<ConversionRule> attachConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String campaignId,
+  }) =>
+      _association('POST', id, workspaceId, connectionId, campaignId);
+
+  /// Detaches a rule from an ad set.
+  Future<ConversionRule> detachConversionRule(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String campaignId,
+  }) =>
+      _association('DELETE', id, workspaceId, connectionId, campaignId);
+
+  /// What a rule recorded between two `YYYY-MM-DD` days, inclusive.
+  Future<ConversionMetrics> conversionMetrics(
+    String id, {
+    required String connectionId,
+    required String since,
+    required String until,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object(
+      'GET',
+      _rulePath(id, '/metrics'),
+      query: {
+        ..._meta(workspaceId, connectionId),
+        'since': since,
+        'until': until,
+      },
+    );
+    return ConversionMetrics.fromJson(result);
+  }
+
+  /// Sends conversions back to the network; answers how many it took.
+  ///
+  /// Each event needs an email or a click id. The address is hashed inside the
+  /// API and nothing about an event is stored.
+  Future<int> sendConversionEvents(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required List<ConversionEvent> events,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      _rulePath(id, '/events'),
+      body: {'events': events.map((e) => e.toJson()).toList()},
+      query: _meta(workspaceId, connectionId),
+    );
+    return asInt(result['accepted']) ?? 0;
+  }
+
+  Future<ConversionRule> _association(
+    String method,
+    String id,
+    String workspaceId,
+    String connectionId,
+    String campaignId,
+  ) async {
+    final result = await _http.object(
+      method,
+      _rulePath(id, '/associations'),
+      body: {'campaignId': campaignId},
+      query: _meta(workspaceId, connectionId),
+    );
+    return ConversionRule.fromJson(result);
+  }
+
+  String _rulePath(String id, [String suffix = '']) =>
+      '/ads/linkedin/conversion-rules/${segment(id)}$suffix';
+
   /// How many people [targeting] could reach from an ad account.
   Future<ReachEstimate> estimateReach({
     required String workspaceId,
@@ -814,6 +1225,664 @@ class AdsResource {
     );
     return asString(result['id']) ?? '';
   }
+
+  // ─── Goals ──────────────────────────────────────────────────────
+
+  /// The goals this connection's ad platform can run right now.
+  ///
+  /// Ask rather than assume: a goal the deployment is not set up for is absent
+  /// here and is refused if you send it anyway.
+  Future<List<String>> goals({
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.raw('GET', '/ads/goals',
+        query: _meta(workspaceId, connectionId));
+    return asStringList(rows);
+  }
+
+  // ─── Product catalogs ───────────────────────────────────────────
+
+  /// Catalogs the connection's business portfolios reach. Read live, never
+  /// stored.
+  Future<List<ProductCatalog>> catalogs({
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', '/ads/catalogs',
+        query: _meta(workspaceId, connectionId));
+    return asModelList(result['catalogs'], ProductCatalog.fromJson);
+  }
+
+  /// Created on the connection's business portfolio. Also needs `publish`.
+  Future<ProductCatalog> createCatalog({
+    required String workspaceId,
+    required String connectionId,
+    required String name,
+    String? vertical,
+  }) async {
+    final body = pruned({
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'name': name,
+      'vertical': vertical,
+    });
+    return ProductCatalog.fromJson(
+        await _http.object('POST', '/ads/catalogs', body: body));
+  }
+
+  /// One catalog, read live.
+  Future<ProductCatalog> catalog(
+    String id, {
+    required String connectionId,
+    String? workspaceId,
+  }) async =>
+      ProductCatalog.fromJson(await _http.object(
+          'GET', '/ads/catalogs/${segment(id)}',
+          query: _meta(workspaceId, connectionId)));
+
+  /// Renames a catalog. Also needs `publish`.
+  Future<ProductCatalog> updateCatalog(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String name,
+  }) async {
+    final body = {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'name': name,
+    };
+    return ProductCatalog.fromJson(await _http.object(
+        'PATCH', '/ads/catalogs/${segment(id)}',
+        body: body, query: _meta(workspaceId, connectionId)));
+  }
+
+  /// Deletes every product, feed and set in it. Also needs `publish`.
+  Future<void> deleteCatalog(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+  }) =>
+      _http.discard('DELETE', '/ads/catalogs/${segment(id)}',
+          query: _meta(workspaceId, connectionId));
+
+  /// One page of products; pass `nextCursor` back as [after].
+  Future<CatalogProductsPage> catalogProducts(
+    String id, {
+    required String connectionId,
+    String? workspaceId,
+    String? after,
+  }) async =>
+      CatalogProductsPage.fromJson(await _http.object(
+          'GET', '/ads/catalogs/${segment(id)}/products',
+          query: {..._meta(workspaceId, connectionId), 'after': after}));
+
+  /// Up to 500 upserts and deletes in one batch, keyed by your own retailer
+  /// id. Also needs `publish`.
+  Future<CatalogBatchResult> writeCatalogProducts(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required List<CatalogProductWrite> products,
+  }) async {
+    final body = {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'products': products.map((p) => p.toJson()).toList(),
+    };
+    return CatalogBatchResult.fromJson(await _http
+        .object('POST', '/ads/catalogs/${segment(id)}/products', body: body));
+  }
+
+  /// The feeds keeping a catalog in step with a hosted product file.
+  Future<List<ProductFeed>> productFeeds(
+    String id, {
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects(
+        'GET', '/ads/catalogs/${segment(id)}/feeds',
+        query: _meta(workspaceId, connectionId));
+    return rows.map(ProductFeed.fromJson).toList();
+  }
+
+  /// A [schedule] needs a [url]. Also needs `publish`.
+  Future<ProductFeed> createProductFeed(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String name,
+    String? url,
+    String? schedule,
+  }) async {
+    final body = pruned({
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'name': name,
+      'url': url,
+      'schedule': schedule,
+    });
+    return ProductFeed.fromJson(await _http
+        .object('POST', '/ads/catalogs/${segment(id)}/feeds', body: body));
+  }
+
+  /// Also needs `publish`.
+  Future<void> deleteProductFeed(
+    String id,
+    String feedId, {
+    required String workspaceId,
+    required String connectionId,
+  }) =>
+      _http.discard(
+          'DELETE', '/ads/catalogs/${segment(id)}/feeds/${segment(feedId)}',
+          query: _meta(workspaceId, connectionId));
+
+  /// Each run the ad platform made of the feed.
+  Future<List<ProductFeedUpload>> feedUploads(
+    String id,
+    String feedId, {
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects(
+        'GET', '/ads/catalogs/${segment(id)}/feeds/${segment(feedId)}/uploads',
+        query: _meta(workspaceId, connectionId));
+    return rows.map(ProductFeedUpload.fromJson).toList();
+  }
+
+  /// Fetches the feed now; the id of the run. Also needs `publish`.
+  Future<String> startFeedUpload(
+    String id,
+    String feedId, {
+    required String workspaceId,
+    required String connectionId,
+    String? url,
+  }) async {
+    final body = pruned({
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'url': url,
+    });
+    final result = await _http.object(
+        'POST', '/ads/catalogs/${segment(id)}/feeds/${segment(feedId)}/uploads',
+        body: body);
+    return asString(result['id']) ?? '';
+  }
+
+  /// A catalog ad runs from a product set, not the whole catalog.
+  Future<List<ProductSet>> productSets(
+    String id, {
+    required String connectionId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects(
+        'GET', '/ads/catalogs/${segment(id)}/product-sets',
+        query: _meta(workspaceId, connectionId));
+    return rows.map(ProductSet.fromJson).toList();
+  }
+
+  /// Without a [filter] the set is the whole catalog. Also needs `publish`.
+  Future<ProductSet> createProductSet(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String name,
+    Map<String, dynamic>? filter,
+  }) async {
+    final body = pruned({
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'name': name,
+      'filter': filter,
+    });
+    return ProductSet.fromJson(await _http.object(
+        'POST', '/ads/catalogs/${segment(id)}/product-sets',
+        body: body));
+  }
+
+  /// Also needs `publish`.
+  Future<ProductSet> updateProductSet(
+    String id,
+    String setId, {
+    required String workspaceId,
+    required String connectionId,
+    required String name,
+    Map<String, dynamic>? filter,
+  }) async {
+    final body = pruned({
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'name': name,
+      'filter': filter,
+    });
+    return ProductSet.fromJson(await _http.object(
+        'PATCH', '/ads/catalogs/${segment(id)}/product-sets/${segment(setId)}',
+        body: body, query: _meta(workspaceId, connectionId)));
+  }
+
+  /// Also needs `publish`.
+  Future<void> deleteProductSet(
+    String id,
+    String setId, {
+    required String workspaceId,
+    required String connectionId,
+  }) =>
+      _http.discard('DELETE',
+          '/ads/catalogs/${segment(id)}/product-sets/${segment(setId)}',
+          query: _meta(workspaceId, connectionId));
+
+  // ─── Reach and frequency ────────────────────────────────────────
+
+  /// The predictions on one ad account.
+  Future<List<ReachFrequencyPrediction>> reachFrequency({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', '/ads/reach-frequency',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return asModelList(
+        result['predictions'], ReachFrequencyPrediction.fromJson);
+  }
+
+  /// Prices a flight. Nothing is bought until you reserve it.
+  Future<ReachFrequencyPrediction> createReachFrequency({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+    required AdTargeting targeting,
+    required List<String> placements,
+    required int budgetMinor,
+    required DateTime startAt,
+    required DateTime endAt,
+    int? frequencyCap,
+  }) async {
+    final body = pruned({
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adAccountId': adAccountId,
+      'name': name,
+      'targeting': targeting.toJson(),
+      'placements': placements,
+      'budgetMinor': budgetMinor,
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      'frequencyCap': frequencyCap,
+    });
+    return ReachFrequencyPrediction.fromJson(
+        await _http.object('POST', '/ads/reach-frequency', body: body));
+  }
+
+  /// One prediction, read live.
+  Future<ReachFrequencyPrediction> reachFrequencyPrediction(
+    String id, {
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async =>
+      ReachFrequencyPrediction.fromJson(await _http.object(
+          'GET', '/ads/reach-frequency/${segment(id)}',
+          query: _account(workspaceId, connectionId, adAccountId)));
+
+  /// Holds the inventory the prediction priced. Also needs `publish`.
+  Future<ReachFrequencyPrediction> reserveReachFrequency(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+  }) =>
+      _reachFrequencyAction(
+          id, 'reserve', workspaceId, connectionId, adAccountId);
+
+  /// Also needs `publish`.
+  Future<ReachFrequencyPrediction> cancelReachFrequency(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+  }) =>
+      _reachFrequencyAction(
+          id, 'cancel', workspaceId, connectionId, adAccountId);
+
+  // ─── Ad Library ─────────────────────────────────────────────────
+
+  /// The public ad archive: ads anyone is running, by keyword or by Page.
+  ///
+  /// Read live on every call and stored nowhere, so an ad that stops running
+  /// is simply absent from the next search. [countries] are two-letter codes
+  /// the ad reached.
+  Future<AdLibraryPage> library({
+    required String connectionId,
+    required List<String> countries,
+    String? q,
+    List<String>? pageIds,
+    String? activeStatus,
+    int? limit,
+    String? after,
+    String? workspaceId,
+  }) async =>
+      AdLibraryPage.fromJson(await _http.object('GET', '/ads/library', query: {
+        ..._meta(workspaceId, connectionId),
+        'countries': countries.join(','),
+        'q': q,
+        'page_ids': pageIds?.join(','),
+        'active_status': activeStatus,
+        'limit': limit,
+        'after': after,
+      }));
+
+  // ─── Partnership ads ────────────────────────────────────────────
+
+  /// Creators who allowlisted this Page to run partnership ads on their posts.
+  Future<List<PartnershipCreator>> partnershipCreators({
+    required String connectionId,
+    required String pageId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/partnership/creators',
+        query: {..._meta(workspaceId, connectionId), 'page_id': pageId});
+    return rows.map(PartnershipCreator.fromJson).toList();
+  }
+
+  /// Asks a creator for permission; the list as it now stands.
+  Future<List<PartnershipCreator>> requestPartnership({
+    required String workspaceId,
+    required String connectionId,
+    required String pageId,
+    required String creatorId,
+  }) async {
+    final body = {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'pageId': pageId,
+      'creatorId': creatorId,
+    };
+    final rows =
+        await _http.objects('POST', '/ads/partnership/creators', body: body);
+    return rows.map(PartnershipCreator.fromJson).toList();
+  }
+
+  /// Revokes a creator's partnership permission.
+  Future<void> revokePartnership(
+    String creatorId, {
+    required String workspaceId,
+    required String connectionId,
+    required String pageId,
+  }) =>
+      _http.discard('DELETE', '/ads/partnership/creators/${segment(creatorId)}',
+          query: {..._meta(workspaceId, connectionId), 'page_id': pageId});
+
+  // ─── Ad account settings ────────────────────────────────────────
+
+  /// Who changed what on the ad account, and when. Dates are `YYYY-MM-DD`.
+  Future<List<AdActivity>> accountActivity({
+    required String connectionId,
+    required String adAccountId,
+    String? since,
+    String? until,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', '/ads/account/activity', query: {
+      ..._account(workspaceId, connectionId, adAccountId),
+      'since': since,
+      'until': until,
+    });
+    return asModelList(result['activity'], AdActivity.fromJson);
+  }
+
+  /// The labels on an ad account.
+  Future<List<AdLabel>> labels({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/account/labels',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(AdLabel.fromJson).toList();
+  }
+
+  /// Creates a label.
+  Future<AdLabel> createLabel({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+  }) async =>
+      AdLabel.fromJson(await _http.object('POST', '/ads/account/labels',
+          body: _labelBody(workspaceId, connectionId, adAccountId, name)));
+
+  /// Renames a label.
+  Future<AdLabel> updateLabel(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+  }) async =>
+      AdLabel.fromJson(await _http.object(
+          'PATCH', '/ads/account/labels/${segment(id)}',
+          body: _labelBody(workspaceId, connectionId, adAccountId, name),
+          query: _meta(workspaceId, connectionId)));
+
+  /// Deletes a label.
+  Future<void> deleteLabel(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+  }) =>
+      _http.discard('DELETE', '/ads/account/labels/${segment(id)}',
+          query: _account(workspaceId, connectionId, adAccountId));
+
+  /// Puts a label on a campaign, ad set or ad, keeping whatever labels it
+  /// already carries. [level] is `campaign`, `ad_set` or `ad`.
+  Future<void> applyLabel(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String objectId,
+    required String level,
+  }) =>
+      _http.discard('POST', '/ads/account/labels/${segment(id)}/apply', body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'objectId': objectId,
+        'level': level,
+      });
+
+  /// The A/B studies on an ad account.
+  Future<List<AdStudy>> studies({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/account/studies',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(AdStudy.fromJson).toList();
+  }
+
+  /// Splits traffic evenly across the cells for the length of the flight.
+  Future<AdStudy> createStudy({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+    required DateTime startAt,
+    required DateTime endAt,
+    required List<AdStudyCell> cells,
+    String? description,
+  }) async {
+    final body = pruned({
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adAccountId': adAccountId,
+      'name': name,
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      'cells': cells.map((c) => c.toJson()).toList(),
+      'description': description,
+    });
+    return AdStudy.fromJson(
+        await _http.object('POST', '/ads/account/studies', body: body));
+  }
+
+  /// One A/B study, read live.
+  Future<AdStudy> study(
+    String id, {
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async =>
+      AdStudy.fromJson(await _http.object(
+          'GET', '/ads/account/studies/${segment(id)}',
+          query: _account(workspaceId, connectionId, adAccountId)));
+
+  /// Deletes an A/B study.
+  Future<void> deleteStudy(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+  }) =>
+      _http.discard('DELETE', '/ads/account/studies/${segment(id)}',
+          query: _account(workspaceId, connectionId, adAccountId));
+
+  /// How many iOS 14 campaigns the account may run at once, per app.
+  Future<List<IosCampaignLimits>> iosCampaignLimits({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/account/ios-limits',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(IosCampaignLimits.fromJson).toList();
+  }
+
+  /// The high-demand windows declared on an ad account.
+  Future<List<HighDemandPeriod>> highDemandPeriods({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/account/high-demand-periods',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(HighDemandPeriod.fromJson).toList();
+  }
+
+  /// Tells the ad platform to expect heavier spend over a window, so pacing
+  /// allows for it. [budgetValueType] is `ABSOLUTE` or `MULTIPLIER`.
+  Future<HighDemandPeriod> createHighDemandPeriod({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required DateTime startAt,
+    required DateTime endAt,
+    required double budgetValue,
+    required String budgetValueType,
+  }) async {
+    final body = {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adAccountId': adAccountId,
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      'budgetValue': budgetValue,
+      'budgetValueType': budgetValueType,
+    };
+    return HighDemandPeriod.fromJson(await _http
+        .object('POST', '/ads/account/high-demand-periods', body: body));
+  }
+
+  /// Deletes a high-demand window.
+  Future<void> deleteHighDemandPeriod(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+  }) =>
+      _http.discard('DELETE', '/ads/account/high-demand-periods/${segment(id)}',
+          query: _account(workspaceId, connectionId, adAccountId));
+
+  /// The value rule sets on an ad account.
+  Future<List<ValueRuleSet>> valueRuleSets({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/account/value-rule-sets',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(ValueRuleSet.fromJson).toList();
+  }
+
+  /// Weights conversions so some audiences count for more than others.
+  Future<ValueRuleSet> createValueRuleSet({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+    required List<ValueRule> rules,
+  }) async {
+    final body = {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adAccountId': adAccountId,
+      'name': name,
+      'rules': rules.map((r) => r.toJson()).toList(),
+    };
+    return ValueRuleSet.fromJson(
+        await _http.object('POST', '/ads/account/value-rule-sets', body: body));
+  }
+
+  /// Deletes a value rule set.
+  Future<void> deleteValueRuleSet(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+  }) =>
+      _http.discard('DELETE', '/ads/account/value-rule-sets/${segment(id)}',
+          query: _account(workspaceId, connectionId, adAccountId));
+
+  Future<ReachFrequencyPrediction> _reachFrequencyAction(
+    String id,
+    String action,
+    String workspaceId,
+    String connectionId,
+    String adAccountId,
+  ) async {
+    final body = {
+      'workspaceId': workspaceId,
+      'connectionId': connectionId,
+      'adAccountId': adAccountId,
+    };
+    return ReachFrequencyPrediction.fromJson(await _http.object(
+        'POST', '/ads/reach-frequency/${segment(id)}/$action',
+        body: body));
+  }
+
+  Map<String, dynamic> _labelBody(
+    String workspaceId,
+    String connectionId,
+    String adAccountId,
+    String name,
+  ) =>
+      {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'name': name,
+      };
+
+  Map<String, dynamic> _account(
+    String? workspaceId,
+    String connectionId,
+    String adAccountId,
+  ) =>
+      {..._meta(workspaceId, connectionId), 'ad_account_id': adAccountId};
 
   Map<String, dynamic> _meta(String? workspaceId, String connectionId) =>
       {'workspace_id': workspaceId, 'connection_id': connectionId};
