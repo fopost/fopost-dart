@@ -57,3 +57,4 @@ export 'src/resources/validate.dart';
 export 'src/resources/webhooks.dart';
 export 'src/resources/workspaces.dart';
 export 'src/version.dart';
+export 'src/webhook.dart';

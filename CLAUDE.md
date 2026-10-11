@@ -7,7 +7,8 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 `fopost` on [pub.dev](https://pub.dev/packages/fopost) — the official Dart SDK
 for the FoPost REST API (`https://api.fopost.com/v1`). It wraps posts,
 workspaces, accounts, communities, labels, webhooks, analytics, automations,
-media, inbox and ads. Pure Dart: it depends only on `http` and `meta`, imports Flutter
+media, inbox, ads and the blog. Pure Dart: it depends only on `http`, `meta` and
+`crypto`, imports Flutter
 nowhere, and therefore runs on Flutter (iOS, Android, web, desktop) and on
 server-side Dart from the same source.
 
