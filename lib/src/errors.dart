@@ -87,6 +87,9 @@ class FoPostException implements Exception {
       case 404:
         return FoPostNotFoundException(message,
             statusCode: status, code: code, body: body, rateLimit: rateLimit);
+      case 413:
+        return FoPostFileTooLargeException(message,
+            statusCode: status, code: code, body: body, rateLimit: rateLimit);
       case 429:
         return FoPostRateLimitException(message,
             statusCode: status,
@@ -230,6 +233,29 @@ class FoPostNotFoundException extends FoPostException {
   /// Creates a not-found error.
   FoPostNotFoundException(super.message,
       {super.statusCode, super.code, super.body, super.rateLimit});
+}
+
+/// A `413` — a file is over the account's upload ceiling. The body carries
+/// `max_file_bytes`, `file_bytes` and `upgrade_url`.
+class FoPostFileTooLargeException extends FoPostException {
+  /// Creates a file-too-large error.
+  FoPostFileTooLargeException(super.message,
+      {super.statusCode, super.code, super.body, super.rateLimit});
+
+  /// The largest file the account may upload, when the API named it.
+  int? get maxFileBytes => _int(bodyMap['max_file_bytes']);
+
+  /// The size of the file that was refused.
+  int? get fileBytes => _int(bodyMap['file_bytes']);
+
+  /// Where to send the user to raise the ceiling, when the API named one.
+  String? get upgradeUrl {
+    final value = bodyMap['upgrade_url'];
+    return value is String ? value : null;
+  }
+
+  static int? _int(Object? value) =>
+      value is num ? value.toInt() : int.tryParse('$value');
 }
 
 /// A `429` — over the plan's per-minute ceiling.

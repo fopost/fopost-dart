@@ -110,22 +110,25 @@ class FoPostHttp {
     String path, {
     required Map<String, String> fields,
     required List<FoPostFile> files,
+    String method = 'POST',
     String fileField = 'files',
     Map<String, dynamic>? query,
   }) {
     final uri = _uri(path, query);
     return _run(() {
-      final request = http.MultipartRequest('POST', uri)
+      final request = http.MultipartRequest(method.toUpperCase(), uri)
         ..headers.addAll(_headers);
       fields.forEach((key, value) {
         if (value.isNotEmpty) request.fields[key] = value;
       });
       for (final file in files) {
-        request.files.add(http.MultipartFile.fromBytes(
-          fileField,
-          file.bytes,
-          filename: file.filename.isEmpty ? 'upload' : file.filename,
-        ));
+        final filename = file.filename.isEmpty ? 'upload' : file.filename;
+        final bytes = file.bytes;
+        // Stream-backed files reopen per attempt, so a retry never replays a spent stream.
+        request.files.add(bytes != null
+            ? http.MultipartFile.fromBytes(fileField, bytes, filename: filename)
+            : http.MultipartFile(fileField, file.openRead(), file.length,
+                filename: filename));
       }
       return request;
     }, unwrap: true);
@@ -174,12 +177,37 @@ class FoPostHttp {
     Uri url,
     Uint8List bytes, {
     required Map<String, String> headers,
+  }) =>
+      putFile(url, FoPostFile(filename: '', bytes: bytes), headers: headers);
+
+  /// Sends a file to a presigned URL with exactly [headers], streaming a
+  /// stream-backed [FoPostFile] rather than buffering it.
+  Future<void> putFile(
+    Uri url,
+    FoPostFile file, {
+    required Map<String, String> headers,
   }) async {
     http.Response response;
     try {
-      final request = http.Request('PUT', url)
-        ..headers.addAll(headers)
-        ..bodyBytes = bytes;
+      final bytes = file.bytes;
+      final http.BaseRequest request;
+      if (bytes != null) {
+        request = http.Request('PUT', url)
+          ..headers.addAll(headers)
+          ..bodyBytes = bytes;
+      } else {
+        final streamed = http.StreamedRequest('PUT', url)
+          ..headers.addAll(headers)
+          ..contentLength = file.length;
+        unawaited(streamed.sink.addStream(file.openRead()).then(
+          (_) => streamed.sink.close(),
+          onError: (Object error, StackTrace trace) {
+            streamed.sink.addError(error, trace);
+            return streamed.sink.close();
+          },
+        ));
+        request = streamed;
+      }
       response = await _once(request).timeout(timeout);
     } on Exception catch (error) {
       throw FoPostConnectionException(

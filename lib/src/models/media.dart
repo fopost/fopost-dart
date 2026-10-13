@@ -127,6 +127,7 @@ class PresignedUpload {
     required this.method,
     required this.headers,
     this.expiresAt,
+    this.maxFileBytes,
   });
 
   /// Reads a presigned upload.
@@ -144,6 +145,7 @@ class PresignedUpload {
       method: asString(json['method']) ?? 'PUT',
       headers: headers,
       expiresAt: asDate(json['expiresAt']),
+      maxFileBytes: asInt(json['maxFileBytes']),
     );
   }
 
@@ -162,6 +164,92 @@ class PresignedUpload {
   /// When the slot stops accepting bytes.
   final DateTime? expiresAt;
 
+  /// The largest file the account may upload.
+  final int? maxFileBytes;
+
   @override
   String toString() => 'PresignedUpload($uploadId)';
+}
+
+/// The next upload tier an account can reach by connecting more accounts.
+class UploadLimitTier {
+  /// Creates a tier.
+  const UploadLimitTier({this.upToAccounts, required this.maxFileBytes});
+
+  /// Reads a tier.
+  factory UploadLimitTier.fromJson(Map<String, dynamic> json) =>
+      UploadLimitTier(
+        upToAccounts: asInt(json['upToAccounts']),
+        maxFileBytes: asInt(json['maxFileBytes']) ?? 0,
+      );
+
+  /// The connected-account count the tier runs up to; null for the top tier.
+  final int? upToAccounts;
+
+  /// The ceiling that tier grants.
+  final int maxFileBytes;
+
+  @override
+  String toString() => 'UploadLimitTier($maxFileBytes)';
+}
+
+/// What an account may upload, from `GET /media/limits`.
+class UploadLimits {
+  /// Creates an upload-limits snapshot.
+  const UploadLimits({
+    required this.maxFileBytes,
+    required this.source,
+    required this.connectedAccounts,
+    required this.largeUploadsEnabled,
+    this.nextTier,
+    required this.multipartMaxFileBytes,
+    required this.maxFilesPerUpload,
+    required this.directUploadAvailable,
+    this.allowedTypes = const [],
+  });
+
+  /// Reads an upload-limits snapshot.
+  factory UploadLimits.fromJson(Map<String, dynamic> json) => UploadLimits(
+        maxFileBytes: asInt(json['maxFileBytes']) ?? 0,
+        source: asString(json['source']) ?? '',
+        connectedAccounts: asInt(json['connectedAccounts']) ?? 0,
+        largeUploadsEnabled: asBool(json['largeUploadsEnabled']) ?? false,
+        nextTier: json['nextTier'] is Map
+            ? UploadLimitTier.fromJson(asMap(json['nextTier']))
+            : null,
+        multipartMaxFileBytes: asInt(json['multipartMaxFileBytes']) ?? 0,
+        maxFilesPerUpload: asInt(json['maxFilesPerUpload']) ?? 0,
+        directUploadAvailable: asBool(json['directUploadAvailable']) ?? false,
+        allowedTypes: asStringList(json['allowedTypes']),
+      );
+
+  /// The largest file the account may upload by any route.
+  final int maxFileBytes;
+
+  /// Where the ceiling comes from: `accounts`, `add_on` or `bypass`.
+  final String source;
+
+  /// Connected accounts counted toward the tier.
+  final int connectedAccounts;
+
+  /// Whether the Large Uploads add-on is on.
+  final bool largeUploadsEnabled;
+
+  /// The next tier up, or null at the top.
+  final UploadLimitTier? nextTier;
+
+  /// The most a multipart request carries per file; larger files go direct.
+  final int multipartMaxFileBytes;
+
+  /// How many files one upload request takes.
+  final int maxFilesPerUpload;
+
+  /// Whether presigned direct uploads are available.
+  final bool directUploadAvailable;
+
+  /// The MIME types the library accepts.
+  final List<String> allowedTypes;
+
+  @override
+  String toString() => 'UploadLimits($maxFileBytes, $source)';
 }
