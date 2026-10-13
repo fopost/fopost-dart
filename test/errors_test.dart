@@ -13,6 +13,7 @@ void main() {
       402: FoPostPaymentRequiredException,
       403: FoPostPermissionDeniedException,
       404: FoPostNotFoundException,
+      413: FoPostFileTooLargeException,
       429: FoPostRateLimitException,
       500: FoPostServerException,
       503: FoPostServerException,
