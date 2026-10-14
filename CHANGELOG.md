@@ -14,6 +14,22 @@
   300 second tolerance and falling back to `X-FoPost-Signature` only when no
   timestamp header is present. Returns a `WebhookEnvelope`; read an
   `article.published` one with `BlogArticlePublished.fromJson`.
+- Added: `media.limits` returns an `UploadLimits` with the account's per-file
+  ceiling (`maxFileBytes`), its source, the connected-account count, the next
+  tier, the multipart ceiling, the files-per-upload cap and the accepted types.
+- Added: `posts.create` and `posts.update` take `files`, up to five. Files
+  within the multipart ceiling go with the request; larger ones are uploaded
+  direct and attached to the first content block, so the route never shows.
+- Added: `FoPostFile.stream` for a file read from a stream of known length, and
+  `FoPostFile.mimeType`. `media.uploadDirectFile` streams such a file to
+  storage instead of buffering it. Multipart parts stream too.
+- Added: `presign` and `uploadDirect` take `folderId`, `origin`, `brandRole`,
+  `brandVoiceId` and `personConsent`; `PresignedUpload.maxFileBytes`.
+- Added: a `413` is thrown as `FoPostFileTooLargeException` with
+  `maxFileBytes`, `fileBytes` and `upgradeUrl`.
+- Changed: the direct-upload path no longer documents a 50 MB ceiling; the
+  account's `maxFileBytes` (up to 5 GB) applies. `FoPostFile.bytes` is now
+  nullable, since a stream-backed file has none.
 - Added: `InboxItem.moderationStatus` carries the platform's own state for a
   comment (`published`, `held`, `spam`, `rejected`), and
   `InboxAccount.reconnectRequired` flags an account connected before the inbox

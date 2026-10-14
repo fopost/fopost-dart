@@ -88,6 +88,68 @@ final asset = await client.media.uploadDirect(
 );
 ```
 
+A large file should not be held in memory. `FoPostFile.stream` opens the file
+each time it is sent, and `uploadDirectFile` streams it to storage:
+
+```dart
+final clip = File('launch.mp4');
+final asset = await client.media.uploadDirectFile(
+  workspace.id,
+  FoPostFile.stream(
+    filename: 'launch.mp4',
+    mimeType: 'video/mp4',
+    length: await clip.length(),
+    open: clip.openRead,
+  ),
+);
+```
+
+### Upload limits
+
+How large a file may be depends on the account: 100 MB with up to 2 connected
+accounts, 400 MB up to 7, 2 GB up to 15, 5 GB beyond that or with the Large
+Uploads add-on. `media.limits` reports the ceiling, where it comes from, and
+the next tier:
+
+```dart
+final limits = await client.media.limits(workspaceId: workspace.id);
+print(limits.maxFileBytes);          // the largest file the account may upload
+print(limits.multipartMaxFileBytes); // the most one multipart request carries per file
+print(limits.nextTier?.upToAccounts);
+```
+
+A file over the ceiling is refused with a `413`, which the SDK throws as
+`FoPostFileTooLargeException` carrying `maxFileBytes`, `fileBytes` and
+`upgradeUrl`.
+
+### Files on a post
+
+`posts.create` and `posts.update` take `files` directly, up to five, each with
+a `mimeType`. They are stored in the workspace library and attached to the
+first content block. Files within the multipart ceiling travel with the request
+itself; anything larger is uploaded direct first. Either way the post comes back
+the same:
+
+```dart
+final post = await client.posts.create(
+  workspaceId: workspace.id,
+  accounts: accountIds,
+  content: 'Launch day',
+  files: [
+    FoPostFile(filename: 'chart.png', mimeType: 'image/png', bytes: bytes),
+    FoPostFile.stream(
+      filename: 'launch.mp4',
+      mimeType: 'video/mp4',
+      length: await clip.length(),
+      open: clip.openRead,
+    ),
+  ],
+);
+```
+
+On `update`, files passed without `content` are appended to the post's current
+first block.
+
 ## Content
 
 `content` takes a `String` for a single post, or a list for a thread. Each entry
@@ -276,7 +338,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `blog`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`                        |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
-| `media`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                                                                                |
+| `media`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `uploadDirectFile`, `delete`                                                                                                                                                                                |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `handover` |
 | `contacts`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `import`, `listFields`, `createField`, `updateField`, `deleteField`, `conversationAnalytics` |
 | `broadcasts`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
