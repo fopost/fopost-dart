@@ -19,6 +19,7 @@ environment:
   sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
+  crypto: ^3.0.3
   http: ^1.2.0
   meta: ^1.12.0
 

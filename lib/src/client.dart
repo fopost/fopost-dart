@@ -8,6 +8,7 @@ import 'resources/activity.dart';
 import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
+import 'resources/blog.dart';
 import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
 import 'resources/contacts.dart';
@@ -104,6 +105,7 @@ class FoPost {
     googleAds = GoogleAdsResource(_http);
     validate = ValidateResource(_http);
     googleBusiness = GoogleBusinessResource(_http);
+    blog = BlogResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -171,6 +173,9 @@ class FoPost {
 
   /// Manage a connected Google Business Profile location.
   late final GoogleBusinessResource googleBusiness;
+
+  /// Blog settings, the keyword plan, and the articles written from it.
+  late final BlogResource blog;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;

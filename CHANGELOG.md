@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Added: `blog`, settings, the keyword plan and the articles written from
+  it. `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`,
+  `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`,
+  `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`,
+  `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle` and
+  `deleteArticle`. Planning, requesting and regenerating spend AI credits and
+  answer `402` on an empty balance; publishing needs the `publish` scope.
+- Added: `verifyWebhook` checks a delivery's signature over the raw bytes in
+  constant time, preferring the timestamped `X-FoPost-Signature-256` within a
+  300 second tolerance and falling back to `X-FoPost-Signature` only when no
+  timestamp header is present. Returns a `WebhookEnvelope`; read an
+  `article.published` one with `BlogArticlePublished.fromJson`.
 - Added: `media.limits` returns an `UploadLimits` with the account's per-file
   ceiling (`maxFileBytes`), its source, the connected-account count, the next
   tier, the multipart ceiling, the files-per-upload cap and the accepted types.

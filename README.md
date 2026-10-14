@@ -335,6 +335,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `communities` | `list`, `sync`, `search`, `add`, `remove`                                                                                                                                                                 |
 | `labels`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                               |
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
+| `blog`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`                        |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `uploadDirectFile`, `delete`                                                                                                                                                                                |
@@ -400,6 +401,43 @@ API change behind it, so the same loop is three pieces with this client:
    `client.inbox.startConversation(…)`.
 
 Reading needs the `inbox` scope; answering needs `publish` as well.
+
+## Blog
+
+`client.blog` plans keywords and writes articles for a website. An article is
+not a post: it goes to the target in the blog settings, which is the hosted
+blog, a connected account, or your own site. Reads need the `posts` scope,
+`planKeywords`, `requestArticle` and `regenerateArticle` need `ai` and answer
+`402` on an empty balance, and `publishArticle` needs `publish`.
+
+```dart
+final article = await client.blog.requestArticle(
+  workspaceId,
+  keyword: 'best trail running shoes',
+  instructions: 'Lead with the lightest pair.',
+);
+// It comes back `queued`; poll getArticle until it is a `draft`.
+final draft = await client.blog.getArticle(workspaceId, article.id);
+```
+
+The website target POSTs a signed `article.published` webhook to your
+`websiteUrl`. `verifyWebhook` checks the signature over the raw bytes, refuses
+a timestamp more than five minutes off, and returns the envelope:
+
+```dart
+final envelope = verifyWebhook(
+  rawBody: request.bodyBytes,
+  headers: request.headers,
+  secret: websiteSecret, // returned once by updateSettings
+);
+if (envelope.event == 'article.published') {
+  final published = BlogArticlePublished.fromJson(envelope.data);
+  // Image URLs expire in six hours, so download and store your own copies.
+}
+```
+
+A bad signature throws `FoPostWebhookSignatureException`. The same helper
+verifies every FoPost webhook, not only the blog's.
 
 ## Contributing
 
