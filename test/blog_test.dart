@@ -9,11 +9,13 @@ const settingsJson = {
   'siteUrl': 'https://yourbrand.com',
   'topic': 'Running shoes',
   'audience': 'Weekend runners',
+  'goal': 'leads',
+  'focusTopics': 'Trail gear',
+  'avoidTopics': 'Medical advice',
   'language': 'en',
   'locationCode': 2840,
   'cadencePerWeek': 2,
   'reviewHoldDays': 3,
-  'autoPublish': false,
   'imageTier': 'standard',
   'inBodyImages': 2,
   'minWords': 900,
@@ -24,6 +26,12 @@ const settingsJson = {
   'targetPlatform': null,
   'websiteUrl': 'https://yourbrand.com/fopost',
   'hasWebsiteSecret': true,
+  'planRun': {
+    'status': 'done',
+    'error': null,
+    'added': 12,
+    'finishedAt': '2026-10-10T07:00:00.000Z',
+  },
   'keywordDataAvailable': true,
   'updatedAt': '2026-10-10T08:00:00.000Z',
 };
@@ -38,6 +46,7 @@ const keywordJson = {
   'source': 'provider',
   'status': 'suggested',
   'plannedFor': null,
+  'fitReason': 'Buyers comparing shoes',
   'createdAt': '2026-10-09T12:00:00.000Z',
 };
 
@@ -101,6 +110,32 @@ void main() {
       expect(settings.cadencePerWeek, 2);
       expect(settings.hasWebsiteSecret, isTrue);
       expect(settings.websiteUrl, 'https://yourbrand.com/fopost');
+      expect(settings.goal, BlogGoal.leads);
+      expect(settings.focusTopics, 'Trail gear');
+      expect(settings.avoidTopics, 'Medical advice');
+      expect(settings.planRun?.status, BlogPlanRunStatus.done);
+      expect(settings.planRun?.added, 12);
+      expect(settings.planRun?.finishedAt, DateTime.utc(2026, 10, 10, 7));
+    });
+
+    test('updateSettings sends the goal and topics', () async {
+      final seen = RecordedRequests();
+      final client = fakeClient((_) async => jsonBare({'data': settingsJson}),
+          recorder: seen);
+
+      await client.blog.updateSettings(
+        'ws_1',
+        goal: BlogGoal.leads,
+        focusTopics: 'Trail gear',
+        avoidTopics: 'Medical advice',
+      );
+
+      expect(jsonDecode(seen.last.body), {
+        'workspaceId': 'ws_1',
+        'goal': 'leads',
+        'focusTopics': 'Trail gear',
+        'avoidTopics': 'Medical advice',
+      });
     });
 
     test('updateSettings sends the workspace in the body and keeps the secret',
@@ -195,6 +230,42 @@ void main() {
       expect(keyword.keyword, 'best trail running shoes');
       expect(keyword.searchVolume, 4400);
       expect(keyword.cpc, 1.25);
+      expect(keyword.fitReason, 'Buyers comparing shoes');
+    });
+
+    test('suggestSeeds posts the seeds and prompt and reads the terms',
+        () async {
+      final seen = RecordedRequests();
+      final client = fakeClient(
+        (_) async => jsonBare({
+          'seeds': ['trail running shoes', 'waterproof trail shoes'],
+        }),
+        recorder: seen,
+      );
+
+      final seeds = await client.blog.suggestSeeds('ws_1',
+          seeds: ['trail shoes'], prompt: 'More beginner terms');
+
+      expect(seen.last.method, 'POST');
+      expect(seen.last.url.path, '/v1/blog/keywords/suggest');
+      expect(jsonDecode(seen.last.body), {
+        'workspaceId': 'ws_1',
+        'seeds': ['trail shoes'],
+        'prompt': 'More beginner terms',
+      });
+      expect(seeds, ['trail running shoes', 'waterproof trail shoes']);
+    });
+
+    test('suggestSeeds surfaces an empty balance as 402', () async {
+      final client = fakeClient(
+        (_) async => jsonError(402, 'insufficient_credits', 'Balance is empty'),
+        maxRetries: 1,
+      );
+
+      await expectLater(
+        client.blog.suggestSeeds('ws_1'),
+        throwsA(isA<FoPostPaymentRequiredException>()),
+      );
     });
 
     test('planKeywords posts the seeds and accepts a 202', () async {
@@ -374,6 +445,33 @@ void main() {
       expect(seen.last.method, 'DELETE');
       expect(seen.last.url.path, '/v1/blog/articles/art_1');
       expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+    });
+
+    test('submitArticle moves the article to review', () async {
+      final seen = RecordedRequests();
+      final client = fakeClient(
+          (_) async => jsonOk({...articleJson, 'status': 'in_review'}),
+          recorder: seen);
+
+      final article = await client.blog.submitArticle('ws_1', 'art_1');
+
+      expect(seen.last.method, 'POST');
+      expect(seen.last.url.path, '/v1/blog/articles/art_1/submit');
+      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(article.status, BlogArticleStatus.inReview);
+    });
+
+    test('submitArticle on a published article is a 409', () async {
+      final client = fakeClient(
+        (_) async => jsonError(409, 'invalid_state', 'Cannot submit'),
+        maxRetries: 1,
+      );
+
+      await expectLater(
+        client.blog.submitArticle('ws_1', 'art_1'),
+        throwsA(isA<FoPostException>()
+            .having((e) => e.statusCode, 'statusCode', 409)),
+      );
     });
 
     test('publish with no target is a 409 with its code', () async {

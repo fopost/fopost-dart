@@ -13,9 +13,10 @@ import 'base.dart';
 /// site, which receives a signed `article.published` webhook you check with
 /// `verifyWebhook`.
 ///
-/// Reads, settings and keyword edits need the `posts` scope. [planKeywords],
-/// [requestArticle] and [regenerateArticle] spend AI credits and need `ai`;
-/// an empty balance answers `402`. [publishArticle] needs `publish`.
+/// Reads, settings, keyword edits and [submitArticle] need the `posts` scope.
+/// [suggestSeeds], [planKeywords], [requestArticle] and [regenerateArticle]
+/// spend AI credits and need `ai`; an empty balance answers `402`.
+/// [publishArticle] needs `publish`.
 ///
 /// Every call names its workspace, because the key may reach several.
 ///
@@ -36,6 +37,9 @@ class BlogResource {
 
   /// Changes the settings. Only the fields given are touched.
   ///
+  /// [goal] is one of [BlogGoal]. [reviewHoldDays] is how many days before
+  /// its planned date a picked keyword starts being written.
+  ///
   /// Setting [websiteUrl] for the first time issues the signing secret, which
   /// comes back once as `BlogSettingsUpdate.websiteSecret`. A `clear*` flag
   /// sends `null` for a field that can be unset.
@@ -44,11 +48,13 @@ class BlogResource {
     String? siteUrl,
     String? topic,
     String? audience,
+    String? goal,
+    String? focusTopics,
+    String? avoidTopics,
     String? language,
     int? locationCode,
     int? cadencePerWeek,
     int? reviewHoldDays,
-    bool? autoPublish,
     String? imageTier,
     int? inBodyImages,
     int? minWords,
@@ -68,11 +74,13 @@ class BlogResource {
       'siteUrl': siteUrl,
       'topic': topic,
       'audience': audience,
+      'goal': goal,
+      'focusTopics': focusTopics,
+      'avoidTopics': avoidTopics,
       'language': language,
       'locationCode': locationCode,
       'cadencePerWeek': cadencePerWeek,
       'reviewHoldDays': reviewHoldDays,
-      'autoPublish': autoPublish,
       'imageTier': imageTier,
       'inBodyImages': inBodyImages,
       'minWords': minWords,
@@ -134,9 +142,31 @@ class BlogResource {
     return rows.map(BlogKeyword.fromJson).toList();
   }
 
-  /// Queues a planning run that proposes keywords, from [seeds] when given.
+  /// Suggests about ten search terms from the blog goal and topics, for you to
+  /// edit before [planKeywords].
   ///
-  /// Returns as soon as the run is queued; new keywords arrive as `suggested`.
+  /// Pass the current [seeds] to refine them and [prompt] (up to 500
+  /// characters) to steer. Spends AI credits.
+  Future<List<String>> suggestSeeds(
+    String workspaceId, {
+    List<String>? seeds,
+    String? prompt,
+  }) async {
+    final body = await _http.object('POST', '/blog/keywords/suggest',
+        body: pruned({
+          'workspaceId': workspaceId,
+          'seeds': seeds,
+          'prompt': prompt,
+        }));
+    return asStringList(body['seeds']);
+  }
+
+  /// Queues a research run over [seeds], or terms derived from the settings
+  /// when omitted.
+  ///
+  /// Returns as soon as the run is queued; follow it in
+  /// `BlogSettings.planRun`. Results arrive as `suggested` keywords and do not
+  /// fill the calendar: set one to `planned` with [updateKeyword] to pick it.
   /// Spends AI credits.
   Future<void> planKeywords(String workspaceId, {List<String>? seeds}) =>
       _http.discard('POST', '/blog/keywords/plan',
@@ -156,6 +186,9 @@ class BlogResource {
           })));
 
   /// Changes a keyword's status or planned day. [clearPlannedFor] sends `null`.
+  ///
+  /// Setting [status] to `planned` picks the keyword, and it takes the next
+  /// free date unless [plannedFor] names one.
   Future<BlogKeyword> updateKeyword(
     String workspaceId,
     String id, {
@@ -223,8 +256,10 @@ class BlogResource {
 
   /// Edits a draft or scheduled article.
   ///
-  /// [publishAt] puts the draft on the calendar; [clearPublishAt] returns it
-  /// to review. An article that is not editable answers `409 invalid_state`.
+  /// [publishAt] puts an article in review on the calendar; a draft answers
+  /// `409` until it is submitted with [submitArticle]. [clearPublishAt]
+  /// returns it to review. An article that is not editable answers
+  /// `409 invalid_state`.
   Future<BlogArticleFull> updateArticle(
     String workspaceId,
     String id, {
@@ -269,8 +304,16 @@ class BlogResource {
           'POST', '/blog/articles/${segment(id)}/regenerate',
           query: {'workspaceId': workspaceId}));
 
-  /// Sends a draft to the target now.
+  /// Moves a draft, failed or rejected article to `in_review`, ready for
+  /// approval. Any other status answers `409`.
+  Future<BlogArticle> submitArticle(String workspaceId, String id) async =>
+      BlogArticle.fromJson(await _http.object(
+          'POST', '/blog/articles/${segment(id)}/submit',
+          query: {'workspaceId': workspaceId}));
+
+  /// Approves an article in review and sends it to the target now.
   ///
+  /// A draft answers `409` until it is submitted with [submitArticle].
   /// Returns once publishing is queued, not once the article is live. With no
   /// target set it answers `409 no_target`. Needs the `publish` scope.
   Future<BlogArticle> publishArticle(String workspaceId, String id) async =>

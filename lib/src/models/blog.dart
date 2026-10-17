@@ -8,8 +8,11 @@ abstract final class BlogArticleStatus {
   /// Being written right now.
   static const String writing = 'writing';
 
-  /// Written and waiting for review.
+  /// Written, not yet submitted for approval.
   static const String draft = 'draft';
+
+  /// Submitted and waiting for approval.
+  static const String inReview = 'in_review';
 
   /// On the calendar, waiting for its `publishAt`.
   static const String scheduled = 'scheduled';
@@ -54,6 +57,73 @@ abstract final class BlogTargetKind {
   static const String website = 'website';
 }
 
+/// What a blog is for; steers suggested terms and keyword ranking.
+abstract final class BlogGoal {
+  /// Search traffic.
+  static const String traffic = 'traffic';
+
+  /// Leads.
+  static const String leads = 'leads';
+
+  /// Sales.
+  static const String sales = 'sales';
+
+  /// Sign-ups.
+  static const String signups = 'signups';
+
+  /// Authority on the topic.
+  static const String authority = 'authority';
+}
+
+/// The statuses a keyword research run moves through.
+abstract final class BlogPlanRunStatus {
+  /// Waiting to start.
+  static const String queued = 'queued';
+
+  /// Researching now.
+  static const String running = 'running';
+
+  /// Finished; see `added`.
+  static const String done = 'done';
+
+  /// Failed; see `error`.
+  static const String failed = 'failed';
+}
+
+/// The last keyword research run.
+class BlogPlanRun {
+  /// Creates a run.
+  const BlogPlanRun({
+    required this.status,
+    this.error,
+    this.added,
+    this.finishedAt,
+  });
+
+  /// Reads a run.
+  factory BlogPlanRun.fromJson(Map<String, dynamic> json) => BlogPlanRun(
+        status: asString(json['status']) ?? '',
+        error: asString(json['error']),
+        added: asInt(json['added']),
+        finishedAt: asDate(json['finishedAt']),
+      );
+
+  /// One of [BlogPlanRunStatus].
+  final String status;
+
+  /// Why the run failed, when it did.
+  final String? error;
+
+  /// New keywords the run found.
+  final int? added;
+
+  /// When the run ended.
+  final DateTime? finishedAt;
+
+  @override
+  String toString() => 'BlogPlanRun($status)';
+}
+
 /// The image quality tiers an article can be illustrated at.
 abstract final class BlogImageTier {
   /// Fastest and cheapest.
@@ -73,11 +143,13 @@ class BlogSettings {
     required this.language,
     required this.cadencePerWeek,
     required this.reviewHoldDays,
-    required this.autoPublish,
     required this.hasWebsiteSecret,
     this.siteUrl,
     this.topic,
     this.audience,
+    this.goal,
+    this.focusTopics,
+    this.avoidTopics,
     this.locationCode,
     this.imageTier,
     this.inBodyImages,
@@ -88,6 +160,7 @@ class BlogSettings {
     this.targetAccountId,
     this.targetPlatform,
     this.websiteUrl,
+    this.planRun,
     this.keywordDataAvailable,
     this.updatedAt,
   });
@@ -97,11 +170,13 @@ class BlogSettings {
         language: asString(json['language']) ?? 'en',
         cadencePerWeek: asInt(json['cadencePerWeek']) ?? 0,
         reviewHoldDays: asInt(json['reviewHoldDays']) ?? 0,
-        autoPublish: asBool(json['autoPublish']) ?? false,
         hasWebsiteSecret: asBool(json['hasWebsiteSecret']) ?? false,
         siteUrl: asString(json['siteUrl']),
         topic: asString(json['topic']),
         audience: asString(json['audience']),
+        goal: asString(json['goal']),
+        focusTopics: asString(json['focusTopics']),
+        avoidTopics: asString(json['avoidTopics']),
         locationCode: asInt(json['locationCode']),
         imageTier: asString(json['imageTier']),
         inBodyImages: asInt(json['inBodyImages']),
@@ -112,6 +187,7 @@ class BlogSettings {
         targetAccountId: asString(json['targetAccountId']),
         targetPlatform: asString(json['targetPlatform']),
         websiteUrl: asString(json['websiteUrl']),
+        planRun: _planRun(json['planRun']),
         keywordDataAvailable: asBool(json['keywordDataAvailable']),
         updatedAt: asDate(json['updatedAt']),
       );
@@ -125,6 +201,15 @@ class BlogSettings {
   /// Who it is written for.
   final String? audience;
 
+  /// One of [BlogGoal], or null when unset.
+  final String? goal;
+
+  /// What the blog wants to write about.
+  final String? focusTopics;
+
+  /// What the blog never writes about.
+  final String? avoidTopics;
+
   /// The language articles are written in.
   final String language;
 
@@ -134,11 +219,8 @@ class BlogSettings {
   /// Articles planned per week; 0 turns planning off.
   final int cadencePerWeek;
 
-  /// Days a draft waits for review before it may auto-publish.
+  /// Days before its planned date that a picked keyword starts being written.
   final int reviewHoldDays;
-
-  /// Whether a reviewed draft publishes on its own.
-  final bool autoPublish;
 
   /// One of [BlogImageTier].
   final String? imageTier;
@@ -169,6 +251,9 @@ class BlogSettings {
 
   /// Whether a website secret has been issued.
   final bool hasWebsiteSecret;
+
+  /// The last keyword research run; null before the first.
+  final BlogPlanRun? planRun;
 
   /// Whether search volume and difficulty can be fetched on this deployment.
   final bool? keywordDataAvailable;
@@ -242,6 +327,7 @@ class BlogKeyword {
     this.cpc,
     this.intent,
     this.plannedFor,
+    this.fitReason,
     this.createdAt,
   });
 
@@ -256,6 +342,7 @@ class BlogKeyword {
         cpc: asDouble(json['cpc']),
         intent: asString(json['intent']),
         plannedFor: asString(json['plannedFor']),
+        fitReason: asString(json['fitReason']),
         createdAt: asDate(json['createdAt']),
       );
 
@@ -285,6 +372,9 @@ class BlogKeyword {
 
   /// The day it is planned for, as `YYYY-MM-DD`.
   final String? plannedFor;
+
+  /// Why the keyword serves the blog goal.
+  final String? fitReason;
 
   /// When it was added.
   final DateTime? createdAt;
@@ -607,6 +697,11 @@ class BlogArticlePublished {
 
   @override
   String toString() => 'BlogArticlePublished($slug)';
+}
+
+BlogPlanRun? _planRun(Object? value) {
+  final map = asMapOrNull(value);
+  return map == null ? null : BlogPlanRun.fromJson(map);
 }
 
 BlogArticleImage? _image(Object? value) {
