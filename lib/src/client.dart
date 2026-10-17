@@ -21,6 +21,7 @@ import 'resources/media.dart';
 import 'resources/posts.dart';
 import 'resources/validate.dart';
 import 'resources/webhooks.dart';
+import 'resources/whatsapp.dart';
 import 'resources/workspaces.dart';
 import 'version.dart';
 
@@ -106,6 +107,7 @@ class FoPost {
     validate = ValidateResource(_http);
     googleBusiness = GoogleBusinessResource(_http);
     blog = BlogResource(_http);
+    whatsapp = WhatsappResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -176,6 +178,9 @@ class FoPost {
 
   /// Blog settings, the keyword plan, and the articles written from it.
   late final BlogResource blog;
+
+  /// WhatsApp Business: templates, flows, groups, blocking and commerce.
+  late final WhatsappResource whatsapp;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;

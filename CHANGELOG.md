@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added: `whatsapp` for a WhatsApp Business connection: the business profile
+  (`profile`, `updateProfile`, `requestDisplayName`, `setUsername`), message
+  templates including the platform's own library (`templates`, `createTemplate`,
+  `importTemplate`, …), groups, blocking, commerce settings and flows
+  (`createFlow`, `uploadFlowJson`, `publishFlow`, `flowResponses`, …), plus
+  `accountEvents`. All need the `accounts` scope.
+- Added: `whatsapp.createSandboxSession` and `sandboxSessions` invite a tester to
+  the platform-owned WhatsApp test number. Inviting sends a template, so it needs
+  the `publish` scope.
+
 - Added: `blog`, settings, the keyword plan and the articles written from
   it. `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`,
   `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`,
