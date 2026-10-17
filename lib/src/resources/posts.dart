@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:meta/meta.dart';
 
+import '../errors.dart';
 import '../file.dart';
 import '../http.dart';
 import '../json.dart';
 import '../models/common.dart';
 import '../models/post.dart';
 import 'base.dart';
+import 'media.dart';
 
 /// Posts, publishing, deliveries, and bulk operations.
 ///
@@ -13,9 +17,13 @@ import 'base.dart';
 class PostsResource {
   /// Wired by the FoPost client; do not construct this yourself.
   @internal
-  PostsResource(this._http);
+  PostsResource(this._http) : _media = MediaResource(_http);
 
   final FoPostHttp _http;
+  final MediaResource _media;
+
+  static const int _defaultMultipartCeiling = 100 * 1024 * 1024;
+  static const int _maxFilesPerPost = 5;
 
   /// Returns one page of posts.
   ///
@@ -115,6 +123,11 @@ class PostsResource {
   /// `draft` or `scheduled`, and a scheduled post needs [scheduleAt]. To send
   /// something out now, create it and call [publish]. [accountGroupId] adds
   /// that group's accounts to [accounts], each account once.
+  ///
+  /// [files] (up to 5, each with a `mimeType`) are stored in the workspace
+  /// library and attached to the first content block. Files within the
+  /// multipart ceiling travel with the request; larger ones go through a
+  /// direct upload first, and either way the post comes back the same.
   Future<Post> create({
     required String workspaceId,
     List<String>? accounts,
@@ -137,6 +150,7 @@ class PostsResource {
     Map<String, dynamic>? settings,
     List<String>? sourceIds,
     String? companionOf,
+    List<FoPostFile>? files,
   }) async {
     final body = pruned({
       'workspace_id': workspaceId,
@@ -161,11 +175,24 @@ class PostsResource {
       'source_ids': sourceIds,
       'companion_of': companionOf,
     });
+    if (files == null || files.isEmpty) {
+      return Post.fromJson(await _http.object('POST', '/posts', body: body));
+    }
+    _checkFiles(files);
+    if (await _fitsMultipart(files, workspaceId)) {
+      return Post.fromJson(asMap(await _http.multipart('/posts',
+          fields: {'post': jsonEncode(body)}, files: files)));
+    }
+    body['content'] = _attach(body['content'] as List<Map<String, dynamic>>,
+        await _uploadAll(workspaceId, files));
     return Post.fromJson(await _http.object('POST', '/posts', body: body));
   }
 
   /// Edits a post that has not been published. Only the fields you pass are
   /// sent, so this is a partial update.
+  ///
+  /// [files] behave as on [create]; without [content] they are appended to the
+  /// post's current first block.
   Future<Post> update(
     String id, {
     List<String>? accounts,
@@ -185,6 +212,7 @@ class PostsResource {
     bool? autoPlug,
     String? autoPlugContent,
     Map<String, dynamic>? settings,
+    List<FoPostFile>? files,
   }) async {
     final body = pruned({
       'accounts': accounts,
@@ -205,8 +233,84 @@ class PostsResource {
       'auto_plug_content': autoPlugContent,
       'settings': settings,
     });
-    return Post.fromJson(
-        await _http.object('PUT', '/posts/${segment(id)}', body: body));
+    final path = '/posts/${segment(id)}';
+    if (files == null || files.isEmpty) {
+      return Post.fromJson(await _http.object('PUT', path, body: body));
+    }
+    _checkFiles(files);
+    if (await _fitsMultipart(files, null)) {
+      return Post.fromJson(asMap(await _http.multipart(path,
+          method: 'PUT', fields: {'post': jsonEncode(body)}, files: files)));
+    }
+    final current = await get(id);
+    final blocks = content == null
+        ? current.content.map((b) => b.toJson()).toList()
+        : body['content'] as List<Map<String, dynamic>>;
+    body['content'] =
+        _attach(blocks, await _uploadAll(current.workspaceId, files));
+    return Post.fromJson(await _http.object('PUT', path, body: body));
+  }
+
+  void _checkFiles(List<FoPostFile> files) {
+    if (files.length > _maxFilesPerPost) {
+      throw ArgumentError.value(
+          files, 'files', 'a post takes at most $_maxFilesPerPost files');
+    }
+    for (final file in files) {
+      if (file.mimeType == null || file.mimeType!.isEmpty) {
+        throw ArgumentError.value(
+            file, 'files', 'every file on a post needs a mimeType');
+      }
+    }
+  }
+
+  Future<bool> _fitsMultipart(
+      List<FoPostFile> files, String? workspaceId) async {
+    var ceiling = _defaultMultipartCeiling;
+    try {
+      final limits = await _media.limits(workspaceId: workspaceId);
+      if (limits.multipartMaxFileBytes > 0) {
+        ceiling = limits.multipartMaxFileBytes;
+      }
+    } on FoPostException {
+      // The documented default stands in when the limits call fails.
+    }
+    return files.every((file) => file.length <= ceiling);
+  }
+
+  Future<List<Map<String, dynamic>>> _uploadAll(
+      String workspaceId, List<FoPostFile> files) async {
+    final items = <Map<String, dynamic>>[];
+    for (final file in files) {
+      final asset = await _media.uploadDirectFile(workspaceId, file);
+      items.add(pruned({
+        'type': _mediaType(file.mimeType!),
+        'name': asset.name,
+        'url': asset.url,
+        'size': asset.size,
+      }));
+    }
+    return items;
+  }
+
+  static String _mediaType(String mimeType) {
+    final lower = mimeType.toLowerCase();
+    if (lower == 'image/gif') return 'gif';
+    if (lower.startsWith('video/')) return 'video';
+    return 'image';
+  }
+
+  static List<Map<String, dynamic>> _attach(
+      List<Map<String, dynamic>> blocks, List<Map<String, dynamic>> media) {
+    final first = blocks.isEmpty
+        ? <String, dynamic>{'text': ''}
+        : Map<String, dynamic>.from(blocks.first);
+    final existing = first['media'];
+    first['media'] = [
+      if (existing is List) ...existing,
+      ...media,
+    ];
+    return [first, ...blocks.skip(1)];
   }
 
   /// Removes a post.

@@ -4,11 +4,18 @@ import 'env/env.dart';
 import 'http.dart';
 import 'resources/account_groups.dart';
 import 'resources/accounts.dart';
+import 'resources/activity.dart';
 import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
+import 'resources/blog.dart';
+import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
+import 'resources/contacts.dart';
+import 'resources/google_ads.dart';
+import 'resources/google_business.dart';
 import 'resources/inbox.dart';
+import 'resources/knowledge.dart';
 import 'resources/labels.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
@@ -84,14 +91,22 @@ class FoPost {
     accounts = AccountsResource(_http);
     communities = CommunitiesResource(_http);
     labels = LabelsResource(_http);
+    activity = ActivityResource(_http);
     accountGroups = AccountGroupsResource(_http);
     webhooks = WebhooksResource(_http);
     analytics = AnalyticsResource(_http);
     automations = AutomationsResource(_http);
     media = MediaResource(_http);
     inbox = InboxResource(_http);
+    contacts = ContactsResource(_http);
+    broadcasts = BroadcastsResource(_http);
+    sequences = SequencesResource(_http);
+    knowledge = KnowledgeResource(_http);
     ads = AdsResource(_http);
+    googleAds = GoogleAdsResource(_http);
     validate = ValidateResource(_http);
+    googleBusiness = GoogleBusinessResource(_http);
+    blog = BlogResource(_http);
     whatsapp = WhatsappResource(_http);
   }
 
@@ -115,6 +130,9 @@ class FoPost {
   /// Campaign labels.
   late final LabelsResource labels;
 
+  /// What happened in a workspace, and the security audit log.
+  late final ActivityResource activity;
+
   /// Named sets of accounts a post can target at once.
   late final AccountGroupsResource accountGroups;
 
@@ -133,11 +151,33 @@ class FoPost {
   /// Comments, mentions and direct messages on connected accounts.
   late final InboxResource inbox;
 
+  /// The people behind that inbox, and the fields a workspace keeps about them.
+  late final ContactsResource contacts;
+
+  /// One message into every conversation the workspace already has with a
+  /// segment of its contacts.
+  late final BroadcastsResource broadcasts;
+
+  /// A series of messages on a delay, walked per enrolled contact.
+  late final SequencesResource sequences;
+
+  /// The workspace knowledge base, which grounds drafted replies.
+  late final KnowledgeResource knowledge;
+
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
 
+  /// Google Ads only: keywords, assets, conversions and raw GAQL.
+  late final GoogleAdsResource googleAds;
+
   /// Standalone checks on a draft, a text's length, or a media URL.
   late final ValidateResource validate;
+
+  /// Manage a connected Google Business Profile location.
+  late final GoogleBusinessResource googleBusiness;
+
+  /// Blog settings, the keyword plan, and the articles written from it.
+  late final BlogResource blog;
 
   /// WhatsApp Business: templates, flows, groups, blocking and commerce.
   late final WhatsappResource whatsapp;

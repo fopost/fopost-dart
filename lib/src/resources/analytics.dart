@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 
 import '../http.dart';
 import '../models/analytics.dart';
+import '../models/common.dart';
 
 /// The cross-account reporting surface.
 ///
@@ -193,4 +194,103 @@ class AnalyticsResource {
   Future<CollectSummary> collect({String? accountId}) async =>
       CollectSummary.fromJson(await _http.object('POST', '/analytics/collect',
           query: {'accountId': accountId}));
+
+  /// Returns how long a post keeps earning.
+  ///
+  /// Engagement is grouped by the post's age at each reading, so each band
+  /// says where the average post had got to by then. [days] selects posts by
+  /// publish time, not reading time.
+  Future<ContentDecay> decay({
+    String? accountId,
+    String? workspaceId,
+    int? days,
+  }) async =>
+      ContentDecay.fromJson(await _http.object(
+        'GET',
+        '/analytics/decay',
+        query: {
+          'accountId': accountId,
+          'workspace_id': workspaceId,
+          'days': days,
+        },
+      ));
+
+  /// Returns whether posting more earned more.
+  ///
+  /// Weeks run Monday to Sunday in UTC and are grouped by their own post
+  /// count, so a four-post week is compared against other four-post weeks.
+  Future<PostingFrequency> frequency({
+    String? accountId,
+    String? workspaceId,
+    int? days,
+  }) async =>
+      PostingFrequency.fromJson(await _http.object(
+        'GET',
+        '/analytics/frequency',
+        query: {
+          'accountId': accountId,
+          'workspace_id': workspaceId,
+          'days': days,
+        },
+      ));
+
+  /// Returns every reading held for one post, oldest first.
+  ///
+  /// [idOrPermalink] is a FoPost post id, or the permalink of a post made
+  /// natively on the network.
+  Future<PostTimeline> timeline(String idOrPermalink) async =>
+      PostTimeline.fromJson(await _http.object(
+        'GET',
+        '/analytics/posts/${Uri.encodeComponent(idOrPermalink)}/timeline',
+      ));
+
+  /// Returns readings recorded after [since], oldest first, with a cursor.
+  ///
+  /// Poll it to mirror the metrics into your own store instead of refetching
+  /// the whole history. Leaving [since] unset asks for the last seven days.
+  Future<MetricChangePage> changes({
+    String? since,
+    int? limit,
+    String? accountId,
+    String? workspaceId,
+  }) async =>
+      MetricChangePage.fromJson(await _http.object(
+        'GET',
+        '/analytics/changes',
+        query: {
+          'since': since,
+          'limit': limit,
+          'accountId': accountId,
+          'workspace_id': workspaceId,
+        },
+      ));
+
+  /// Re-reads one post from the network now.
+  ///
+  /// This spends the same per-user budget as [collect], so a burst answers
+  /// 429. [idOrPermalink] is a FoPost post id, or the permalink of a post made
+  /// natively on the network.
+  Future<CollectPostResult> collectPost(String idOrPermalink) async =>
+      CollectPostResult.fromJson(await _http.object(
+        'POST',
+        '/posts/${Uri.encodeComponent(idOrPermalink)}/analytics/collect',
+      ));
+
+  /// Returns the posts on an account that never went out through FoPost.
+  Future<Page<NativePost>> nativePosts(
+    String accountId, {
+    int? page,
+    int? perPage,
+    int? days,
+  }) async {
+    final body = await _http.raw(
+      'GET',
+      '/accounts/$accountId/native-posts',
+      query: {'page': page, 'per_page': perPage, 'days': days},
+    );
+    return Page.fromJson(
+      body is Map<String, dynamic> ? body : <String, dynamic>{},
+      NativePost.fromJson,
+    );
+  }
 }

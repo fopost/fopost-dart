@@ -10,6 +10,10 @@ abstract final class InboxItemType {
 
   /// A direct message.
   static const String dm = 'dm';
+
+  /// A rating left on the business: a Google Business review or a Facebook
+  /// Page recommendation.
+  static const String review = 'review';
 }
 
 /// The states an inbox item moves through.
@@ -194,7 +198,7 @@ class InboxPostContext {
   String toString() => 'InboxPostContext($externalId)';
 }
 
-/// A comment, mention or direct message on a connected account.
+/// A comment, mention, review or direct message on a connected account.
 class InboxItem {
   /// Creates an item.
   const InboxItem({
@@ -209,6 +213,7 @@ class InboxItem {
     this.authorHandle,
     this.authorAvatarUrl,
     this.text,
+    this.rating,
     this.attachments = const [],
     this.permalink,
     this.postExternalId,
@@ -232,6 +237,7 @@ class InboxItem {
     this.canSendMedia,
     this.canQuickReply,
     this.canPrivateReply,
+    this.moderationStatus,
     this.post,
     this.postContext,
     this.account,
@@ -250,6 +256,7 @@ class InboxItem {
         authorHandle: asString(json['authorHandle']),
         authorAvatarUrl: asString(json['authorAvatarUrl']),
         text: asString(json['text']),
+        rating: asInt(json['rating']),
         attachments: asModelList(json['attachments'], InboxAttachment.fromJson),
         permalink: asString(json['permalink']),
         postExternalId: asString(json['postExternalId']),
@@ -273,6 +280,7 @@ class InboxItem {
         canSendMedia: asBool(json['canSendMedia']),
         canQuickReply: asBool(json['canQuickReply']),
         canPrivateReply: asBool(json['canPrivateReply']),
+        moderationStatus: asString(json['moderationStatus']),
         post: asMapOrNull(json['post']),
         postContext: _postContext(json['postContext']),
         account: _accountRef(json['account']),
@@ -310,6 +318,9 @@ class InboxItem {
 
   /// The item's text.
   final String? text;
+
+  /// Stars on a review, 1-5. Null on every other type.
+  final int? rating;
 
   /// Files attached to it.
   final List<InboxAttachment> attachments;
@@ -381,6 +392,10 @@ class InboxItem {
   /// Whether a DM can be opened with `startConversation(commentId: ...)`.
   final bool? canPrivateReply;
 
+  /// The platform's own state for a comment: `published`, `held`, `spam` or
+  /// `rejected`. Null where the platform does not report one.
+  final String? moderationStatus;
+
   /// The FoPost post it sits under, when it was published through FoPost.
   final Map<String, dynamic>? post;
 
@@ -394,7 +409,8 @@ class InboxItem {
   String toString() => 'InboxItem($id, $type, $state)';
 }
 
-/// One platform post and the comments it has collected.
+/// One platform post and the comments it has collected, or one review left
+/// on the business.
 class InboxThread {
   /// Creates a thread.
   const InboxThread({
@@ -406,6 +422,7 @@ class InboxThread {
     this.lastCommentAt,
     this.lastCommentText,
     this.lastCommentAuthor,
+    this.rating,
     this.post,
     this.account,
   });
@@ -420,6 +437,7 @@ class InboxThread {
         lastCommentAt: asDate(json['lastCommentAt']),
         lastCommentText: asString(json['lastCommentText']),
         lastCommentAuthor: asString(json['lastCommentAuthor']),
+        rating: asInt(json['rating']),
         post: _postContext(json['post']),
         account: _accountRef(json['account']),
       );
@@ -447,6 +465,9 @@ class InboxThread {
 
   /// Who wrote the latest comment.
   final String? lastCommentAuthor;
+
+  /// Stars, on a review thread. Null on comments and mentions.
+  final int? rating;
 
   /// The post itself.
   final InboxPostContext? post;
@@ -566,6 +587,7 @@ class InboxAccount {
     this.dmSupported,
     this.dmPendingReason,
     this.canStartConversation,
+    this.reconnectRequired,
   });
 
   /// Reads an account.
@@ -581,6 +603,7 @@ class InboxAccount {
         dmSupported: asBool(json['dmSupported']),
         dmPendingReason: asString(json['dmPendingReason']),
         canStartConversation: asBool(json['canStartConversation']),
+        reconnectRequired: asBool(json['reconnectRequired']),
       );
 
   /// The account's id.
@@ -615,6 +638,9 @@ class InboxAccount {
 
   /// Whether a new DM can be opened from it by handle.
   final bool? canStartConversation;
+
+  /// The grant predates a permission the inbox read needs; reconnect it once.
+  final bool? reconnectRequired;
 
   @override
   String toString() => 'InboxAccount($platform, $id)';
@@ -841,3 +867,24 @@ InboxPostContext? _postContext(Object? value) =>
 
 InboxAccountRef? _accountRef(Object? value) =>
     value is Map ? InboxAccountRef.fromJson(asMap(value)) : null;
+
+/// The outcome of a Messenger thread hand-over.
+class InboxHandover {
+  /// Creates a hand-over result.
+  const InboxHandover({required this.control, this.appId});
+
+  /// Reads a hand-over result.
+  factory InboxHandover.fromJson(Map<String, dynamic> json) => InboxHandover(
+        appId: asString(json['app_id']),
+        control: asString(json['control']) ?? '',
+      );
+
+  /// The app control went to, or null when it was taken back.
+  final String? appId;
+
+  /// `passed` or `taken`.
+  final String control;
+
+  @override
+  String toString() => 'InboxHandover($control)';
+}

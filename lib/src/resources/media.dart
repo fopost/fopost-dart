@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 
 import '../file.dart';
 import '../http.dart';
+import '../json.dart';
 import '../models/media.dart';
 
 /// The media library. Uploads count against the plan's storage allowance and
@@ -55,21 +56,42 @@ class MediaResource {
         .toList();
   }
 
+  /// Returns what the account may upload: the per-file ceiling, the multipart
+  /// ceiling, and the accepted types.
+  Future<UploadLimits> limits({String? workspaceId}) async {
+    final body = await _http
+        .object('GET', '/media/limits', query: {'workspaceId': workspaceId});
+    return UploadLimits.fromJson(body);
+  }
+
   /// Reserves a presigned slot for one file, to be filled with a direct `PUT`.
   ///
-  /// [size] is the exact byte count that will be sent, at most 50 MB.
+  /// [size] is the exact byte count that will be sent, up to the account's
+  /// `maxFileBytes` from [limits]. A `brandRole` of `person` needs
+  /// [personConsent] with `subject` and `statement`.
   Future<PresignedUpload> presign({
     required String workspaceId,
     required String filename,
     required String mimeType,
     required int size,
+    String? folderId,
+    String? origin,
+    String? brandRole,
+    String? brandVoiceId,
+    Map<String, String>? personConsent,
   }) async {
-    final body = await _http.object('POST', '/media/presign', body: {
-      'workspaceId': workspaceId,
-      'filename': filename,
-      'mimeType': mimeType,
-      'size': size,
-    });
+    final body = await _http.object('POST', '/media/presign',
+        body: pruned({
+          'workspaceId': workspaceId,
+          'filename': filename,
+          'mimeType': mimeType,
+          'size': size,
+          'folderId': folderId,
+          'origin': origin,
+          'brandRole': brandRole,
+          'brandVoiceId': brandVoiceId,
+          'personConsent': personConsent,
+        }));
     return PresignedUpload.fromJson(body);
   }
 
@@ -97,20 +119,66 @@ class MediaResource {
     String workspaceId,
     String filename,
     String mimeType,
-    Uint8List data,
-  ) async {
+    Uint8List data, {
+    String? folderId,
+    String? origin,
+    String? brandRole,
+    String? brandVoiceId,
+    Map<String, String>? personConsent,
+  }) =>
+      uploadDirectFile(
+        workspaceId,
+        FoPostFile(filename: filename, bytes: data, mimeType: mimeType),
+        folderId: folderId,
+        origin: origin,
+        brandRole: brandRole,
+        brandVoiceId: brandVoiceId,
+        personConsent: personConsent,
+      );
+
+  /// Stores one [FoPostFile] through a presigned direct upload. A
+  /// [FoPostFile.stream] file is streamed to storage, never buffered, so this
+  /// is the route for anything over the multipart ceiling.
+  ///
+  /// ```dart
+  /// final clip = File('launch.mp4');
+  /// final asset = await client.media.uploadDirectFile(
+  ///   workspaceId,
+  ///   FoPostFile.stream(
+  ///     filename: 'launch.mp4',
+  ///     mimeType: 'video/mp4',
+  ///     length: await clip.length(),
+  ///     open: clip.openRead,
+  ///   ),
+  /// );
+  /// ```
+  Future<UploadedMedia> uploadDirectFile(
+    String workspaceId,
+    FoPostFile file, {
+    String? folderId,
+    String? origin,
+    String? brandRole,
+    String? brandVoiceId,
+    Map<String, String>? personConsent,
+  }) async {
+    final mimeType = file.mimeType;
+    if (mimeType == null || mimeType.isEmpty) {
+      throw ArgumentError.value(
+          file, 'file', 'a direct upload needs the file\'s mimeType');
+    }
     final slot = await presign(
       workspaceId: workspaceId,
-      filename: filename,
+      filename: file.filename,
       mimeType: mimeType,
-      size: data.length,
+      size: file.length,
+      folderId: folderId,
+      origin: origin,
+      brandRole: brandRole,
+      brandVoiceId: brandVoiceId,
+      personConsent: personConsent,
     );
-    await _http.putBytes(
-      Uri.parse(slot.uploadUrl),
-      data,
-      // http sets Content-Length from the body, matching the presigned size.
-      headers: slot.headers,
-    );
+    // Content-Length comes from the file's length, matching the presigned size.
+    await _http.putFile(Uri.parse(slot.uploadUrl), file, headers: slot.headers);
     return complete(slot.uploadId);
   }
 

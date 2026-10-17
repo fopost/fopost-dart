@@ -12,10 +12,97 @@
   the platform-owned WhatsApp test number. Inviting sends a template, so it needs
   the `publish` scope.
 
+- Added: `blog`, settings, the keyword plan and the articles written from
+  it. `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`,
+  `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`,
+  `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`,
+  `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle` and
+  `deleteArticle`. Planning, requesting and regenerating spend AI credits and
+  answer `402` on an empty balance; publishing needs the `publish` scope.
+- Added: `verifyWebhook` checks a delivery's signature over the raw bytes in
+  constant time, preferring the timestamped `X-FoPost-Signature-256` within a
+  300 second tolerance and falling back to `X-FoPost-Signature` only when no
+  timestamp header is present. Returns a `WebhookEnvelope`; read an
+  `article.published` one with `BlogArticlePublished.fromJson`.
+- Added: `media.limits` returns an `UploadLimits` with the account's per-file
+  ceiling (`maxFileBytes`), its source, the connected-account count, the next
+  tier, the multipart ceiling, the files-per-upload cap and the accepted types.
+- Added: `posts.create` and `posts.update` take `files`, up to five. Files
+  within the multipart ceiling go with the request; larger ones are uploaded
+  direct and attached to the first content block, so the route never shows.
+- Added: `FoPostFile.stream` for a file read from a stream of known length, and
+  `FoPostFile.mimeType`. `media.uploadDirectFile` streams such a file to
+  storage instead of buffering it. Multipart parts stream too.
+- Added: `presign` and `uploadDirect` take `folderId`, `origin`, `brandRole`,
+  `brandVoiceId` and `personConsent`; `PresignedUpload.maxFileBytes`.
+- Added: a `413` is thrown as `FoPostFileTooLargeException` with
+  `maxFileBytes`, `fileBytes` and `upgradeUrl`.
+- Changed: the direct-upload path no longer documents a 50 MB ceiling; the
+  account's `maxFileBytes` (up to 5 GB) applies. `FoPostFile.bytes` is now
+  nullable, since a stream-backed file has none.
+- Added: `InboxItem.moderationStatus` carries the platform's own state for a
+  comment (`published`, `held`, `spam`, `rejected`), and
+  `InboxAccount.reconnectRequired` flags an account connected before the inbox
+  asked for a permission it needs.
+- Added: `broadcasts` — one message into every conversation the workspace
+  already has with a segment of its contacts. `list`, `get`, `create`,
+  `update`, `delete`, `send`, `cancel` and `recipients`. Reading needs the
+  `inbox` scope; `send` and `cancel` also need `publish`.
+- Added: `sequences` — a series of messages on a delay. `list`, `get`,
+  `create`, `update`, `delete`, `enroll`, `unenroll` and `enrollments`.
+  `enroll` and `unenroll` need `publish`.
+- Added: both honour each network's messaging window server-side. Messenger
+  and Instagram take a business-initiated message only within 24 hours of the
+  contact's last one, so recipients outside it come back skipped with
+  `window_closed` and nothing is attempted — the number sent is often lower
+  than the audience.
+- Added: `contacts` — the people behind the inbox. `list`, `get`, `create`,
+  `update`, `delete`, `conversations` and `import`, plus `listFields`,
+  `createField`, `updateField` and `deleteField` for the columns a workspace
+  keeps about a person. Needs the `inbox` scope.
+- Added: `contacts.conversationAnalytics` — inbox volume and reply time per
+  thread. Needs the `analytics` scope, and each row's `key` is an opaque handle
+  for the thread rather than the id or handle the inbox groups on.
+- Added: Meta messaging settings on `accounts`: `iceBreakers`, `setIceBreakers` and
+  `deleteIceBreakers` (Facebook Pages and Instagram), plus `persistentMenu`,
+  `setPersistentMenu`, `deletePersistentMenu`, `greeting`, `setGreeting` and
+  `deleteGreeting` (Facebook Pages). A network without a field answers 400.
+- Added: `accounts.webhookSubscription` reports whether the network is still delivering
+  events for an account, and `resubscribeWebhook` puts a lapsed subscription back.
+- Added: `inbox.handover` passes a Messenger thread to another Meta app, or takes it back
+  when no `appId` is given (`inbox` scope, plus `publish`).
+- Added: `client.googleAds` wraps the Google Ads surface: keywords and keyword
+  ideas, search terms, bid strategies, ad schedule, negative keyword lists,
+  assets, Performance Max asset groups, Local Services leads, conversions, and
+  `query` for a raw GAQL read.
+- Added: `client.ads.authorizeGoogle` starts a Google Ads connection.
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
   Needs the `accounts` scope.
+- Added: the Discord bot surface on `accounts` — `discordChannels`,
+  `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`,
+  `discordPins`, `deleteDiscordMessage`, `pinDiscordMessage`,
+  `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`,
+  `sendDiscordDirectMessage`, `discordEvents`, `getDiscordEvent`,
+  `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`,
+  `discordMembers`, `discordMember`, `discordRoles`, `createDiscordRole`,
+  `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole` and
+  `removeDiscordMemberRole`. Needs the `accounts` scope, plus `publish` for
+  anything that posts; a webhook connection answers `409 webhook_connection`.
+- Added: `DiscordChannel.canPost` — false when a channel permission in Discord shuts
+  the bot out. `switchDiscordChannel` answers `409 channel_not_writable` for one.
+- Added: per-network extras on `accounts`, all `accounts` scope: Pinterest boards
+  (`pinterestBoards`, `createPinterestBoard`), YouTube playlists and captions
+  (`youtubePlaylists`, `createYouTubePlaylist`, `setDefaultYouTubePlaylist`,
+  `youtubeCaptions`, `uploadYouTubeCaptions`, `youtubeTranscript`), Bluesky post
+  languages (`blueskyLanguages`, `setBlueskyLanguages`), TikTok music and place
+  search plus video lookup (`tiktokMusic`, `tiktokLocations`,
+  `tiktokVideoLookup`), TikTok creator info
+  (`tiktokCreatorInfo`), Instagram audio, publishing limit and stories
+  (`instagramAudio`, `instagramPublishingLimit`, `instagramStories`,
+  `instagramStoryInsights`) and LinkedIn mentions (`linkedinMentions`), with a
+  model each.
 
 ## 0.3.0
 
