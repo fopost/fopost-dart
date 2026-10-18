@@ -600,6 +600,143 @@ class LinkedInMention {
   String toString() => 'LinkedInMention($urn, $name)';
 }
 
+/// The outcome of following or unfollowing an X user.
+class XFollowResult {
+  /// Creates a result.
+  const XFollowResult({
+    required this.accountId,
+    required this.userId,
+    required this.following,
+  });
+
+  /// Reads a result.
+  factory XFollowResult.fromJson(Map<String, dynamic> json) => XFollowResult(
+        accountId: asString(json['account_id']) ?? '',
+        userId: asString(json['user_id']) ?? '',
+        following: asBool(json['following']) ?? false,
+      );
+
+  /// The X account that acted.
+  final String accountId;
+
+  /// The X user id that was followed or unfollowed.
+  final String userId;
+
+  /// Whether the account now follows the user.
+  final bool following;
+
+  @override
+  String toString() => 'XFollowResult($userId, following: $following)';
+}
+
+/// A post read from X with the connected account's token.
+class XPost {
+  /// Creates a post.
+  const XPost({
+    required this.id,
+    this.text,
+    this.permalink,
+    this.authorName,
+    this.authorHandle,
+    this.authorAvatarUrl,
+    this.authorFollowers,
+    this.conversationId,
+    this.parentExternalId,
+    this.likes,
+    this.replies,
+    this.reposts,
+    this.quotes,
+    this.platformCreatedAt,
+  });
+
+  /// Reads a post.
+  factory XPost.fromJson(Map<String, dynamic> json) => XPost(
+        id: asString(json['id']) ?? '',
+        text: asString(json['text']),
+        permalink: asString(json['permalink']),
+        authorName: asString(json['author_name']),
+        authorHandle: asString(json['author_handle']),
+        authorAvatarUrl: asString(json['author_avatar_url']),
+        authorFollowers: asInt(json['author_followers']),
+        conversationId: asString(json['conversation_id']),
+        parentExternalId: asString(json['parent_external_id']),
+        likes: asInt(json['likes']),
+        replies: asInt(json['replies']),
+        reposts: asInt(json['reposts']),
+        quotes: asInt(json['quotes']),
+        platformCreatedAt: asDate(json['platform_created_at']),
+      );
+
+  /// The X post id.
+  final String id;
+
+  /// The post text.
+  final String? text;
+
+  /// The post's URL on X.
+  final String? permalink;
+
+  /// The author's display name.
+  final String? authorName;
+
+  /// The author's handle, without the `@`.
+  final String? authorHandle;
+
+  /// The author's avatar.
+  final String? authorAvatarUrl;
+
+  /// How many followers the author has.
+  final int? authorFollowers;
+
+  /// The thread root id.
+  final String? conversationId;
+
+  /// The post this one replied to.
+  final String? parentExternalId;
+
+  /// Like count.
+  final int? likes;
+
+  /// Reply count.
+  final int? replies;
+
+  /// Repost count.
+  final int? reposts;
+
+  /// Quote count.
+  final int? quotes;
+
+  /// When it was posted on X.
+  final DateTime? platformCreatedAt;
+
+  @override
+  String toString() => 'XPost($id)';
+}
+
+/// One page of an X search.
+class XSearchPage {
+  /// Creates a page.
+  const XSearchPage({this.posts = const [], this.nextToken});
+
+  /// Reads a page.
+  factory XSearchPage.fromJson(Map<String, dynamic> json) => XSearchPage(
+        posts: asModelList(json['data'], XPost.fromJson),
+        nextToken: asString(asMap(json['meta'])['next_token']),
+      );
+
+  /// The posts on this page.
+  final List<XPost> posts;
+
+  /// Pass back as `nextToken` for the next page; null on the last.
+  final String? nextToken;
+
+  /// Whether another page follows this one.
+  bool get hasMore => nextToken != null && nextToken!.isNotEmpty;
+
+  @override
+  String toString() => 'XSearchPage(${posts.length})';
+}
+
 Map<String, int>? _insights(Object? value) {
   if (value is! Map) return null;
   final out = <String, int>{};

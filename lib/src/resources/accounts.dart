@@ -216,6 +216,57 @@ class AccountsResource {
     return asString(json['subreddit']);
   }
 
+  /// Follows an X user ([userId], numeric as X reports it) from an X account.
+  ///
+  /// A 409 `reconnect_required` means the account was connected before the
+  /// follow grant existed and has to be reconnected. Every call is an X API
+  /// call metered to the workspace; 402 `platform_balance_spent` means X's
+  /// own balance ran out. Needs the `inbox` and `publish` scopes.
+  Future<XFollowResult> followXUser(String id,
+          {required String userId}) async =>
+      XFollowResult.fromJson(await _http.object(
+        'POST',
+        '/accounts/${segment(id)}/x/follow',
+        body: {'user_id': userId},
+      ));
+
+  /// Unfollows an X user. Same scopes and errors as [followXUser].
+  Future<XFollowResult> unfollowXUser(String id,
+          {required String userId}) async =>
+      XFollowResult.fromJson(await _http.object(
+        'POST',
+        '/accounts/${segment(id)}/x/unfollow',
+        body: {'user_id': userId},
+      ));
+
+  /// Reads one X post ([postId], numeric) with the token of the X account
+  /// [accountId]. 404 when X has no such post. Needs the `inbox` scope.
+  Future<XPost> getXPost(String postId, {required String accountId}) async =>
+      XPost.fromJson(await _http.object(
+        'GET',
+        '/x/posts/${segment(postId)}',
+        query: {'account_id': accountId},
+      ));
+
+  /// Searches recent X posts for [q] (1 to 512 characters) with the token of
+  /// the X account [accountId]. [maxResults] is 10 to 100; pass
+  /// [XSearchPage.nextToken] back as [nextToken] for the next page. Needs
+  /// the `inbox` scope.
+  Future<XSearchPage> searchXPosts(
+    String q, {
+    required String accountId,
+    int? maxResults,
+    String? nextToken,
+  }) async {
+    final body = await _http.raw('GET', '/x/search', query: {
+      'q': q,
+      'account_id': accountId,
+      'max_results': maxResults,
+      'next_token': nextToken,
+    });
+    return XSearchPage.fromJson(asMap(body));
+  }
+
   /// Returns the channels the Slack app can post to: every public channel,
   /// and private ones the app was invited to. A 409 `webhook_connection`
   /// means the account posts through a webhook.

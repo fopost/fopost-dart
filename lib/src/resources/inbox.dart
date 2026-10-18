@@ -230,6 +230,24 @@ class InboxResource {
   Future<InboxItem> unlike(String id) async => InboxItem.fromJson(
       await _http.object('POST', '/inbox/${segment(id)}/unlike'));
 
+  /// Reposts an item to the account's own timeline (X). Only where
+  /// `canRepost` is true. Needs the `publish` scope.
+  Future<InboxItem> repost(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/repost'));
+
+  /// Removes the account's repost. Needs the `publish` scope.
+  Future<InboxItem> unrepost(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/unrepost'));
+
+  /// Bookmarks an item on the account (X). Only where `canBookmark` is true.
+  /// Needs the `publish` scope.
+  Future<InboxItem> bookmark(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/bookmark'));
+
+  /// Removes the account's bookmark. Needs the `publish` scope.
+  Future<InboxItem> unbookmark(String id) async => InboxItem.fromJson(
+      await _http.object('POST', '/inbox/${segment(id)}/unbookmark'));
+
   /// Votes an item up or down where the network ranks by votes (Reddit), or
   /// takes an earlier vote back with `none`.
   ///

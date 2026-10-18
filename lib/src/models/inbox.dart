@@ -225,6 +225,8 @@ class InboxItem {
     this.canReply,
     this.hidden,
     this.liked,
+    this.reposted,
+    this.bookmarked,
     this.vote,
     this.pinned,
     this.reaction,
@@ -232,6 +234,8 @@ class InboxItem {
     this.canHide,
     this.canDelete,
     this.canLike,
+    this.canRepost,
+    this.canBookmark,
     this.canVote,
     this.canPin,
     this.canEdit,
@@ -270,6 +274,8 @@ class InboxItem {
         canReply: asBool(json['canReply']),
         hidden: asBool(json['hidden']),
         liked: asBool(json['liked']),
+        reposted: asBool(json['reposted']),
+        bookmarked: asBool(json['bookmarked']),
         vote: asString(json['vote']),
         pinned: asBool(json['pinned']),
         reaction: asString(json['reaction']),
@@ -277,6 +283,8 @@ class InboxItem {
         canHide: asBool(json['canHide']),
         canDelete: asBool(json['canDelete']),
         canLike: asBool(json['canLike']),
+        canRepost: asBool(json['canRepost']),
+        canBookmark: asBool(json['canBookmark']),
         canVote: asBool(json['canVote']),
         canPin: asBool(json['canPin']),
         canEdit: asBool(json['canEdit']),
@@ -359,6 +367,12 @@ class InboxItem {
   /// Whether the account has liked it.
   final bool? liked;
 
+  /// Whether the account has reposted it to its own timeline (X).
+  final bool? reposted;
+
+  /// Whether the account has bookmarked it (X).
+  final bool? bookmarked;
+
   /// How the account voted, where the network ranks by votes: `up` or `down`.
   final String? vote;
 
@@ -380,6 +394,12 @@ class InboxItem {
 
   /// Whether the platform lets the account like it.
   final bool? canLike;
+
+  /// Whether the network has a repost (X).
+  final bool? canRepost;
+
+  /// Whether the network has bookmarks (X).
+  final bool? canBookmark;
 
   /// Whether up and down votes are available, where the network ranks by them.
   final bool? canVote;
