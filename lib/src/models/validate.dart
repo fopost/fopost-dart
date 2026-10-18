@@ -195,3 +195,48 @@ class ValidateMediaResult {
   @override
   String toString() => 'ValidateMediaResult($name, ok: $ok)';
 }
+
+/// Whether a subreddit exists and takes a post from one account.
+class ValidateSubredditResult {
+  /// Creates a result.
+  const ValidateSubredditResult({
+    required this.subreddit,
+    this.exists = false,
+    this.canPost = false,
+    this.over18 = false,
+    this.flairEnabled = false,
+    this.ok = false,
+  });
+
+  /// Reads a result.
+  factory ValidateSubredditResult.fromJson(Map<String, dynamic> json) =>
+      ValidateSubredditResult(
+        subreddit: asString(json['subreddit']) ?? '',
+        exists: asBool(json['exists']) ?? false,
+        canPost: asBool(json['can_post']) ?? false,
+        over18: asBool(json['over_18']) ?? false,
+        flairEnabled: asBool(json['flair_enabled']) ?? false,
+        ok: asBool(json['ok']) ?? false,
+      );
+
+  /// The subreddit that was checked, without the `r/` prefix.
+  final String subreddit;
+
+  /// Whether the subreddit exists and is visible to this account.
+  final bool exists;
+
+  /// Whether this account may submit there.
+  final bool canPost;
+
+  /// Whether the subreddit is marked over 18.
+  final bool over18;
+
+  /// Whether the subreddit offers post flairs.
+  final bool flairEnabled;
+
+  /// True when the subreddit exists and takes a post from this account.
+  final bool ok;
+
+  @override
+  String toString() => 'ValidateSubredditResult(r/$subreddit, ok: $ok)';
+}
