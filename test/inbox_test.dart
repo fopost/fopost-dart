@@ -360,6 +360,42 @@ void main() {
     client.close();
   });
 
+  test('repost and bookmark read the X action fields', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+      (request) async => jsonOk({
+        ...itemJson(),
+        'platform': 'twitter',
+        'reposted': request.url.path.endsWith('/repost'),
+        'bookmarked': request.url.path.endsWith('/bookmark'),
+        'can_repost': true,
+        'can_bookmark': true,
+      }),
+      recorder: seen,
+    );
+
+    final reposted = await client.inbox.repost('in_1');
+    expect(seen.last.method, 'POST');
+    expect(seen.last.url.path, '/v1/inbox/in_1/repost');
+    expect(seen.last.body, isEmpty);
+    expect(reposted.reposted, isTrue);
+    expect(reposted.canRepost, isTrue);
+    expect(reposted.canBookmark, isTrue);
+
+    final unreposted = await client.inbox.unrepost('in_1');
+    expect(seen.last.url.path, '/v1/inbox/in_1/unrepost');
+    expect(unreposted.reposted, isFalse);
+
+    final bookmarked = await client.inbox.bookmark('in_1');
+    expect(seen.last.url.path, '/v1/inbox/in_1/bookmark');
+    expect(bookmarked.bookmarked, isTrue);
+
+    final unbookmarked = await client.inbox.unbookmark('in_1');
+    expect(seen.last.url.path, '/v1/inbox/in_1/unbookmark');
+    expect(unbookmarked.bookmarked, isFalse);
+    client.close();
+  });
+
   test('reply sends media ids and quick replies without text', () async {
     final seen = RecordedRequests();
     final client = fakeClient(
