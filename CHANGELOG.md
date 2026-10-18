@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- Added: ads tracking. `ads.sendPixelConversions` sends Conversions API events
+  to a pixel exactly once per required `idempotencyKey` (the `Idempotency-Key`
+  header; a replay answers `replayed: true`), `ads.listConversionBatches` reads
+  the stored batches with identifiers hashed, and `PixelConversionEvent` carries
+  `eventId`, `actionSource`, `sourceUrl`, `externalId`, `clientIpAddress`,
+  `clientUserAgent`, `clickId`, `browserId` and `contentIds`. Pixels:
+  `pixels`, `createPixel`, `pixel` (with the install `code`), `updatePixel`,
+  `sharePixel`, `pixelStats` and `eventMatchQuality`. Custom conversions:
+  `customConversions`, `createCustomConversion`, `customConversion`,
+  `updateCustomConversion` and `deleteCustomConversion`. All need the `ads`
+  scope only.
+- Changed: `ads.uploadConversions` answers a `ConversionUploadResult` (`id`,
+  `accepted`, `eventCount`, `replayed`) instead of the accepted count, takes an
+  optional `idempotencyKey`, and accepts `PixelConversionEvent`s as well as
+  raw maps.
+
 ## 0.3.0
 
 - Breaking: `BlogSettings.autoPublish` and the `autoPublish` argument of
