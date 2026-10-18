@@ -305,24 +305,300 @@ class AdsResource {
     return rows.map(SparkPost.fromJson).toList();
   }
 
-  /// Offline conversions against a pixel the ad account owns. Identifiers are
-  /// hashed before anything leaves FoPost; returns how many the network took.
-  Future<int> uploadConversions({
+  /// Conversions against a pixel the ad account owns, through the Conversions
+  /// API. Identifiers are hashed before anything leaves FoPost.
+  ///
+  /// Each event is a [PixelConversionEvent] or a raw map. An optional
+  /// [idempotencyKey] makes a resend answer the stored batch (`replayed`)
+  /// instead of sending again; [sendPixelConversions] requires one.
+  Future<ConversionUploadResult> uploadConversions({
     required String workspaceId,
     required String connectionId,
     required String adAccountId,
     required String pixelId,
-    required List<Map<String, dynamic>> events,
+    required List<Object> events,
+    String? idempotencyKey,
+  }) =>
+      _sendConversions('/ads/conversions',
+          workspaceId: workspaceId,
+          connectionId: connectionId,
+          adAccountId: adAccountId,
+          pixelId: pixelId,
+          events: events,
+          idempotencyKey: idempotencyKey);
+
+  /// Sends conversions to a pixel exactly once per [idempotencyKey].
+  ///
+  /// The same key answers the stored batch with `replayed: true` and nothing
+  /// reaches the network again. Events are [PixelConversionEvent]s or raw
+  /// maps; identifiers are hashed before anything leaves FoPost.
+  Future<ConversionUploadResult> sendPixelConversions({
+    required String idempotencyKey,
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String pixelId,
+    required List<Object> events,
+  }) =>
+      _sendConversions('/ads/conversions/events',
+          workspaceId: workspaceId,
+          connectionId: connectionId,
+          adAccountId: adAccountId,
+          pixelId: pixelId,
+          events: events,
+          idempotencyKey: idempotencyKey);
+
+  /// Stored conversion batches, newest first, with identifiers hashed.
+  Future<List<ConversionBatch>> listConversionBatches({
+    String? workspaceId,
+    String? connectionId,
+    int? limit,
   }) async {
-    final data = await _http.object('POST', '/ads/conversions', body: {
+    final rows = await _http.objects('GET', '/ads/conversions/events', query: {
+      'workspace_id': workspaceId,
+      'connection_id': connectionId,
+      'limit': limit,
+    });
+    return rows.map(ConversionBatch.fromJson).toList();
+  }
+
+  Future<ConversionUploadResult> _sendConversions(
+    String path, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String pixelId,
+    required List<Object> events,
+    String? idempotencyKey,
+  }) async {
+    final data = await _http.object(
+      'POST',
+      path,
+      body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'pixelId': pixelId,
+        'events': events.map(_conversionEvent).toList(),
+      },
+      headers:
+          idempotencyKey == null ? null : {'Idempotency-Key': idempotencyKey},
+    );
+    return ConversionUploadResult.fromJson(data);
+  }
+
+  static Map<String, dynamic> _conversionEvent(Object event) {
+    if (event is PixelConversionEvent) return event.toJson();
+    if (event is Map) return Map<String, dynamic>.from(event);
+    throw ArgumentError.value(
+        event, 'events', 'expected a PixelConversionEvent or a Map');
+  }
+
+  // ─── Pixels ─────────────────────────────────────────────────────
+
+  /// The pixels on an ad account, read live.
+  Future<List<AdPixel>> pixels({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/pixels',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(AdPixel.fromJson).toList();
+  }
+
+  /// Creates a pixel on the ad account; the answer carries its install code.
+  Future<AdPixelDetail> createPixel({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String name,
+  }) async {
+    final result = await _http.object('POST', '/ads/pixels', body: {
       'workspaceId': workspaceId,
       'connectionId': connectionId,
       'adAccountId': adAccountId,
-      'pixelId': pixelId,
-      'events': events,
+      'name': name,
     });
-    return asInt(data['accepted']) ?? 0;
+    return AdPixelDetail.fromJson(result);
   }
+
+  /// One pixel in full, including its install code.
+  Future<AdPixelDetail> pixel(
+    String id, {
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', _pixelPath(id),
+        query: _account(workspaceId, connectionId, adAccountId));
+    return AdPixelDetail.fromJson(result);
+  }
+
+  /// Renames a pixel or changes what its data may be used for
+  /// ([PixelDataUseSetting]).
+  Future<AdPixelDetail> updatePixel(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    String? name,
+    String? dataUseSetting,
+  }) async {
+    final result = await _http.object(
+      'PATCH',
+      _pixelPath(id),
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'name': name,
+        'dataUseSetting': dataUseSetting,
+      }),
+    );
+    return AdPixelDetail.fromJson(result);
+  }
+
+  /// Shares a pixel with another ad account under the same business
+  /// portfolio.
+  Future<void> sharePixel(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String targetAdAccountId,
+  }) =>
+      _http.discard('POST', _pixelPath(id, '/share'), body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'targetAdAccountId': targetAdAccountId,
+      });
+
+  /// How often each event fired on a pixel over the last 28 days.
+  Future<AdPixelStats> pixelStats(
+    String id, {
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', _pixelPath(id, '/stats'),
+        query: _account(workspaceId, connectionId, adAccountId));
+    return AdPixelStats.fromJson(result);
+  }
+
+  /// How well each event's identifiers match people on the network.
+  Future<List<EventMatchQuality>> eventMatchQuality(
+    String id, {
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', _pixelPath(id, '/match-quality'),
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(EventMatchQuality.fromJson).toList();
+  }
+
+  String _pixelPath(String id, [String suffix = '']) =>
+      '/ads/pixels/${segment(id)}$suffix';
+
+  // ─── Custom conversions ─────────────────────────────────────────
+
+  /// The custom conversions on an ad account, read live.
+  Future<List<CustomConversion>> customConversions({
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final rows = await _http.objects('GET', '/ads/custom-conversions',
+        query: _account(workspaceId, connectionId, adAccountId));
+    return rows.map(CustomConversion.fromJson).toList();
+  }
+
+  /// Creates a custom conversion that counts [rule] on [pixelId] as
+  /// [eventType] (one of [CustomConversionEventType]).
+  Future<CustomConversion> createCustomConversion({
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    required String pixelId,
+    required String name,
+    required String eventType,
+    required CustomConversionRule rule,
+    String? description,
+    int? defaultValueMinor,
+  }) async {
+    final result = await _http.object(
+      'POST',
+      '/ads/custom-conversions',
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'pixelId': pixelId,
+        'name': name,
+        'eventType': eventType,
+        'rule': rule.toJson(),
+        'description': description,
+        'defaultValueMinor': defaultValueMinor,
+      }),
+    );
+    return CustomConversion.fromJson(result);
+  }
+
+  /// One custom conversion.
+  Future<CustomConversion> customConversion(
+    String id, {
+    required String connectionId,
+    required String adAccountId,
+    String? workspaceId,
+  }) async {
+    final result = await _http.object('GET', _customConversionPath(id),
+        query: _account(workspaceId, connectionId, adAccountId));
+    return CustomConversion.fromJson(result);
+  }
+
+  /// Renames a custom conversion or changes its description or default value.
+  Future<CustomConversion> updateCustomConversion(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+    String? name,
+    String? description,
+    int? defaultValueMinor,
+  }) async {
+    final result = await _http.object(
+      'PATCH',
+      _customConversionPath(id),
+      body: pruned({
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+        'name': name,
+        'description': description,
+        'defaultValueMinor': defaultValueMinor,
+      }),
+    );
+    return CustomConversion.fromJson(result);
+  }
+
+  /// Deletes a custom conversion. The account travels in the body, because
+  /// the path already carries the id.
+  Future<void> deleteCustomConversion(
+    String id, {
+    required String workspaceId,
+    required String connectionId,
+    required String adAccountId,
+  }) =>
+      _http.discard('DELETE', _customConversionPath(id), body: {
+        'workspaceId': workspaceId,
+        'connectionId': connectionId,
+        'adAccountId': adAccountId,
+      });
+
+  String _customConversionPath(String id) =>
+      '/ads/custom-conversions/${segment(id)}';
 
   /// One page of an ad's comments; pass `nextCursor` back as [after].
   Future<AdCommentsPage> comments({
