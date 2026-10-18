@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+- Added: `queue`, the posting queue. `slots`, `createSlot`, `updateSlot`,
+  `deleteSlot`, `next` and `preview`; `posts.create` and `posts.update` take
+  `schedule: 'queue'` to drop a post into the next free slot.
+- Added: `connectSessions.create` and `get`, hosted links that let one of
+  your users connect an account into a workspace. The link comes back once as
+  `ConnectSession.url`.
+- Added: `logs.list`, the API request log with its cursor and summary.
+- Added: `analytics.inbox`, inbox volume, response times and a heatmap.
+
 ## 0.3.0
 
 - Breaking: `BlogSettings.autoPublish` and the `autoPublish` argument of
