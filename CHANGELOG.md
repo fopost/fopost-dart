@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Breaking: `BlogSettings.autoPublish` and the `autoPublish` argument of
+  `blog.updateSettings` are removed. Nothing publishes without approval:
+  `blog.submitArticle` moves a draft, failed or rejected article to
+  `in_review`, and `publishArticle` or a `publishAt` on a draft answers `409`
+  until it is submitted.
+- Added: `blog.suggestSeeds` suggests about ten search terms from the blog goal
+  and topics; pass the current seeds to refine and a prompt to steer. Spends AI
+  credits.
+- Added: `BlogSettings.goal` (`BlogGoal`), `focusTopics`, `avoidTopics` and
+  `planRun` (`BlogPlanRun`), with `goal`, `focusTopics` and `avoidTopics` on
+  `blog.updateSettings`; `BlogKeyword.fitReason`; and
+  `BlogArticleStatus.inReview`.
+- Changed: `blog.planKeywords` no longer fills the calendar. Results land as
+  `suggested` keywords; setting one to `planned` picks it for the next free
+  date. `reviewHoldDays` is now the days before its planned date that a picked
+  keyword starts being written.
+
 - Added: `whatsapp` for a WhatsApp Business connection: the business profile
   (`profile`, `updateProfile`, `requestDisplayName`, `setUsername`), message
   templates including the platform's own library (`templates`, `createTemplate`,

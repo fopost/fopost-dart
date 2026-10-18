@@ -6,39 +6,48 @@ import 'package:test/test.dart';
 import 'support.dart';
 
 const settingsJson = {
-  'siteUrl': 'https://yourbrand.com',
+  'site_url': 'https://yourbrand.com',
   'topic': 'Running shoes',
   'audience': 'Weekend runners',
+  'goal': 'leads',
+  'focus_topics': 'Trail gear',
+  'avoid_topics': 'Medical advice',
   'language': 'en',
-  'locationCode': 2840,
-  'cadencePerWeek': 2,
-  'reviewHoldDays': 3,
-  'autoPublish': false,
-  'imageTier': 'standard',
-  'inBodyImages': 2,
-  'minWords': 900,
-  'maxWords': 1500,
-  'brandVoiceId': null,
-  'targetKind': 'website',
-  'targetAccountId': null,
-  'targetPlatform': null,
-  'websiteUrl': 'https://yourbrand.com/fopost',
-  'hasWebsiteSecret': true,
-  'keywordDataAvailable': true,
-  'updatedAt': '2026-10-10T08:00:00.000Z',
+  'location_code': 2840,
+  'cadence_per_week': 2,
+  'review_hold_days': 3,
+  'image_tier': 'standard',
+  'in_body_images': 2,
+  'min_words': 900,
+  'max_words': 1500,
+  'brand_voice_id': null,
+  'target_kind': 'website',
+  'target_account_id': null,
+  'target_platform': null,
+  'website_url': 'https://yourbrand.com/fopost',
+  'has_website_secret': true,
+  'plan_run': {
+    'status': 'done',
+    'error': null,
+    'added': 12,
+    'finished_at': '2026-10-10T07:00:00.000Z',
+  },
+  'keyword_data_available': true,
+  'updated_at': '2026-10-10T08:00:00.000Z',
 };
 
 const keywordJson = {
   'id': 'kw_1',
   'keyword': 'best trail running shoes',
-  'searchVolume': 4400,
+  'search_volume': 4400,
   'difficulty': 38,
   'cpc': 1.25,
   'intent': 'commercial',
   'source': 'provider',
   'status': 'suggested',
-  'plannedFor': null,
-  'createdAt': '2026-10-09T12:00:00.000Z',
+  'planned_for': null,
+  'fit_reason': 'Buyers comparing shoes',
+  'created_at': '2026-10-09T12:00:00.000Z',
 };
 
 const articleJson = {
@@ -47,24 +56,24 @@ const articleJson = {
   'slug': 'best-trail-running-shoes',
   'keyword': 'best trail running shoes',
   'excerpt': 'Our picks.',
-  'metaTitle': null,
-  'metaDescription': null,
-  'featuredImage': {
-    'mediaId': 'med_1',
+  'meta_title': null,
+  'meta_description': null,
+  'featured_image': {
+    'media_id': 'med_1',
     'url': 'https://media.example/hero.jpg',
     'alt': 'Trail shoes on a rock',
   },
   'tags': ['running', 'gear'],
-  'wordCount': 1200,
+  'word_count': 1200,
   'status': 'draft',
   'origin': 'plan',
-  'reviewUntil': '2026-10-13T08:00:00.000Z',
-  'publishAt': null,
-  'publishedAt': null,
-  'publishedUrl': null,
+  'review_until': '2026-10-13T08:00:00.000Z',
+  'publish_at': null,
+  'published_at': null,
+  'published_url': null,
   'error': null,
-  'createdAt': '2026-10-10T08:00:00.000Z',
-  'updatedAt': '2026-10-10T09:00:00.000Z',
+  'created_at': '2026-10-10T08:00:00.000Z',
+  'updated_at': '2026-10-10T09:00:00.000Z',
 };
 
 const fullArticleJson = {
@@ -72,11 +81,11 @@ const fullArticleJson = {
   'instructions': 'Lead with the lightest pair.',
   'outline': ['Why trail shoes differ', 'Our picks'],
   'brief': {'sources': 3},
-  'bodyMarkdown': '# Hello',
-  'bodyHtml': '<h1>Hello</h1>',
+  'body_markdown': '# Hello',
+  'body_html': '<h1>Hello</h1>',
   'images': [
     {
-      'mediaId': 'med_2',
+      'media_id': 'med_2',
       'url': 'https://media.example/in-body.jpg',
       'alt': 'A muddy trail',
       'position': 1,
@@ -90,25 +99,50 @@ void main() {
         () async {
       final seen = RecordedRequests();
       final client =
-          fakeClient((_) async => jsonOk(settingsJson), recorder: seen);
+          fakeClient((_) async => jsonBare(settingsJson), recorder: seen);
 
       final settings = await client.blog.getSettings('ws_1');
 
       expect(seen.last.method, 'GET');
       expect(seen.last.url.path, '/v1/blog/settings');
-      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
       expect(settings.targetKind, BlogTargetKind.website);
       expect(settings.cadencePerWeek, 2);
       expect(settings.hasWebsiteSecret, isTrue);
       expect(settings.websiteUrl, 'https://yourbrand.com/fopost');
+      expect(settings.goal, BlogGoal.leads);
+      expect(settings.focusTopics, 'Trail gear');
+      expect(settings.avoidTopics, 'Medical advice');
+      expect(settings.planRun?.status, BlogPlanRunStatus.done);
+      expect(settings.planRun?.added, 12);
+      expect(settings.planRun?.finishedAt, DateTime.utc(2026, 10, 10, 7));
+    });
+
+    test('updateSettings sends the goal and topics', () async {
+      final seen = RecordedRequests();
+      final client =
+          fakeClient((_) async => jsonBare(settingsJson), recorder: seen);
+
+      await client.blog.updateSettings(
+        'ws_1',
+        goal: BlogGoal.leads,
+        focusTopics: 'Trail gear',
+        avoidTopics: 'Medical advice',
+      );
+
+      expect(jsonDecode(seen.last.body), {
+        'workspaceId': 'ws_1',
+        'goal': 'leads',
+        'focusTopics': 'Trail gear',
+        'avoidTopics': 'Medical advice',
+      });
     });
 
     test('updateSettings sends the workspace in the body and keeps the secret',
         () async {
       final seen = RecordedRequests();
       final client = fakeClient(
-        (_) async =>
-            jsonBare({'data': settingsJson, 'websiteSecret': 'whsec_abc'}),
+        (_) async => jsonBare({...settingsJson, 'website_secret': 'whsec_abc'}),
         recorder: seen,
       );
 
@@ -133,7 +167,7 @@ void main() {
 
     test('updateSettings answers a null secret when none was issued', () async {
       final client = fakeClient(
-          (_) async => jsonBare({'data': settingsJson, 'websiteSecret': null}));
+          (_) async => jsonBare({...settingsJson, 'website_secret': null}));
 
       final result = await client.blog.updateSettings('ws_1', topic: 'Shoes');
 
@@ -143,7 +177,7 @@ void main() {
     test('rotateWebsiteSecret returns the new secret', () async {
       final seen = RecordedRequests();
       final client = fakeClient(
-          (_) async => jsonOk({'websiteSecret': 'whsec_new'}),
+          (_) async => jsonBare({'website_secret': 'whsec_new'}),
           recorder: seen);
 
       final secret = await client.blog.rotateWebsiteSecret('ws_1');
@@ -153,12 +187,24 @@ void main() {
       expect(secret, 'whsec_new');
     });
 
+    test('testWebsite reads the site status on success', () async {
+      final client = fakeClient((_) async => jsonBare({'http_status': 204}));
+
+      final result = await client.blog.testWebsite('ws_1');
+
+      expect(result.ok, isTrue);
+      expect(result.status, 204);
+      expect(result.error, isNull);
+    });
+
     test('testWebsite reads a 502 as a failed test instead of throwing',
         () async {
       final client = fakeClient(
         (_) async => jsonBare(
           {
-            'data': {'ok': false, 'status': 500, 'error': 'site answered 500'},
+            'error': 'website_test_failed',
+            'message': 'site answered 500',
+            'http_status': 500,
           },
           status: 502,
         ),
@@ -187,7 +233,7 @@ void main() {
 
       expect(seen.last.url.path, '/v1/blog/keywords');
       expect(seen.last.url.queryParameters, {
-        'workspaceId': 'ws_1',
+        'workspace_id': 'ws_1',
         'status': 'suggested,planned',
         'limit': '50',
       });
@@ -195,14 +241,48 @@ void main() {
       expect(keyword.keyword, 'best trail running shoes');
       expect(keyword.searchVolume, 4400);
       expect(keyword.cpc, 1.25);
+      expect(keyword.fitReason, 'Buyers comparing shoes');
+    });
+
+    test('suggestSeeds posts the seeds and prompt and reads the terms',
+        () async {
+      final seen = RecordedRequests();
+      final client = fakeClient(
+        (_) async => jsonBare({
+          'seeds': ['trail running shoes', 'waterproof trail shoes'],
+        }),
+        recorder: seen,
+      );
+
+      final seeds = await client.blog.suggestSeeds('ws_1',
+          seeds: ['trail shoes'], prompt: 'More beginner terms');
+
+      expect(seen.last.method, 'POST');
+      expect(seen.last.url.path, '/v1/blog/keywords/suggest');
+      expect(jsonDecode(seen.last.body), {
+        'workspaceId': 'ws_1',
+        'seeds': ['trail shoes'],
+        'prompt': 'More beginner terms',
+      });
+      expect(seeds, ['trail running shoes', 'waterproof trail shoes']);
+    });
+
+    test('suggestSeeds surfaces an empty balance as 402', () async {
+      final client = fakeClient(
+        (_) async => jsonError(402, 'insufficient_credits', 'Balance is empty'),
+        maxRetries: 1,
+      );
+
+      await expectLater(
+        client.blog.suggestSeeds('ws_1'),
+        throwsA(isA<FoPostPaymentRequiredException>()),
+      );
     });
 
     test('planKeywords posts the seeds and accepts a 202', () async {
       final seen = RecordedRequests();
       final client = fakeClient(
-        (_) async => jsonBare({
-          'data': {'status': 'queued'},
-        }, status: 202),
+        (_) async => jsonBare({'status': 'queued'}, status: 202),
         recorder: seen,
       );
 
@@ -238,7 +318,7 @@ void main() {
       final seen = RecordedRequests();
       final client = fakeClient((request) async {
         if (request.method == 'DELETE') return jsonBare(null, status: 204);
-        return jsonOk({...keywordJson, 'status': 'planned'});
+        return jsonBare({...keywordJson, 'status': 'planned'});
       }, recorder: seen);
 
       await client.blog
@@ -255,7 +335,7 @@ void main() {
           status: BlogKeywordStatus.planned, clearPlannedFor: true);
       expect(seen.last.method, 'PATCH');
       expect(seen.last.url.path, '/v1/blog/keywords/kw_1');
-      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
       expect(jsonDecode(seen.last.body),
           {'status': 'planned', 'plannedFor': null});
       expect(updated.status, 'planned');
@@ -263,7 +343,7 @@ void main() {
       await client.blog.deleteKeyword('ws_1', 'kw_1');
       expect(seen.last.method, 'DELETE');
       expect(seen.last.url.path, '/v1/blog/keywords/kw_1');
-      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
     });
   });
 
@@ -278,7 +358,7 @@ void main() {
 
       expect(seen.last.url.path, '/v1/blog/articles');
       expect(seen.last.url.queryParameters,
-          {'workspaceId': 'ws_1', 'status': 'draft'});
+          {'workspace_id': 'ws_1', 'status': 'draft'});
       final article = articles.single;
       expect(article.slug, 'best-trail-running-shoes');
       expect(article.featuredImage?.mediaId, 'med_1');
@@ -290,9 +370,9 @@ void main() {
         () async {
       final seen = RecordedRequests();
       final client = fakeClient(
-        (_) async => jsonBare({
-          'data': {...articleJson, 'status': 'queued', 'wordCount': 0},
-        }, status: 202),
+        (_) async => jsonBare(
+            {...articleJson, 'status': 'queued', 'word_count': 0},
+            status: 202),
         recorder: seen,
       );
 
@@ -312,12 +392,12 @@ void main() {
     test('getArticle reads the body, outline and images', () async {
       final seen = RecordedRequests();
       final client =
-          fakeClient((_) async => jsonOk(fullArticleJson), recorder: seen);
+          fakeClient((_) async => jsonBare(fullArticleJson), recorder: seen);
 
       final article = await client.blog.getArticle('ws_1', 'art_1');
 
       expect(seen.last.url.path, '/v1/blog/articles/art_1');
-      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
       expect(article.bodyMarkdown, '# Hello');
       expect(article.bodyHtml, '<h1>Hello</h1>');
       expect(article.outline, ['Why trail shoes differ', 'Our picks']);
@@ -329,7 +409,7 @@ void main() {
     test('updateArticle sends the patch and a UTC publishAt', () async {
       final seen = RecordedRequests();
       final client =
-          fakeClient((_) async => jsonOk(fullArticleJson), recorder: seen);
+          fakeClient((_) async => jsonBare(fullArticleJson), recorder: seen);
 
       await client.blog.updateArticle(
         'ws_1',
@@ -342,7 +422,7 @@ void main() {
 
       expect(seen.last.method, 'PATCH');
       expect(seen.last.url.path, '/v1/blog/articles/art_1');
-      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
       expect(jsonDecode(seen.last.body), {
         'title': 'New title',
         'tags': ['running'],
@@ -356,13 +436,13 @@ void main() {
       final seen = RecordedRequests();
       final client = fakeClient((request) async {
         if (request.method == 'DELETE') return jsonBare(null, status: 204);
-        return jsonBare({'data': articleJson}, status: 202);
+        return jsonBare(articleJson, status: 202);
       }, recorder: seen);
 
       await client.blog.publishArticle('ws_1', 'art_1');
       expect(seen.last.method, 'POST');
       expect(seen.last.url.path, '/v1/blog/articles/art_1/publish');
-      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
 
       await client.blog.regenerateArticle('ws_1', 'art_1');
       expect(seen.last.url.path, '/v1/blog/articles/art_1/regenerate');
@@ -373,7 +453,34 @@ void main() {
       await client.blog.deleteArticle('ws_1', 'art_1');
       expect(seen.last.method, 'DELETE');
       expect(seen.last.url.path, '/v1/blog/articles/art_1');
-      expect(seen.last.url.queryParameters, {'workspaceId': 'ws_1'});
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
+    });
+
+    test('submitArticle moves the article to review', () async {
+      final seen = RecordedRequests();
+      final client = fakeClient(
+          (_) async => jsonBare({...articleJson, 'status': 'in_review'}),
+          recorder: seen);
+
+      final article = await client.blog.submitArticle('ws_1', 'art_1');
+
+      expect(seen.last.method, 'POST');
+      expect(seen.last.url.path, '/v1/blog/articles/art_1/submit');
+      expect(seen.last.url.queryParameters, {'workspace_id': 'ws_1'});
+      expect(article.status, BlogArticleStatus.inReview);
+    });
+
+    test('submitArticle on a published article is a 409', () async {
+      final client = fakeClient(
+        (_) async => jsonError(409, 'invalid_state', 'Cannot submit'),
+        maxRetries: 1,
+      );
+
+      await expectLater(
+        client.blog.submitArticle('ws_1', 'art_1'),
+        throwsA(isA<FoPostException>()
+            .having((e) => e.statusCode, 'statusCode', 409)),
+      );
     });
 
     test('publish with no target is a 409 with its code', () async {

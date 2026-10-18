@@ -335,7 +335,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `communities` | `list`, `sync`, `search`, `add`, `remove`                                                                                                                                                                 |
 | `labels`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                               |
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
-| `blog`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
+| `blog`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `suggestSeeds`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `submitArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`                        |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `uploadDirectFile`, `delete`                                                                                                                                                                                |
@@ -407,9 +407,16 @@ Reading needs the `inbox` scope; answering needs `publish` as well.
 
 `client.blog` plans keywords and writes articles for a website. An article is
 not a post: it goes to the target in the blog settings, which is the hosted
-blog, a connected account, or your own site. Reads need the `posts` scope,
-`planKeywords`, `requestArticle` and `regenerateArticle` need `ai` and answer
-`402` on an empty balance, and `publishArticle` needs `publish`.
+blog, a connected account, or your own site. Reads and `submitArticle` need
+the `posts` scope, `suggestSeeds`, `planKeywords`, `requestArticle` and
+`regenerateArticle` need `ai` and answer `402` on an empty balance, and
+`publishArticle` needs `publish`.
+
+Planning is goal-driven: set `goal`, `focusTopics` and `avoidTopics` in the
+settings, refine terms with `suggestSeeds`, then research them with
+`planKeywords`. Results arrive as `suggested` keywords; setting one to
+`planned` picks it for the next free date. A finished draft is submitted with
+`submitArticle` and only then published or scheduled.
 
 ```dart
 final article = await client.blog.requestArticle(
