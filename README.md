@@ -52,7 +52,7 @@ this package imports `dart:io` on a path the web can reach.
 
 ```yaml
 dependencies:
-  fopost: ^0.3.0
+  fopost: ^0.4.0
 ```
 
 Two things to know:
@@ -336,7 +336,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `labels`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                               |
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
 | `blog`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `suggestSeeds`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `submitArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
-| `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`                        |
+| `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`, `inbox` |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `uploadDirectFile`, `delete`                                                                                                                                                                                |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `handover` |
@@ -350,6 +350,9 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `googleBusiness` | `getLocation`, `updateLocation`, `getAttributes`, `updateAttributes`, `getMenus`, `replaceMenus`, `getServices`, `replaceServices`, `listMedia`, `addMedia`, `deleteMedia`, `listPlaceActions`, `createPlaceAction`, `updatePlaceAction`, `deletePlaceAction`, `getVerificationOptions`, `startVerification`, `completeVerification`, `getPerformance`, `getSearchKeywords`, `assign` |
 | `whatsapp`    | `profile`, `updateProfile`, `requestDisplayName`, `setUsername`, `templates`, `templateLibrary`, `template`, `createTemplate`, `importTemplate`, `updateTemplate`, `deleteTemplate`, `groups`, `createGroup`, `group`, `updateGroup`, `deleteGroup`, `groupInviteLink`, `resetGroupInviteLink`, `removeGroupParticipants`, `blocked`, `blockUsers`, `unblockUsers`, `commerceSettings`, `updateCommerceSettings`, `linkCatalog`, `flows`, `flow`, `createFlow`, `updateFlow`, `deleteFlow`, `uploadFlowJson`, `publishFlow`, `deprecateFlow`, `flowResponses`, `encryptionKeyStatus`, `setEncryptionKey`, `accountEvents`, `sandboxSessions`, `createSandboxSession` |
 | `blogs`       | `listBlogs`, `listArticles`, `getArticle`, `createArticle`, `updateArticle`, `deleteArticle`, `listProducts`, `updateProduct` |
+| `queue`       | `slots`, `createSlot`, `updateSlot`, `deleteSlot`, `next`, `preview` |
+| `connectSessions` | `create`, `get` |
+| `logs`        | `list` |
 | `validate`    | `post`, `length`, `media`                                                                                                                                                                                 |
 | `activity`    | `list`                                                                                                                                                                                                    |
 

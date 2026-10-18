@@ -12,14 +12,17 @@ import 'resources/blog.dart';
 import 'resources/blogs.dart';
 import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
+import 'resources/connect_sessions.dart';
 import 'resources/contacts.dart';
 import 'resources/google_ads.dart';
 import 'resources/google_business.dart';
 import 'resources/inbox.dart';
 import 'resources/knowledge.dart';
 import 'resources/labels.dart';
+import 'resources/logs.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
+import 'resources/queue.dart';
 import 'resources/validate.dart';
 import 'resources/webhooks.dart';
 import 'resources/whatsapp.dart';
@@ -110,6 +113,9 @@ class FoPost {
     googleBusiness = GoogleBusinessResource(_http);
     blog = BlogResource(_http);
     whatsapp = WhatsappResource(_http);
+    queue = QueueResource(_http);
+    connectSessions = ConnectSessionsResource(_http);
+    logs = LogsResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -186,6 +192,15 @@ class FoPost {
 
   /// WhatsApp Business: templates, flows, groups, blocking and commerce.
   late final WhatsappResource whatsapp;
+
+  /// The posting queue: recurring slots a post can be dropped into.
+  late final QueueResource queue;
+
+  /// Hosted links that let your users connect accounts into a workspace.
+  late final ConnectSessionsResource connectSessions;
+
+  /// The API request log.
+  late final LogsResource logs;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;
