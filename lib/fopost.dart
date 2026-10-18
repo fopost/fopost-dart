@@ -36,6 +36,7 @@ export 'src/models/media.dart';
 export 'src/models/platform_extras.dart';
 export 'src/models/post.dart';
 export 'src/models/queue.dart';
+export 'src/models/request_log.dart';
 export 'src/models/validate.dart';
 export 'src/models/webhook.dart';
 
@@ -57,6 +58,7 @@ export 'src/resources/google_business.dart';
 export 'src/resources/inbox.dart';
 export 'src/resources/knowledge.dart';
 export 'src/resources/labels.dart';
+export 'src/resources/logs.dart';
 export 'src/resources/media.dart';
 export 'src/resources/posts.dart';
 export 'src/resources/queue.dart';

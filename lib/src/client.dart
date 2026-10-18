@@ -19,6 +19,7 @@ import 'resources/google_business.dart';
 import 'resources/inbox.dart';
 import 'resources/knowledge.dart';
 import 'resources/labels.dart';
+import 'resources/logs.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
 import 'resources/queue.dart';
@@ -114,6 +115,7 @@ class FoPost {
     whatsapp = WhatsappResource(_http);
     queue = QueueResource(_http);
     connectSessions = ConnectSessionsResource(_http);
+    logs = LogsResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -196,6 +198,9 @@ class FoPost {
 
   /// Hosted links that let your users connect accounts into a workspace.
   late final ConnectSessionsResource connectSessions;
+
+  /// The API request log.
+  late final LogsResource logs;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;
