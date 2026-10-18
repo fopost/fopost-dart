@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Breaking: `BlogSettings.autoPublish` and the `autoPublish` argument of
   `blog.updateSettings` are removed. Nothing publishes without approval:
@@ -93,6 +93,13 @@
   assets, Performance Max asset groups, Local Services leads, conversions, and
   `query` for a raw GAQL read.
 - Added: `client.ads.authorizeGoogle` starts a Google Ads connection.
+- Added: `client.blogs` for content that already lives on a connected site —
+  `listBlogs`, `listArticles`, `getArticle`, `createArticle`, `updateArticle`,
+  `deleteArticle`, `listProducts` and `updateProduct`, with `RemoteBlog`,
+  `RemoteArticle` and `RemoteProduct`. Reads need the `posts` scope; the writes
+  need `posts` and `publish`. Updating an article changes the live one in place
+  and never creates a duplicate.
+
 - Added: `accounts.slackChannels`, `slackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` for a Slack account's channels, workspace members and
   posting identity. A `clear*` flag on `updateSlackIdentity` sends `null`.
@@ -130,8 +137,6 @@
   with `none`. Needs `inbox` and `publish`.
 - Added: `Account.reconnectRequired`, and `vote` and `canVote` on an inbox
   item.
-
-## 0.3.0
 
 - Added: the ads campaign tree (`accountTree`; get, create, update, delete
   and duplicate for campaigns, ad sets and network ads; `bulkSetStatus`),

@@ -9,6 +9,7 @@ import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
 import 'resources/blog.dart';
+import 'resources/blogs.dart';
 import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
 import 'resources/contacts.dart';
@@ -92,6 +93,7 @@ class FoPost {
     communities = CommunitiesResource(_http);
     labels = LabelsResource(_http);
     activity = ActivityResource(_http);
+    blogs = BlogsResource(_http);
     accountGroups = AccountGroupsResource(_http);
     webhooks = WebhooksResource(_http);
     analytics = AnalyticsResource(_http);
@@ -132,6 +134,9 @@ class FoPost {
 
   /// What happened in a workspace, and the security audit log.
   late final ActivityResource activity;
+
+  /// Articles and products on a connected site, by the platform's own ids.
+  late final BlogsResource blogs;
 
   /// Named sets of accounts a post can target at once.
   late final AccountGroupsResource accountGroups;
