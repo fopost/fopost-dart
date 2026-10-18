@@ -33,7 +33,7 @@ class BlogResource {
   /// Returns the workspace's blog settings.
   Future<BlogSettings> getSettings(String workspaceId) async =>
       BlogSettings.fromJson(await _http.object('GET', '/blog/settings',
-          query: {'workspaceId': workspaceId}));
+          query: {'workspace_id': workspaceId}));
 
   /// Changes the settings. Only the fields given are touched.
   ///
@@ -95,9 +95,8 @@ class BlogResource {
     if (clearTarget) body['targetKind'] = null;
     if (clearTargetAccountId) body['targetAccountId'] = null;
     if (clearWebsiteUrl) body['websiteUrl'] = null;
-    // The secret rides beside `data`, so the envelope is read whole.
-    final response = await _http.raw('PATCH', '/blog/settings', body: body);
-    return BlogSettingsUpdate.fromJson(asMap(response));
+    return BlogSettingsUpdate.fromJson(
+        await _http.object('PATCH', '/blog/settings', body: body));
   }
 
   /// Issues a new website signing secret and returns it.
@@ -106,7 +105,7 @@ class BlogResource {
   Future<String> rotateWebsiteSecret(String workspaceId) async {
     final body = await _http.object('POST', '/blog/settings/website-secret',
         body: {'workspaceId': workspaceId});
-    return asString(body['websiteSecret']) ?? '';
+    return asString(body['website_secret']) ?? '';
   }
 
   /// Sends a signed `article.test` delivery to the website target.
@@ -119,9 +118,9 @@ class BlogResource {
           'POST', '/blog/settings/website-test',
           body: {'workspaceId': workspaceId}));
     } on FoPostServerException catch (error) {
-      // The API answers 502 with the same body when the site failed.
+      // The API answers 502 with the site's status when the delivery failed.
       if (error.statusCode != 502) rethrow;
-      return BlogWebsiteTest.fromJson(asMap(error.bodyMap['data']));
+      return BlogWebsiteTest.fromJson(error.bodyMap);
     }
   }
 
@@ -135,7 +134,7 @@ class BlogResource {
     int? limit,
   }) async {
     final rows = await _http.objects('GET', '/blog/keywords', query: {
-      'workspaceId': workspaceId,
+      'workspace_id': workspaceId,
       'status': status,
       'limit': limit,
     });
@@ -202,14 +201,14 @@ class BlogResource {
       'PATCH',
       '/blog/keywords/${segment(id)}',
       body: body,
-      query: {'workspaceId': workspaceId},
+      query: {'workspace_id': workspaceId},
     ));
   }
 
   /// Removes a keyword from the plan.
   Future<void> deleteKeyword(String workspaceId, String id) =>
       _http.discard('DELETE', '/blog/keywords/${segment(id)}',
-          query: {'workspaceId': workspaceId});
+          query: {'workspace_id': workspaceId});
 
   // ─── Articles ─────────────────────────────────────────────────────
 
@@ -221,7 +220,7 @@ class BlogResource {
     int? limit,
   }) async {
     final rows = await _http.objects('GET', '/blog/articles', query: {
-      'workspaceId': workspaceId,
+      'workspace_id': workspaceId,
       'status': status,
       'limit': limit,
     });
@@ -252,7 +251,7 @@ class BlogResource {
   Future<BlogArticleFull> getArticle(String workspaceId, String id) async =>
       BlogArticleFull.fromJson(await _http.object(
           'GET', '/blog/articles/${segment(id)}',
-          query: {'workspaceId': workspaceId}));
+          query: {'workspace_id': workspaceId}));
 
   /// Edits a draft or scheduled article.
   ///
@@ -294,7 +293,7 @@ class BlogResource {
       'PATCH',
       '/blog/articles/${segment(id)}',
       body: body,
-      query: {'workspaceId': workspaceId},
+      query: {'workspace_id': workspaceId},
     ));
   }
 
@@ -302,14 +301,14 @@ class BlogResource {
   Future<BlogArticle> regenerateArticle(String workspaceId, String id) async =>
       BlogArticle.fromJson(await _http.object(
           'POST', '/blog/articles/${segment(id)}/regenerate',
-          query: {'workspaceId': workspaceId}));
+          query: {'workspace_id': workspaceId}));
 
   /// Moves a draft, failed or rejected article to `in_review`, ready for
   /// approval. Any other status answers `409`.
   Future<BlogArticle> submitArticle(String workspaceId, String id) async =>
       BlogArticle.fromJson(await _http.object(
           'POST', '/blog/articles/${segment(id)}/submit',
-          query: {'workspaceId': workspaceId}));
+          query: {'workspace_id': workspaceId}));
 
   /// Approves an article in review and sends it to the target now.
   ///
@@ -319,16 +318,16 @@ class BlogResource {
   Future<BlogArticle> publishArticle(String workspaceId, String id) async =>
       BlogArticle.fromJson(await _http.object(
           'POST', '/blog/articles/${segment(id)}/publish',
-          query: {'workspaceId': workspaceId}));
+          query: {'workspace_id': workspaceId}));
 
   /// Turns a draft down. It stays readable but never publishes.
   Future<BlogArticle> rejectArticle(String workspaceId, String id) async =>
       BlogArticle.fromJson(await _http.object(
           'POST', '/blog/articles/${segment(id)}/reject',
-          query: {'workspaceId': workspaceId}));
+          query: {'workspace_id': workspaceId}));
 
   /// Removes an article. A published copy on the target is left alone.
   Future<void> deleteArticle(String workspaceId, String id) =>
       _http.discard('DELETE', '/blog/articles/${segment(id)}',
-          query: {'workspaceId': workspaceId});
+          query: {'workspace_id': workspaceId});
 }
