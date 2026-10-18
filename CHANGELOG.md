@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Breaking: `BlogSettings.autoPublish` and the `autoPublish` argument of
   `blog.updateSettings` are removed. Nothing publishes without approval:
@@ -137,8 +137,6 @@
   with `none`. Needs `inbox` and `publish`.
 - Added: `Account.reconnectRequired`, and `vote` and `canVote` on an inbox
   item.
-
-## 0.3.0
 
 - Added: the ads campaign tree (`accountTree`; get, create, update, delete
   and duplicate for campaigns, ad sets and network ads; `bulkSetStatus`),
