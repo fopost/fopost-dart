@@ -12,6 +12,7 @@ import 'resources/blog.dart';
 import 'resources/blogs.dart';
 import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
+import 'resources/connect_sessions.dart';
 import 'resources/contacts.dart';
 import 'resources/google_ads.dart';
 import 'resources/google_business.dart';
@@ -112,6 +113,7 @@ class FoPost {
     blog = BlogResource(_http);
     whatsapp = WhatsappResource(_http);
     queue = QueueResource(_http);
+    connectSessions = ConnectSessionsResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -191,6 +193,9 @@ class FoPost {
 
   /// The posting queue: recurring slots a post can be dropped into.
   late final QueueResource queue;
+
+  /// Hosted links that let your users connect accounts into a workspace.
+  late final ConnectSessionsResource connectSessions;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;
