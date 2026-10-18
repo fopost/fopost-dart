@@ -71,12 +71,14 @@ class FoPostHttp {
     String path, {
     Object? body,
     Map<String, dynamic>? query,
+    Map<String, String>? headers,
   }) {
     final uri = _uri(path, query);
     final encoded = body == null ? null : jsonEncode(body);
     return _run(() {
       final request = http.Request(method.toUpperCase(), uri)
-        ..headers.addAll(_headers);
+        ..headers.addAll(_headers)
+        ..headers.addAll(headers ?? const {});
       if (encoded != null) {
         request.headers['Content-Type'] = 'application/json';
         request.body = encoded;
@@ -91,12 +93,14 @@ class FoPostHttp {
     String path, {
     Object? body,
     Map<String, dynamic>? query,
+    Map<String, String>? headers,
   }) {
     final uri = _uri(path, query);
     final encoded = body == null ? null : jsonEncode(body);
     return _run(() {
       final request = http.Request(method.toUpperCase(), uri)
-        ..headers.addAll(_headers);
+        ..headers.addAll(_headers)
+        ..headers.addAll(headers ?? const {});
       if (encoded != null) {
         request.headers['Content-Type'] = 'application/json';
         request.body = encoded;
@@ -140,8 +144,10 @@ class FoPostHttp {
     String path, {
     Object? body,
     Map<String, dynamic>? query,
+    Map<String, String>? headers,
   }) async =>
-      asMap(await json(method, path, body: body, query: query));
+      asMap(
+          await json(method, path, body: body, query: query, headers: headers));
 
   /// Unwrapped response as a list of objects.
   Future<List<Map<String, dynamic>>> objects(

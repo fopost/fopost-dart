@@ -368,8 +368,8 @@ void main() {
         'platform': 'twitter',
         'reposted': request.url.path.endsWith('/repost'),
         'bookmarked': request.url.path.endsWith('/bookmark'),
-        'can_repost': true,
-        'can_bookmark': true,
+        'canRepost': true,
+        'canBookmark': true,
       }),
       recorder: seen,
     );

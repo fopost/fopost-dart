@@ -394,12 +394,16 @@ class AccountsResource {
   ///
   /// A 409 `webhook_connection` means the account posts through a webhook;
   /// upgrade it to the bot first. The same applies to every other Discord call.
+  ///
+  /// Wraps the API's `listDiscordChannels` operation.
   Future<List<DiscordChannel>> discordChannels(String id) async {
     final rows = await _http.objects('GET', _discord(id, '/channels'));
     return rows.map(DiscordChannel.fromJson).toList();
   }
 
   /// Moves the account to another channel in the same server.
+  ///
+  /// Wraps the API's `switchDiscordChannel` operation.
   Future<DiscordChannel> switchDiscordChannel(
           String id, String channelId) async =>
       DiscordChannel.fromJson(await _http.object(
@@ -409,6 +413,8 @@ class AccountsResource {
       ));
 
   /// Returns the nickname and avatar the bot wears in the server.
+  ///
+  /// Wraps the API's `getDiscordIdentity` operation.
   Future<DiscordIdentity> getDiscordIdentity(String id) async =>
       DiscordIdentity.fromJson(
           await _http.object('GET', _discord(id, '/identity')));
@@ -416,6 +422,8 @@ class AccountsResource {
   /// Sets the nickname and avatar the bot wears in the server.
   ///
   /// An unset field keeps its value; a `clear*` flag sends `null` and clears it.
+  ///
+  /// Wraps the API's `updateDiscordIdentity` operation.
   Future<DiscordIdentity> updateDiscordIdentity(
     String id, {
     String? username,
@@ -433,12 +441,16 @@ class AccountsResource {
       ));
 
   /// Returns the pinned messages in the account's channel.
+  ///
+  /// Wraps the API's `listDiscordPins` operation.
   Future<List<DiscordMessage>> discordPins(String id) async {
     final rows = await _http.objects('GET', _discord(id, '/messages/pinned'));
     return rows.map(DiscordMessage.fromJson).toList();
   }
 
   /// Removes a message from the account's channel.
+  ///
+  /// Wraps the API's `deleteDiscordMessage` operation.
   Future<DiscordAck> deleteDiscordMessage(String id, String messageId) async =>
       DiscordAck.fromJson(await _http.object(
           'DELETE', _discord(id, '/messages/${segment(messageId)}')));
@@ -479,6 +491,8 @@ class AccountsResource {
       ));
 
   /// Sends one message to a member of the server.
+  ///
+  /// Wraps the API's `sendDiscordDm` operation.
   Future<DiscordMessageRef> sendDiscordDirectMessage(
     String id,
     String memberId,
@@ -491,12 +505,16 @@ class AccountsResource {
       ));
 
   /// Returns the server's scheduled events.
+  ///
+  /// Wraps the API's `listDiscordEvents` operation.
   Future<List<DiscordScheduledEvent>> discordEvents(String id) async {
     final rows = await _http.objects('GET', _discord(id, '/events'));
     return rows.map(DiscordScheduledEvent.fromJson).toList();
   }
 
   /// Returns one scheduled event.
+  ///
+  /// Wraps the API's `getDiscordEvent` operation.
   Future<DiscordScheduledEvent> getDiscordEvent(
           String id, String eventId) async =>
       DiscordScheduledEvent.fromJson(await _http.object(
@@ -506,6 +524,8 @@ class AccountsResource {
   ///
   /// Give [channelId] for an event in a voice or stage channel, or [location]
   /// with an [endTime] for one elsewhere.
+  ///
+  /// Wraps the API's `createDiscordEvent` operation.
   Future<DiscordScheduledEvent> createDiscordEvent(
     String id, {
     required String name,
@@ -529,6 +549,8 @@ class AccountsResource {
       ));
 
   /// Changes a scheduled event; an unset field is left as it is.
+  ///
+  /// Wraps the API's `updateDiscordEvent` operation.
   Future<DiscordScheduledEvent> updateDiscordEvent(
     String id,
     String eventId, {
@@ -555,11 +577,15 @@ class AccountsResource {
       ));
 
   /// Removes a scheduled event.
+  ///
+  /// Wraps the API's `deleteDiscordEvent` operation.
   Future<DiscordAck> deleteDiscordEvent(String id, String eventId) async =>
       DiscordAck.fromJson(await _http.object(
           'DELETE', _discord(id, '/events/${segment(eventId)}')));
 
   /// Returns the server's roster, or the members whose name starts with [query].
+  ///
+  /// Wraps the API's `listDiscordMembers` operation.
   Future<List<DiscordMember>> discordMembers(
     String id, {
     String? query,
@@ -577,17 +603,23 @@ class AccountsResource {
   }
 
   /// Returns one member of the server.
+  ///
+  /// Wraps the API's `getDiscordMember` operation.
   Future<DiscordMember> discordMember(String id, String memberId) async =>
       DiscordMember.fromJson(await _http.object(
           'GET', _discord(id, '/members/${segment(memberId)}')));
 
   /// Returns the server's roles, highest first.
+  ///
+  /// Wraps the API's `listDiscordRoles` operation.
   Future<List<DiscordRole>> discordRoles(String id) async {
     final rows = await _http.objects('GET', _discord(id, '/roles'));
     return rows.map(DiscordRole.fromJson).toList();
   }
 
   /// Adds a role to the server.
+  ///
+  /// Wraps the API's `createDiscordRole` operation.
   Future<DiscordRole> createDiscordRole(
     String id, {
     required String name,
@@ -609,6 +641,8 @@ class AccountsResource {
       ));
 
   /// Changes a role on the server; an unset field is left as it is.
+  ///
+  /// Wraps the API's `updateDiscordRole` operation.
   Future<DiscordRole> updateDiscordRole(
     String id,
     String roleId, {
@@ -631,6 +665,8 @@ class AccountsResource {
       ));
 
   /// Removes a role from the server.
+  ///
+  /// Wraps the API's `deleteDiscordRole` operation.
   Future<DiscordAck> deleteDiscordRole(String id, String roleId) async =>
       DiscordAck.fromJson(await _http.object(
           'DELETE', _discord(id, '/roles/${segment(roleId)}')));

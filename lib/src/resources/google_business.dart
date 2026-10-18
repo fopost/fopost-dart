@@ -38,6 +38,8 @@ class GoogleBusinessResource {
       '/accounts/${segment(id)}/gbp$suffix';
 
   /// Returns the connected location, in the Business Information shape.
+  ///
+  /// Wraps the API's `getGoogleBusinessLocation` operation.
   Future<Map<String, dynamic>> getLocation(String accountId) =>
       _http.object('GET', _path(accountId, '/location'));
 
@@ -47,6 +49,8 @@ class GoogleBusinessResource {
   /// field. Keys are the API's own snake_case names: `title`, `description`,
   /// `website_uri`, `primary_phone`, `additional_phones`, `store_code` and
   /// `regular_hours`.
+  ///
+  /// Wraps the API's `updateGoogleBusinessLocation` operation.
   Future<Map<String, dynamic>> updateLocation(
     String accountId,
     Map<String, dynamic> fields,
@@ -55,6 +59,8 @@ class GoogleBusinessResource {
 
   /// Returns the attribute values set on the location, or, with [available],
   /// the attributes Google offers for its category and region.
+  ///
+  /// Wraps the API's `getGoogleBusinessAttributes` operation.
   Future<Map<String, dynamic>> getAttributes(
     String accountId, {
     bool available = false,
@@ -70,6 +76,8 @@ class GoogleBusinessResource {
       });
 
   /// Changes only the named attributes; every other one is left alone.
+  ///
+  /// Wraps the API's `updateGoogleBusinessAttributes` operation.
   Future<Map<String, dynamic>> updateAttributes(
     String accountId,
     List<Map<String, dynamic>> attributes,
@@ -78,10 +86,14 @@ class GoogleBusinessResource {
           body: {'attributes': attributes});
 
   /// Returns the location's food menus.
+  ///
+  /// Wraps the API's `getGoogleBusinessMenus` operation.
   Future<Map<String, dynamic>> getMenus(String accountId) =>
       _http.object('GET', _path(accountId, '/menus'));
 
   /// Replaces the whole menu set; Google has no per-section patch.
+  ///
+  /// Wraps the API's `replaceGoogleBusinessMenus` operation.
   Future<Map<String, dynamic>> replaceMenus(
     String accountId,
     List<Map<String, dynamic>> menus,
@@ -89,10 +101,14 @@ class GoogleBusinessResource {
       _http.object('PUT', _path(accountId, '/menus'), body: {'menus': menus});
 
   /// Returns the location's service list.
+  ///
+  /// Wraps the API's `getGoogleBusinessServices` operation.
   Future<Map<String, dynamic>> getServices(String accountId) =>
       _http.object('GET', _path(accountId, '/services'));
 
   /// Replaces the whole service list.
+  ///
+  /// Wraps the API's `replaceGoogleBusinessServices` operation.
   Future<Map<String, dynamic>> replaceServices(
     String accountId,
     List<Map<String, dynamic>> serviceItems,
@@ -101,6 +117,8 @@ class GoogleBusinessResource {
           body: {'service_items': serviceItems});
 
   /// Returns the photos on the location.
+  ///
+  /// Wraps the API's `listGoogleBusinessMedia` operation.
   Future<Map<String, dynamic>> listMedia(
     String accountId, {
     int? pageSize,
@@ -112,6 +130,8 @@ class GoogleBusinessResource {
   /// Adds a photo from the media library.
   ///
   /// The asset has to be in a workspace the caller can reach, and JPEG or PNG.
+  ///
+  /// Wraps the API's `addGoogleBusinessMedia` operation.
   Future<Map<String, dynamic>> addMedia(
     String accountId, {
     required String mediaId,
@@ -126,14 +146,20 @@ class GoogleBusinessResource {
           }));
 
   /// Removes a photo by the media key Google returned.
+  ///
+  /// Wraps the API's `deleteGoogleBusinessMedia` operation.
   Future<Map<String, dynamic>> deleteMedia(String accountId, String mediaKey) =>
       _http.object('DELETE', _path(accountId, '/media/${segment(mediaKey)}'));
 
   /// Returns the Book, Order and Reserve links on the listing.
+  ///
+  /// Wraps the API's `listGoogleBusinessPlaceActions` operation.
   Future<Map<String, dynamic>> listPlaceActions(String accountId) =>
       _http.object('GET', _path(accountId, '/place-actions'));
 
   /// Adds an action link to the listing.
+  ///
+  /// Wraps the API's `createGoogleBusinessPlaceAction` operation.
   Future<Map<String, dynamic>> createPlaceAction(
     String accountId, {
     required String uri,
@@ -148,6 +174,8 @@ class GoogleBusinessResource {
           }));
 
   /// Patches one action link; an omitted argument is left alone.
+  ///
+  /// Wraps the API's `updateGoogleBusinessPlaceAction` operation.
   Future<Map<String, dynamic>> updatePlaceAction(
     String accountId,
     String linkId, {
@@ -159,12 +187,16 @@ class GoogleBusinessResource {
           body: pruned({'uri': uri, 'is_preferred': isPreferred}));
 
   /// Removes one action link.
+  ///
+  /// Wraps the API's `deleteGoogleBusinessPlaceAction` operation.
   Future<Map<String, dynamic>> deletePlaceAction(
           String accountId, String linkId) =>
       _http.object(
           'DELETE', _path(accountId, '/place-actions/${segment(linkId)}'));
 
   /// Returns the ways Google will let this location be verified.
+  ///
+  /// Wraps the API's `getGoogleBusinessVerificationOptions` operation.
   Future<Map<String, dynamic>> getVerificationOptions(
     String accountId, {
     String? languageCode,
@@ -177,6 +209,8 @@ class GoogleBusinessResource {
   /// [method] is `ADDRESS`, `EMAIL`, `PHONE_CALL`, `SMS`, `AUTO` or
   /// `VETTED_PARTNER`; the response names the pending verification to complete
   /// with the PIN.
+  ///
+  /// Wraps the API's `startGoogleBusinessVerification` operation.
   Future<Map<String, dynamic>> startVerification(
     String accountId, {
     required String method,
@@ -195,6 +229,8 @@ class GoogleBusinessResource {
           }));
 
   /// Completes a pending verification with the PIN Google sent.
+  ///
+  /// Wraps the API's `completeGoogleBusinessVerification` operation.
   Future<Map<String, dynamic>> completeVerification(
     String accountId, {
     required String verificationName,
@@ -205,6 +241,8 @@ class GoogleBusinessResource {
 
   /// Returns daily impressions, calls, direction requests and clicks for the
   /// range. An omitted [dailyMetrics] leaves the API's own default set.
+  ///
+  /// Wraps the API's `getGoogleBusinessPerformance` operation.
   Future<Map<String, dynamic>> getPerformance(
     String accountId, {
     required String startDate,
@@ -234,6 +272,8 @@ class GoogleBusinessResource {
   /// Hands the location to another workspace the caller owns.
   ///
   /// The connection and every row keyed to it move in one transaction.
+  ///
+  /// Wraps the API's `assignGoogleBusinessLocation` operation.
   Future<MovedAccount> assign(
     String accountId, {
     required String workspaceId,

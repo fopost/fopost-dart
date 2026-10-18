@@ -25,11 +25,15 @@ class WhatsappResource {
   // ─── Profile ──────────────────────────────────────────────────────────
 
   /// The profile on the number, plus its quality rating and limit tier.
+  ///
+  /// Wraps the API's `getWhatsappProfile` operation.
   Future<WhatsappProfile> profile(String accountId) async =>
       WhatsappProfile.fromJson(
           await _http.object('GET', '${_base(accountId)}/profile'));
 
   /// A partial update: omitted arguments keep their value.
+  ///
+  /// Wraps the API's `updateWhatsappProfile` operation.
   Future<WhatsappProfile> updateProfile(
     String accountId, {
     String? about,
@@ -53,11 +57,15 @@ class WhatsappResource {
   }
 
   /// A review, not a write: the number keeps its old name until it passes.
+  ///
+  /// Wraps the API's `requestWhatsappDisplayName` operation.
   Future<void> requestDisplayName(String accountId, String displayName) =>
       _http.discard('POST', '${_base(accountId)}/profile/display-name',
           body: {'display_name': displayName});
 
   /// Sets the public username on the number.
+  ///
+  /// Wraps the API's `setWhatsappUsername` operation.
   Future<WhatsappProfile> setUsername(
           String accountId, String username) async =>
       WhatsappProfile.fromJson(await _http.object(
@@ -67,6 +75,8 @@ class WhatsappResource {
   // ─── Templates ────────────────────────────────────────────────────────
 
   /// Every template on the account, with its review status.
+  ///
+  /// Wraps the API's `listWhatsappTemplates` operation.
   Future<List<WhatsappTemplate>> templates(String accountId,
       {String? after}) async {
     final rows = await _http.objects('GET', '${_base(accountId)}/templates',
@@ -75,12 +85,16 @@ class WhatsappResource {
   }
 
   /// The pre-written templates the platform offers, for adapting.
+  ///
+  /// Wraps the API's `listWhatsappTemplateLibrary` operation.
   Future<List<Map<String, dynamic>>> templateLibrary(String accountId,
           {String? search}) =>
       _http.objects('GET', '${_base(accountId)}/templates/library',
           query: {'search': search});
 
   /// One template and the review status it currently has.
+  ///
+  /// Wraps the API's `getWhatsappTemplate` operation.
   Future<WhatsappTemplate> template(
           String accountId, String templateId) async =>
       WhatsappTemplate.fromJson(await _http.object(
@@ -88,6 +102,8 @@ class WhatsappResource {
 
   /// Files a template for review. The result carries the status the platform
   /// assigned, which is `PENDING` on a normal submission.
+  ///
+  /// Wraps the API's `createWhatsappTemplate` operation.
   Future<WhatsappTemplate> createTemplate(
     String accountId, {
     required String name,
@@ -109,6 +125,8 @@ class WhatsappResource {
   }
 
   /// Creates a template from one of the platform's library entries.
+  ///
+  /// Wraps the API's `importWhatsappTemplate` operation.
   Future<WhatsappTemplate> importTemplate(
     String accountId, {
     required String libraryTemplateName,
@@ -130,6 +148,8 @@ class WhatsappResource {
   }
 
   /// Edits a template. The name cannot change; create a new one instead.
+  ///
+  /// Wraps the API's `updateWhatsappTemplate` operation.
   Future<WhatsappTemplate> updateTemplate(
     String accountId,
     String templateId, {
@@ -146,6 +166,8 @@ class WhatsappResource {
   }
 
   /// The name is required: it is what the platform deletes by.
+  ///
+  /// Wraps the API's `deleteWhatsappTemplate` operation.
   Future<void> deleteTemplate(
     String accountId,
     String templateId, {
@@ -158,12 +180,16 @@ class WhatsappResource {
   // ─── Groups ───────────────────────────────────────────────────────────
 
   /// The groups this number created.
+  ///
+  /// Wraps the API's `listWhatsappGroups` operation.
   Future<List<WhatsappGroup>> groups(String accountId) async {
     final rows = await _http.objects('GET', '${_base(accountId)}/groups');
     return rows.map(WhatsappGroup.fromJson).toList();
   }
 
   /// Participation is invite-only: send the invite link, there is no add.
+  ///
+  /// Wraps the API's `createWhatsappGroup` operation.
   Future<WhatsappGroup> createGroup(
     String accountId, {
     required String subject,
@@ -178,11 +204,15 @@ class WhatsappResource {
   }
 
   /// One group and its participant count.
+  ///
+  /// Wraps the API's `getWhatsappGroup` operation.
   Future<WhatsappGroup> group(String accountId, String groupId) async =>
       WhatsappGroup.fromJson(await _http.object(
           'GET', '${_base(accountId)}/groups/${segment(groupId)}'));
 
   /// Changes a group's subject or description.
+  ///
+  /// Wraps the API's `updateWhatsappGroup` operation.
   Future<WhatsappGroup> updateGroup(
     String accountId,
     String groupId, {
@@ -199,6 +229,8 @@ class WhatsappResource {
   }
 
   /// Removes the group.
+  ///
+  /// Wraps the API's `deleteWhatsappGroup` operation.
   Future<void> deleteGroup(String accountId, String groupId) =>
       _http.discard('DELETE', '${_base(accountId)}/groups/${segment(groupId)}');
 
@@ -229,6 +261,8 @@ class WhatsappResource {
   // ─── Blocking ─────────────────────────────────────────────────────────
 
   /// The numbers this account has blocked.
+  ///
+  /// Wraps the API's `listWhatsappBlocked` operation.
   Future<List<String>> blocked(String accountId, {String? after}) async {
     final decoded = await _http
         .json('GET', '${_base(accountId)}/block', query: {'after': after});
@@ -237,12 +271,16 @@ class WhatsappResource {
   }
 
   /// Blocks up to 100 numbers, and names the ones the platform refused.
+  ///
+  /// Wraps the API's `blockWhatsappUsers` operation.
   Future<WhatsappBlockResult> blockUsers(
           String accountId, List<String> users) async =>
       WhatsappBlockResult.fromJson(await _http
           .object('POST', '${_base(accountId)}/block', body: {'users': users}));
 
   /// Unblocks up to 100 numbers.
+  ///
+  /// Wraps the API's `unblockWhatsappUsers` operation.
   Future<WhatsappBlockResult> unblockUsers(
           String accountId, List<String> users) async =>
       WhatsappBlockResult.fromJson(await _http.object(
@@ -252,11 +290,15 @@ class WhatsappResource {
   // ─── Commerce ─────────────────────────────────────────────────────────
 
   /// Whether the cart and catalog show on the number.
+  ///
+  /// Wraps the API's `getWhatsappCommerce` operation.
   Future<WhatsappCommerceSettings> commerceSettings(String accountId) async =>
       WhatsappCommerceSettings.fromJson(
           await _http.object('GET', '${_base(accountId)}/commerce'));
 
   /// Turns the cart or the catalog on or off.
+  ///
+  /// Wraps the API's `updateWhatsappCommerce` operation.
   Future<WhatsappCommerceSettings> updateCommerceSettings(
     String accountId, {
     bool? cartEnabled,
@@ -271,6 +313,8 @@ class WhatsappResource {
   }
 
   /// Points the number at a catalog the customer already owns.
+  ///
+  /// Wraps the API's `linkWhatsappCatalog` operation.
   Future<WhatsappCommerceSettings> linkCatalog(
           String accountId, String catalogId) async =>
       WhatsappCommerceSettings.fromJson(await _http.object(
@@ -280,17 +324,23 @@ class WhatsappResource {
   // ─── Flows ────────────────────────────────────────────────────────────
 
   /// The in-chat forms on this account, with their validation errors.
+  ///
+  /// Wraps the API's `listWhatsappFlows` operation.
   Future<List<WhatsappFlow>> flows(String accountId) async {
     final rows = await _http.objects('GET', '${_base(accountId)}/flows');
     return rows.map(WhatsappFlow.fromJson).toList();
   }
 
   /// One flow and what the platform found wrong with it.
+  ///
+  /// Wraps the API's `getWhatsappFlow` operation.
   Future<WhatsappFlow> flow(String accountId, String flowId) async =>
       WhatsappFlow.fromJson(await _http.object(
           'GET', '${_base(accountId)}/flows/${segment(flowId)}'));
 
   /// Creates a draft flow; its screens are uploaded separately.
+  ///
+  /// Wraps the API's `createWhatsappFlow` operation.
   Future<WhatsappFlow> createFlow(
     String accountId, {
     required String name,
@@ -309,6 +359,8 @@ class WhatsappResource {
   }
 
   /// Changes a flow's name, categories or endpoint.
+  ///
+  /// Wraps the API's `updateWhatsappFlow` operation.
   Future<WhatsappFlow> updateFlow(
     String accountId,
     String flowId, {
@@ -327,6 +379,8 @@ class WhatsappResource {
   }
 
   /// Drafts only; a published flow is deprecated instead.
+  ///
+  /// Wraps the API's `deleteWhatsappFlow` operation.
   Future<void> deleteFlow(String accountId, String flowId) =>
       _http.discard('DELETE', '${_base(accountId)}/flows/${segment(flowId)}');
 
@@ -352,6 +406,8 @@ class WhatsappResource {
           'POST', '${_base(accountId)}/flows/${segment(flowId)}/deprecate'));
 
   /// What people submitted through this account's flows.
+  ///
+  /// Wraps the API's `listWhatsappFlowResponses` operation.
   Future<List<WhatsappFlowResponse>> flowResponses(String accountId) async {
     final rows =
         await _http.objects('GET', '${_base(accountId)}/flows/responses');
@@ -359,6 +415,8 @@ class WhatsappResource {
   }
 
   /// Whether a business public key is registered, and how it was judged.
+  ///
+  /// Wraps the API's `getWhatsappEncryptionKey` operation.
   Future<WhatsappEncryptionKeyStatus> encryptionKeyStatus(
           String accountId) async =>
       WhatsappEncryptionKeyStatus.fromJson(await _http.object(
@@ -366,6 +424,8 @@ class WhatsappResource {
 
   /// Registers the public half of the key the platform encrypts a flow
   /// endpoint's payloads with. The private half stays with the customer.
+  ///
+  /// Wraps the API's `setWhatsappEncryptionKey` operation.
   Future<WhatsappEncryptionKeyStatus> setEncryptionKey(
     String accountId,
     String businessPublicKey,
@@ -377,6 +437,8 @@ class WhatsappResource {
   // ─── Account state and sandbox ────────────────────────────────────────
 
   /// The account review state and the number's quality and limit tier.
+  ///
+  /// Wraps the API's `getWhatsappAccountEvents` operation.
   Future<Map<String, dynamic>> accountEvents(String accountId) =>
       _http.object('GET', '${_base(accountId)}/events');
 

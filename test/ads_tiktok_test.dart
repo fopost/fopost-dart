@@ -86,10 +86,12 @@ void main() {
 
   test('uploads conversions and reports what the network accepted', () async {
     final seen = RecordedRequests();
-    final client =
-        fakeClient((_) async => jsonOk({'accepted': 2}), recorder: seen);
+    final client = fakeClient(
+        (_) async => jsonOk(
+            {'id': 'cb_1', 'accepted': 2, 'eventCount': 2, 'replayed': false}),
+        recorder: seen);
 
-    final accepted = await client.ads.uploadConversions(
+    final result = await client.ads.uploadConversions(
       workspaceId: 'ws_1',
       connectionId: 'conn_1',
       adAccountId: '7011',
@@ -99,9 +101,175 @@ void main() {
       ],
     );
 
-    expect(accepted, 2);
+    expect(result.accepted, 2);
+    expect(result.id, 'cb_1');
+    expect(result.replayed, isFalse);
     expect(seen.last.url.path, '/v1/ads/conversions');
+    expect(seen.last.headers.containsKey('Idempotency-Key'), isFalse);
     expect(jsonDecode(seen.last.body)['pixelId'], 'px_1');
+  });
+
+  test('sends pixel conversions once per Idempotency-Key', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk(
+            {'id': 'cb_2', 'accepted': 1, 'eventCount': 1, 'replayed': true},
+            headers: const {'idempotency-replayed': 'true'}),
+        recorder: seen);
+
+    final result = await client.ads.sendPixelConversions(
+      idempotencyKey: 'order-991',
+      workspaceId: 'ws_1',
+      connectionId: 'conn_1',
+      adAccountId: 'act_1',
+      pixelId: 'px_1',
+      events: const [
+        PixelConversionEvent(
+          eventName: 'Purchase',
+          occurredAt: '2026-10-18T09:00:00Z',
+          eventId: 'order-991',
+          actionSource: ConversionActionSource.website,
+          email: 'buyer@yourbrand.com',
+          valueMinor: 4999,
+          currency: 'USD',
+          contentIds: ['sku_1'],
+        ),
+      ],
+    );
+
+    expect(result.replayed, isTrue);
+    expect(seen.last.url.path, '/v1/ads/conversions/events');
+    expect(seen.last.headers['Idempotency-Key'], 'order-991');
+    final event = jsonDecode(seen.last.body)['events'][0];
+    expect(event['actionSource'], 'website');
+    expect(event['contentIds'], ['sku_1']);
+    expect(event.containsKey('phone'), isFalse);
+  });
+
+  test('lists conversion batches with hashed identifiers', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk([
+              {
+                'id': 'cb_1',
+                'workspaceId': 'ws_1',
+                'connectionId': 'conn_1',
+                'adAccountId': 'act_1',
+                'pixelId': 'px_1',
+                'idempotencyKey': 'order-991',
+                'eventCount': 1,
+                'accepted': 1,
+                'events': [
+                  {
+                    'eventName': 'Purchase',
+                    'occurredAt': '2026-10-18T09:00:00Z',
+                    'actionSource': 'website',
+                    'emailHash': 'ab12',
+                    'valueMinor': 4999,
+                  }
+                ],
+                'createdAt': '2026-10-18T09:00:01Z',
+              }
+            ]),
+        recorder: seen);
+
+    final batches =
+        await client.ads.listConversionBatches(workspaceId: 'ws_1', limit: 10);
+    expect(batches.single.idempotencyKey, 'order-991');
+    expect(batches.single.events.single.emailHash, 'ab12');
+    expect(seen.last.url.queryParameters['limit'], '10');
+  });
+
+  test('reads a pixel with its install code and stats', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient((request) async {
+      if (request.url.path.endsWith('/stats')) {
+        return jsonOk({
+          'since': '2026-09-20',
+          'until': '2026-10-18',
+          'events': [
+            {'eventName': 'PageView', 'count': 1200}
+          ],
+        });
+      }
+      if (request.url.path.endsWith('/match-quality')) {
+        return jsonOk([
+          {
+            'eventName': 'Purchase',
+            'score': 7.5,
+            'matchKeys': [
+              {'identifier': 'email', 'coveragePercent': 80}
+            ],
+          }
+        ]);
+      }
+      return jsonOk({
+        'id': 'px_1',
+        'name': 'Site',
+        'code': '<script>fbq()</script>',
+        'isUnavailable': false,
+        'dataUseSetting': 'advertising_and_analytics',
+      });
+    }, recorder: seen);
+
+    final pixel = await client.ads
+        .pixel('px_1', connectionId: 'conn_1', adAccountId: 'act_1');
+    expect(pixel.code, contains('fbq'));
+    expect(pixel.dataUseSetting, PixelDataUseSetting.advertisingAndAnalytics);
+    expect(seen.last.url.path, '/v1/ads/pixels/px_1');
+    expect(seen.last.url.queryParameters['ad_account_id'], 'act_1');
+
+    final stats = await client.ads
+        .pixelStats('px_1', connectionId: 'conn_1', adAccountId: 'act_1');
+    expect(stats.events.single.count, 1200);
+
+    final quality = await client.ads.eventMatchQuality('px_1',
+        connectionId: 'conn_1', adAccountId: 'act_1');
+    expect(quality.single.score, 7.5);
+    expect(quality.single.matchKeys.single.coveragePercent, 80);
+  });
+
+  test('creates and deletes a custom conversion', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient((request) async {
+      if (request.method == 'DELETE') return jsonBare(null, status: 204);
+      return jsonBare({
+        'data': {
+          'id': 'cc_1',
+          'name': 'Checkout',
+          'pixelId': 'px_1',
+          'eventType': 'PURCHASE',
+          'rule': {'eventName': 'PageView', 'urlContains': '/thanks'},
+          'isArchived': false,
+          'isUnavailable': false,
+        }
+      }, status: 201);
+    }, recorder: seen);
+
+    final created = await client.ads.createCustomConversion(
+      workspaceId: 'ws_1',
+      connectionId: 'conn_1',
+      adAccountId: 'act_1',
+      pixelId: 'px_1',
+      name: 'Checkout',
+      eventType: CustomConversionEventType.purchase,
+      rule: const CustomConversionRule(urlContains: '/thanks'),
+      defaultValueMinor: 2500,
+    );
+    expect(created.id, 'cc_1');
+    expect(created.rule?.urlContains, '/thanks');
+    expect(seen.last.url.path, '/v1/ads/custom-conversions');
+    final body = jsonDecode(seen.last.body);
+    expect(body['eventType'], 'PURCHASE');
+    expect(body['rule'], {'urlContains': '/thanks'});
+    expect(body['defaultValueMinor'], 2500);
+    expect(body.containsKey('description'), isFalse);
+
+    await client.ads.deleteCustomConversion('cc_1',
+        workspaceId: 'ws_1', connectionId: 'conn_1', adAccountId: 'act_1');
+    expect(seen.last.method, 'DELETE');
+    expect(seen.last.url.path, '/v1/ads/custom-conversions/cc_1');
+    expect(jsonDecode(seen.last.body)['adAccountId'], 'act_1');
   });
 
   test('reads a page of comments and answers, hides and deletes one', () async {

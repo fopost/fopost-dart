@@ -143,6 +143,29 @@ void main() {
       client.close();
     });
 
+    test('sends schedule: queue on create and update', () async {
+      final seen = RecordedRequests();
+      final client = fakeClient(
+        (_) async => jsonOk(postJson(status: PostStatus.scheduled)),
+        recorder: seen,
+      );
+
+      await client.posts.create(
+        workspaceId: 'ws_1',
+        accounts: ['acc_1'],
+        content: 'Queued with the SDK',
+        schedule: 'queue',
+      );
+      expect(seen.last.method, 'POST');
+      expect((jsonDecode(seen.last.body) as Map)['schedule'], 'queue');
+
+      await client.posts.update('p_1', schedule: 'queue');
+      expect(seen.last.method, 'PUT');
+      expect(seen.last.url.path, '/v1/posts/p_1');
+      expect(jsonDecode(seen.last.body), {'schedule': 'queue'});
+      client.close();
+    });
+
     test('rejects content that is not text or blocks', () {
       final client = fakeClient((_) async => jsonOk(postJson()));
       expect(
