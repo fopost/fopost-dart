@@ -34,6 +34,7 @@ export 'src/models/label.dart';
 export 'src/models/media.dart';
 export 'src/models/platform_extras.dart';
 export 'src/models/post.dart';
+export 'src/models/queue.dart';
 export 'src/models/validate.dart';
 export 'src/models/webhook.dart';
 
@@ -56,6 +57,7 @@ export 'src/resources/knowledge.dart';
 export 'src/resources/labels.dart';
 export 'src/resources/media.dart';
 export 'src/resources/posts.dart';
+export 'src/resources/queue.dart';
 export 'src/resources/validate.dart';
 export 'src/resources/webhooks.dart';
 

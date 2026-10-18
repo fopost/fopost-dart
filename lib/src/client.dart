@@ -20,6 +20,7 @@ import 'resources/knowledge.dart';
 import 'resources/labels.dart';
 import 'resources/media.dart';
 import 'resources/posts.dart';
+import 'resources/queue.dart';
 import 'resources/validate.dart';
 import 'resources/webhooks.dart';
 import 'resources/whatsapp.dart';
@@ -110,6 +111,7 @@ class FoPost {
     googleBusiness = GoogleBusinessResource(_http);
     blog = BlogResource(_http);
     whatsapp = WhatsappResource(_http);
+    queue = QueueResource(_http);
   }
 
   /// The production API, including its version prefix.
@@ -186,6 +188,9 @@ class FoPost {
 
   /// WhatsApp Business: templates, flows, groups, blocking and commerce.
   late final WhatsappResource whatsapp;
+
+  /// The posting queue: recurring slots a post can be dropped into.
+  late final QueueResource queue;
 
   /// The API root every request is sent to.
   String get baseUrl => _http.baseUrl;

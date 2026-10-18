@@ -120,8 +120,9 @@ class PostsResource {
   ///
   /// [content] takes a `String` for a single post, or a list for a thread —
   /// each entry a `String`, a [ContentBlock], or a raw map. [status] is
-  /// `draft` or `scheduled`, and a scheduled post needs [scheduleAt]. To send
-  /// something out now, create it and call [publish]. [accountGroupId] adds
+  /// `draft` or `scheduled`, and a scheduled post needs [scheduleAt], or
+  /// [schedule] of `queue` to take the next free posting-queue slot instead.
+  /// To send something out now, create it and call [publish]. [accountGroupId] adds
   /// that group's accounts to [accounts], each account once.
   ///
   /// [files] (up to 5, each with a `mimeType`) are stored in the workspace
@@ -137,6 +138,7 @@ class PostsResource {
     String? artifactType,
     String? status,
     DateTime? scheduleAt,
+    String? schedule,
     bool? repeatable,
     int? repeatableTimes,
     int? repeatableGap,
@@ -161,6 +163,7 @@ class PostsResource {
       'artifact_type': artifactType,
       'status': status,
       'schedule_at': scheduleAt?.toUtc().toIso8601String(),
+      'schedule': schedule,
       'repeatable': repeatable,
       'repeatable_times': repeatableTimes,
       'repeatable_gap': repeatableGap,
@@ -192,7 +195,8 @@ class PostsResource {
   /// sent, so this is a partial update.
   ///
   /// [files] behave as on [create]; without [content] they are appended to the
-  /// post's current first block.
+  /// post's current first block. [schedule] of `queue` moves the post into
+  /// the next free posting-queue slot.
   Future<Post> update(
     String id, {
     List<String>? accounts,
@@ -201,6 +205,7 @@ class PostsResource {
     String? artifactType,
     String? status,
     DateTime? scheduleAt,
+    String? schedule,
     bool? repeatable,
     int? repeatableTimes,
     int? repeatableGap,
@@ -221,6 +226,7 @@ class PostsResource {
       'artifact_type': artifactType,
       'status': status,
       'schedule_at': scheduleAt?.toUtc().toIso8601String(),
+      'schedule': schedule,
       'repeatable': repeatable,
       'repeatable_times': repeatableTimes,
       'repeatable_gap': repeatableGap,
