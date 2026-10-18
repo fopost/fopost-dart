@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- Added: `inbox.repost`, `unrepost`, `bookmark` and `unbookmark` act on an X
+  item where `InboxItem.canRepost` or `canBookmark` is true, and `InboxItem`
+  carries `reposted` and `bookmarked`. All need the `publish` scope.
+- Added: `accounts.followXUser` and `unfollowXUser` follow an X user from an X
+  account and answer an `XFollowResult`. `publish` scope.
+- Added: `accounts.getXPost` reads one X post and `accounts.searchXPosts`
+  searches recent posts, both with the token of the X account passed as
+  `accountId`; search pages with `XSearchPage.nextToken`. `inbox` scope.
+- Changed: an X account connected before this release answers
+  `409 reconnect_required` to repost, bookmark and follow until it is
+  reconnected; each of these calls is an X API call metered to the workspace,
+  and a spent X balance answers `402 platform_balance_spent`.
+
 ## 0.3.0
 
 - Breaking: `BlogSettings.autoPublish` and the `autoPublish` argument of
