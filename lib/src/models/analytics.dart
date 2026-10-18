@@ -1596,3 +1596,325 @@ class NativePost {
   @override
   String toString() => 'NativePost($externalPostId)';
 }
+
+/// The headline inbox numbers for a window.
+class InboxAnalyticsTotals {
+  /// Creates the totals.
+  const InboxAnalyticsTotals({
+    required this.received,
+    required this.sent,
+    required this.answered,
+    required this.open,
+    required this.conversations,
+    this.medianResponseMinutes,
+  });
+
+  /// Reads the totals.
+  factory InboxAnalyticsTotals.fromJson(Map<String, dynamic> json) =>
+      InboxAnalyticsTotals(
+        received: asInt(json['received']) ?? 0,
+        sent: asInt(json['sent']) ?? 0,
+        answered: asInt(json['answered']) ?? 0,
+        open: asInt(json['open']) ?? 0,
+        conversations: asInt(json['conversations']) ?? 0,
+        medianResponseMinutes: asDouble(json['median_response_minutes']),
+      );
+
+  /// Inbound items.
+  final int received;
+
+  /// Replies sent.
+  final int sent;
+
+  /// Inbound items that got a reply.
+  final int answered;
+
+  /// Inbound items still unread or read, not resolved.
+  final int open;
+
+  /// Conversations touched.
+  final int conversations;
+
+  /// Median minutes from an inbound item to its first reply; null without
+  /// replies.
+  final double? medianResponseMinutes;
+
+  @override
+  String toString() => 'InboxAnalyticsTotals($received in, $sent out)';
+}
+
+/// Percentage change against the previous window of the same length.
+class InboxAnalyticsDeltas {
+  /// Creates the deltas.
+  const InboxAnalyticsDeltas({this.received, this.sent, this.answered});
+
+  /// Reads the deltas.
+  factory InboxAnalyticsDeltas.fromJson(Map<String, dynamic> json) =>
+      InboxAnalyticsDeltas(
+        received: asDouble(json['received']),
+        sent: asDouble(json['sent']),
+        answered: asDouble(json['answered']),
+      );
+
+  /// Change in items received.
+  final double? received;
+
+  /// Change in replies sent.
+  final double? sent;
+
+  /// Change in items answered.
+  final double? answered;
+
+  @override
+  String toString() => 'InboxAnalyticsDeltas(received: $received)';
+}
+
+/// One day of inbox traffic.
+class InboxAnalyticsPoint {
+  /// Creates a point.
+  const InboxAnalyticsPoint({
+    required this.date,
+    required this.received,
+    required this.sent,
+    required this.answered,
+  });
+
+  /// Reads a point.
+  factory InboxAnalyticsPoint.fromJson(Map<String, dynamic> json) =>
+      InboxAnalyticsPoint(
+        date: asString(json['date']) ?? '',
+        received: asInt(json['received']) ?? 0,
+        sent: asInt(json['sent']) ?? 0,
+        answered: asInt(json['answered']) ?? 0,
+      );
+
+  /// The day, as `YYYY-MM-DD`.
+  final String date;
+
+  /// Inbound items that day.
+  final int received;
+
+  /// Replies sent that day.
+  final int sent;
+
+  /// Inbound items answered that day.
+  final int answered;
+
+  @override
+  String toString() => 'InboxAnalyticsPoint($date)';
+}
+
+/// Inbox traffic on one network.
+class InboxPlatformTraffic {
+  /// Creates a row.
+  const InboxPlatformTraffic({
+    required this.platform,
+    required this.received,
+    required this.sent,
+  });
+
+  /// Reads a row.
+  factory InboxPlatformTraffic.fromJson(Map<String, dynamic> json) =>
+      InboxPlatformTraffic(
+        platform: asString(json['platform']) ?? '',
+        received: asInt(json['received']) ?? 0,
+        sent: asInt(json['sent']) ?? 0,
+      );
+
+  /// The network.
+  final String platform;
+
+  /// Inbound items.
+  final int received;
+
+  /// Replies sent.
+  final int sent;
+
+  @override
+  String toString() => 'InboxPlatformTraffic($platform)';
+}
+
+/// How many items of one kind arrived.
+class InboxTypeCount {
+  /// Creates a row.
+  const InboxTypeCount({required this.type, required this.count});
+
+  /// Reads a row.
+  factory InboxTypeCount.fromJson(Map<String, dynamic> json) => InboxTypeCount(
+        type: asString(json['type']) ?? '',
+        count: asInt(json['count']) ?? 0,
+      );
+
+  /// `comment`, `mention`, `reply`, `dm` or `review`.
+  final String type;
+
+  /// How many arrived.
+  final int count;
+
+  @override
+  String toString() => 'InboxTypeCount($type: $count)';
+}
+
+/// Inbox traffic on one connected account.
+class InboxAccountTraffic {
+  /// Creates a row.
+  const InboxAccountTraffic({
+    required this.accountId,
+    required this.platform,
+    required this.username,
+    required this.name,
+    required this.received,
+    required this.sent,
+    this.avatar,
+  });
+
+  /// Reads a row.
+  factory InboxAccountTraffic.fromJson(Map<String, dynamic> json) =>
+      InboxAccountTraffic(
+        accountId: asString(json['account_id']) ?? '',
+        platform: asString(json['platform']) ?? '',
+        username: asString(json['username']) ?? '',
+        name: asString(json['name']) ?? '',
+        avatar: asString(json['avatar']),
+        received: asInt(json['received']) ?? 0,
+        sent: asInt(json['sent']) ?? 0,
+      );
+
+  /// The account.
+  final String accountId;
+
+  /// Its network.
+  final String platform;
+
+  /// Its handle.
+  final String username;
+
+  /// Its display name.
+  final String name;
+
+  /// Its avatar, where there is one.
+  final String? avatar;
+
+  /// Inbound items.
+  final int received;
+
+  /// Replies sent.
+  final int sent;
+
+  @override
+  String toString() => 'InboxAccountTraffic($platform/$username)';
+}
+
+/// How many replies landed in one response-time band.
+class InboxResponseTimeBucket {
+  /// Creates a bucket.
+  const InboxResponseTimeBucket({required this.bucket, required this.count});
+
+  /// Reads a bucket.
+  factory InboxResponseTimeBucket.fromJson(Map<String, dynamic> json) =>
+      InboxResponseTimeBucket(
+        bucket: asString(json['bucket']) ?? '',
+        count: asInt(json['count']) ?? 0,
+      );
+
+  /// `under_1h`, `1h_6h`, `6h_24h`, `1d_3d` or `over_3d`.
+  final String bucket;
+
+  /// Replies in the band.
+  final int count;
+
+  @override
+  String toString() => 'InboxResponseTimeBucket($bucket: $count)';
+}
+
+/// How many items arrived in one hour of one weekday.
+class InboxHeatmapCell {
+  /// Creates a cell.
+  const InboxHeatmapCell({
+    required this.weekday,
+    required this.hour,
+    required this.count,
+  });
+
+  /// Reads a cell.
+  factory InboxHeatmapCell.fromJson(Map<String, dynamic> json) =>
+      InboxHeatmapCell(
+        weekday: asInt(json['weekday']) ?? 0,
+        hour: asInt(json['hour']) ?? 0,
+        count: asInt(json['count']) ?? 0,
+      );
+
+  /// 0 = Sunday through 6 = Saturday.
+  final int weekday;
+
+  /// The hour, 0-23, in the report's time zone.
+  final int hour;
+
+  /// Items that arrived then.
+  final int count;
+
+  @override
+  String toString() => 'InboxHeatmapCell($weekday/$hour: $count)';
+}
+
+/// Inbox volume, response times and where the traffic comes from.
+class InboxAnalytics {
+  /// Creates the report.
+  const InboxAnalytics({
+    required this.totals,
+    required this.deltas,
+    required this.series,
+    required this.byPlatform,
+    required this.byType,
+    required this.byAccount,
+    required this.responseTime,
+    required this.heatmap,
+    this.timeZone,
+  });
+
+  /// Reads the report.
+  factory InboxAnalytics.fromJson(Map<String, dynamic> json) => InboxAnalytics(
+        totals: InboxAnalyticsTotals.fromJson(asMap(json['totals'])),
+        deltas: InboxAnalyticsDeltas.fromJson(asMap(json['deltas'])),
+        series: asModelList(json['series'], InboxAnalyticsPoint.fromJson),
+        byPlatform:
+            asModelList(json['by_platform'], InboxPlatformTraffic.fromJson),
+        byType: asModelList(json['by_type'], InboxTypeCount.fromJson),
+        byAccount:
+            asModelList(json['by_account'], InboxAccountTraffic.fromJson),
+        responseTime: asModelList(
+            json['response_time'], InboxResponseTimeBucket.fromJson),
+        heatmap: asModelList(json['heatmap'], InboxHeatmapCell.fromJson),
+        timeZone: asString(json['time_zone']),
+      );
+
+  /// The headline numbers.
+  final InboxAnalyticsTotals totals;
+
+  /// Change against the previous window.
+  final InboxAnalyticsDeltas deltas;
+
+  /// One point per day.
+  final List<InboxAnalyticsPoint> series;
+
+  /// Traffic per network.
+  final List<InboxPlatformTraffic> byPlatform;
+
+  /// Items per kind.
+  final List<InboxTypeCount> byType;
+
+  /// Traffic per account.
+  final List<InboxAccountTraffic> byAccount;
+
+  /// Replies per response-time band.
+  final List<InboxResponseTimeBucket> responseTime;
+
+  /// Arrivals per weekday and hour.
+  final List<InboxHeatmapCell> heatmap;
+
+  /// The IANA zone the heatmap is bucketed in.
+  final String? timeZone;
+
+  @override
+  String toString() => 'InboxAnalytics(${totals.received} received)';
+}
