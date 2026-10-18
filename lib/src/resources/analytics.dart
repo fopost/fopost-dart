@@ -187,6 +187,26 @@ class AnalyticsResource {
         await _http.object('GET', '/analytics/demographics', query: query));
   }
 
+  /// Returns inbox volume, response times and where the traffic comes from
+  /// over the last [days] (default 7). [tz] is the IANA zone the heatmap is
+  /// bucketed in, UTC by default.
+  Future<InboxAnalytics> inbox({
+    String? accountId,
+    String? workspaceId,
+    int? days,
+    String? tz,
+  }) async =>
+      InboxAnalytics.fromJson(await _http.object(
+        'GET',
+        '/analytics/inbox',
+        query: {
+          'account_id': accountId,
+          'workspace_id': workspaceId,
+          'days': days,
+          'tz': tz,
+        },
+      ));
+
   /// Pulls fresh numbers from the platforms.
   ///
   /// This is rate limited harder than the read endpoints, since every call

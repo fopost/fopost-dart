@@ -3,6 +3,7 @@ import 'package:test/test.dart';
 import 'support.dart';
 
 void main() {
+  inboxAnalyticsTests();
   test('decay reads the bands and the half life', () async {
     final seen = RecordedRequests();
     final client = fakeClient(
@@ -234,5 +235,75 @@ void main() {
     expect(page.data.single.metrics.engagements, 90);
     expect(page.meta.total, 1);
     client.close();
+  });
+}
+
+void inboxAnalyticsTests() {
+  test('inbox reads totals, breakdowns and the heatmap', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+        (_) async => jsonOk({
+              'totals': {
+                'received': 40,
+                'sent': 25,
+                'answered': 22,
+                'open': 6,
+                'conversations': 18,
+                'median_response_minutes': 42.5,
+              },
+              'deltas': {'received': 10, 'sent': null, 'answered': -5},
+              'series': [
+                {
+                  'date': '2026-10-17',
+                  'received': 20,
+                  'sent': 12,
+                  'answered': 11
+                }
+              ],
+              'by_platform': [
+                {'platform': 'instagram', 'received': 30, 'sent': 20}
+              ],
+              'by_type': [
+                {'type': 'comment', 'count': 25}
+              ],
+              'by_account': [
+                {
+                  'account_id': 'acc_1',
+                  'platform': 'instagram',
+                  'username': 'yourbrand',
+                  'name': 'Your Brand',
+                  'avatar': null,
+                  'received': 30,
+                  'sent': 20,
+                }
+              ],
+              'response_time': [
+                {'bucket': 'under_1h', 'count': 15}
+              ],
+              'heatmap': [
+                {'weekday': 1, 'hour': 9, 'count': 4}
+              ],
+              'time_zone': 'Europe/Zagreb',
+            }),
+        recorder: seen);
+
+    final report = await client.analytics
+        .inbox(workspaceId: 'ws_1', days: 7, tz: 'Europe/Zagreb');
+
+    expect(seen.last.method, 'GET');
+    expect(seen.last.url.path, '/v1/analytics/inbox');
+    expect(seen.last.url.queryParameters,
+        {'workspace_id': 'ws_1', 'days': '7', 'tz': 'Europe/Zagreb'});
+    expect(report.totals.received, 40);
+    expect(report.totals.medianResponseMinutes, 42.5);
+    expect(report.deltas.received, 10);
+    expect(report.deltas.sent, isNull);
+    expect(report.series.single.date, '2026-10-17');
+    expect(report.byPlatform.single.platform, 'instagram');
+    expect(report.byType.single.count, 25);
+    expect(report.byAccount.single.username, 'yourbrand');
+    expect(report.responseTime.single.bucket, 'under_1h');
+    expect(report.heatmap.single.hour, 9);
+    expect(report.timeZone, 'Europe/Zagreb');
   });
 }
