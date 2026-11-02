@@ -43,11 +43,10 @@ class WebhookEnvelope {
     this.deliveryId,
   });
 
-  /// The event name, e.g. `article.published`.
+  /// The event name, e.g. `post.published`.
   final String event;
 
-  /// The event-specific body. Read an `article.published` one with
-  /// `BlogArticlePublished.fromJson(envelope.data)`.
+  /// The event-specific body.
   final Map<String, dynamic> data;
 
   /// When the event happened.
@@ -65,8 +64,7 @@ class WebhookEnvelope {
 /// [rawBody] is the request body exactly as received: the bytes, or the body
 /// as a string before anything parsed it. Re-serialised JSON will not verify.
 /// [headers] are the request headers; names are matched without regard to
-/// case. [secret] is the webhook's signing secret, or the blog's website
-/// secret for the website target.
+/// case. [secret] is the webhook's signing secret.
 ///
 /// The timestamped signature (`X-FoPost-Signature-256`) is preferred and is
 /// refused when the timestamp sits more than [tolerance] from now. Only a
@@ -82,8 +80,8 @@ class WebhookEnvelope {
 ///   headers: request.headers,
 ///   secret: secret,
 /// );
-/// if (envelope.event == 'article.published') {
-///   final article = BlogArticlePublished.fromJson(envelope.data);
+/// if (envelope.event == 'post.published') {
+///   final postId = envelope.data['id'];
 /// }
 /// ```
 WebhookEnvelope verifyWebhook({

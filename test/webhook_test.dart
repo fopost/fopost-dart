@@ -7,21 +7,8 @@ import 'package:test/test.dart';
 const secret = 'whsec_test_secret';
 
 final body = jsonEncode({
-  'event': 'article.published',
-  'data': {
-    'id': 'art_1',
-    'title': 'Hello',
-    'slug': 'hello',
-    'bodyMarkdown': '# Hello',
-    'bodyHtml': '<h1>Hello</h1>',
-    'featuredImage': {'mediaId': 'med_1', 'url': 'https://x/y.jpg', 'alt': 'a'},
-    'images': <Object>[],
-    'tags': ['news'],
-    'keyword': null,
-    'wordCount': 1,
-    'publishedAt': '2026-10-11T09:00:00.000Z',
-    'publishedUrl': 'https://yourbrand.com/blog/hello',
-  },
+  'event': 'post.published',
+  'data': {'id': 'post_1', 'status': 'published'},
   'timestamp': '2026-10-11T09:00:00.000Z',
 });
 
@@ -35,7 +22,7 @@ Map<String, String> timestampedHeaders({int? at, String? body_}) {
   final stamp = at ?? sentAt;
   final raw = body_ ?? body;
   return {
-    'X-FoPost-Event': 'article.published',
+    'X-FoPost-Event': 'post.published',
     'X-FoPost-Delivery': 'dlv_1',
     'X-FoPost-Timestamp': '$stamp',
     'X-FoPost-Signature-256': hmac('$stamp.$raw'),
@@ -52,17 +39,15 @@ void main() {
       now: now,
     );
 
-    expect(envelope.event, 'article.published');
+    expect(envelope.event, 'post.published');
     expect(envelope.deliveryId, 'dlv_1');
     expect(envelope.timestamp, DateTime.utc(2026, 10, 11, 9));
-    final article = BlogArticlePublished.fromJson(envelope.data);
-    expect(article.slug, 'hello');
-    expect(article.featuredImage?.mediaId, 'med_1');
-    expect(article.publishedUrl, 'https://yourbrand.com/blog/hello');
+    expect(envelope.data['id'], 'post_1');
+    expect(envelope.data['status'], 'published');
   });
 
   test('a tampered body fails', () {
-    final tampered = body.replaceFirst('hello', 'hacked');
+    final tampered = body.replaceFirst('post_1', 'post_2');
 
     expect(
       () => verifyWebhook(
@@ -96,7 +81,7 @@ void main() {
       secret: secret,
       now: now,
     );
-    expect(envelope.event, 'article.published');
+    expect(envelope.event, 'post.published');
 
     // With a timestamp present the legacy header alone is not enough.
     expect(

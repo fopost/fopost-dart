@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Removed: `client.blog` (`BlogResource`) and the blog models (`BlogArticle*`,
+  `BlogKeyword*`, `BlogSettings*`, `BlogWebsiteTest`, `BlogPlanRun`), retired
+  with the API's `/v1/blog` endpoints. `client.blogs` (articles on a connected
+  site) and `RemoteBlog`, `RemoteArticle` and `RemoteProduct` are unchanged.
 - Added: `inbox.repost`, `unrepost`, `bookmark` and `unbookmark` act on an X
   item where `InboxItem.canRepost` or `canBookmark` is true, and `InboxItem`
   carries `reposted` and `bookmarked`. All need the `publish` scope.
