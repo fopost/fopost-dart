@@ -47,7 +47,6 @@ export 'src/resources/accounts.dart';
 export 'src/resources/ads.dart';
 export 'src/resources/analytics.dart';
 export 'src/resources/automations.dart';
-export 'src/resources/blog.dart';
 export 'src/resources/blogs.dart';
 export 'src/resources/broadcasts.dart';
 export 'src/resources/communities.dart';

@@ -335,7 +335,6 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `communities` | `list`, `sync`, `search`, `add`, `remove`                                                                                                                                                                 |
 | `labels`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                               |
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
-| `blog`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `suggestSeeds`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `submitArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`, `inbox` |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
 | `media`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `uploadDirectFile`, `delete`                                                                                                                                                                                |
@@ -414,49 +413,20 @@ API change behind it, so the same loop is three pieces with this client:
 
 Reading needs the `inbox` scope; answering needs `publish` as well.
 
-## Blog
+## Verifying webhooks
 
-`client.blog` plans keywords and writes articles for a website. An article is
-not a post: it goes to the target in the blog settings, which is the hosted
-blog, a connected account, or your own site. Reads and `submitArticle` need
-the `posts` scope, `suggestSeeds`, `planKeywords`, `requestArticle` and
-`regenerateArticle` need `ai` and answer `402` on an empty balance, and
-`publishArticle` needs `publish`.
-
-Planning is goal-driven: set `goal`, `focusTopics` and `avoidTopics` in the
-settings, refine terms with `suggestSeeds`, then research them with
-`planKeywords`. Results arrive as `suggested` keywords; setting one to
-`planned` picks it for the next free date. A finished draft is submitted with
-`submitArticle` and only then published or scheduled.
-
-```dart
-final article = await client.blog.requestArticle(
-  workspaceId,
-  keyword: 'best trail running shoes',
-  instructions: 'Lead with the lightest pair.',
-);
-// It comes back `queued`; poll getArticle until it is a `draft`.
-final draft = await client.blog.getArticle(workspaceId, article.id);
-```
-
-The website target POSTs a signed `article.published` webhook to your
-`websiteUrl`. `verifyWebhook` checks the signature over the raw bytes, refuses
-a timestamp more than five minutes off, and returns the envelope:
+`verifyWebhook` checks a delivery's signature over the raw bytes, refuses a
+timestamp more than five minutes off, and returns the envelope:
 
 ```dart
 final envelope = verifyWebhook(
   rawBody: request.bodyBytes,
   headers: request.headers,
-  secret: websiteSecret, // returned once by updateSettings
+  secret: webhookSecret,
 );
-if (envelope.event == 'article.published') {
-  final published = BlogArticlePublished.fromJson(envelope.data);
-  // Image URLs expire in six hours, so download and store your own copies.
-}
 ```
 
-A bad signature throws `FoPostWebhookSignatureException`. The same helper
-verifies every FoPost webhook, not only the blog's.
+A bad signature throws `FoPostWebhookSignatureException`.
 
 ## Contributing
 

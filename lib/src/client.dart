@@ -8,7 +8,6 @@ import 'resources/activity.dart';
 import 'resources/ads.dart';
 import 'resources/analytics.dart';
 import 'resources/automations.dart';
-import 'resources/blog.dart';
 import 'resources/blogs.dart';
 import 'resources/broadcasts.dart';
 import 'resources/communities.dart';
@@ -111,7 +110,6 @@ class FoPost {
     googleAds = GoogleAdsResource(_http);
     validate = ValidateResource(_http);
     googleBusiness = GoogleBusinessResource(_http);
-    blog = BlogResource(_http);
     whatsapp = WhatsappResource(_http);
     queue = QueueResource(_http);
     connectSessions = ConnectSessionsResource(_http);
@@ -186,9 +184,6 @@ class FoPost {
 
   /// Manage a connected Google Business Profile location.
   late final GoogleBusinessResource googleBusiness;
-
-  /// Blog settings, the keyword plan, and the articles written from it.
-  late final BlogResource blog;
 
   /// WhatsApp Business: templates, flows, groups, blocking and commerce.
   late final WhatsappResource whatsapp;
