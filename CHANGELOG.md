@@ -6,6 +6,15 @@
   `BlogKeyword*`, `BlogSettings*`, `BlogWebsiteTest`, `BlogPlanRun`), retired
   with the API's `/v1/blog` endpoints. `client.blogs` (articles on a connected
   site) and `RemoteBlog`, `RemoteArticle` and `RemoteProduct` are unchanged.
+- Removed: the `platform`, `state` and `q` arguments of `inbox.list`,
+  `inbox.threads` and `inbox.conversations`, and `InboxSort.unanswered`,
+  matching the inbox list API.
+- Changed: those three take `accountIds` (a list, sent comma-separated) in
+  place of `accountId`, plus `status` (one of `InboxStatus`: `unanswered`,
+  `replied`, `resolved`) and `since`.
+- Added: `inbox.resolve` resolves every unanswered item of one type,
+  optionally only on some accounts and only items dated before a cutoff, and
+  returns how many changed. `inbox` scope.
 - Added: `inbox.repost`, `unrepost`, `bookmark` and `unbookmark` act on an X
   item where `InboxItem.canRepost` or `canBookmark` is true, and `InboxItem`
   carries `reposted` and `bookmarked`. All need the `publish` scope.
