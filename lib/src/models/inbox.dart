@@ -38,9 +38,19 @@ abstract final class InboxSort {
 
   /// Oldest first.
   static const String oldest = 'oldest';
+}
 
-  /// Items with no reply first.
+/// The reply buckets an inbox list can filter on. A reply also resolves an
+/// item, so the three never overlap.
+abstract final class InboxStatus {
+  /// Inbound items nobody has replied to or resolved.
   static const String unanswered = 'unanswered';
+
+  /// Items that got a reply.
+  static const String replied = 'replied';
+
+  /// Items closed without a reply.
+  static const String resolved = 'resolved';
 }
 
 /// The connected account an inbox row belongs to.

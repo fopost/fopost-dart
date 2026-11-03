@@ -49,9 +49,11 @@ void main() {
     final page = await client.inbox.list(
       workspaceId: 'ws_1',
       type: InboxItemType.comment,
-      state: InboxItemState.unread,
+      accountIds: ['acc_1', 'acc_2'],
+      status: InboxStatus.unanswered,
+      since: DateTime.utc(2026, 9, 1),
       postExternalId: 'fb_post_9',
-      sort: InboxSort.unanswered,
+      sort: InboxSort.oldest,
       page: 2,
       perPage: 25,
     );
@@ -61,9 +63,11 @@ void main() {
     expect(seen.last.url.queryParameters, {
       'workspace_id': 'ws_1',
       'type': 'comment',
-      'state': 'unread',
+      'account_id': 'acc_1,acc_2',
+      'status': 'unanswered',
+      'since': '2026-09-01T00:00:00.000Z',
       'post_external_id': 'fb_post_9',
-      'sort': 'unanswered',
+      'sort': 'oldest',
       'page': '2',
       'per_page': '25',
     });
@@ -112,15 +116,25 @@ void main() {
       recorder: seen,
     );
 
-    final threads =
-        await client.inbox.threads(workspaceId: 'ws_1', kind: 'mentions');
+    final threads = await client.inbox.threads(
+      workspaceId: 'ws_1',
+      kind: 'mentions',
+      status: InboxStatus.replied,
+    );
     expect(seen.last.url.path, '/v1/inbox/posts');
     expect(seen.last.url.queryParameters['kind'], 'mentions');
+    expect(seen.last.url.queryParameters['status'], 'replied');
     expect(threads.data.single.commentCount, 4);
     expect(threads.data.single.post?.text, 'Launch day');
 
-    final conversations = await client.inbox.conversations(workspaceId: 'ws_1');
+    final conversations = await client.inbox.conversations(
+      workspaceId: 'ws_1',
+      accountIds: ['acc_1'],
+      status: InboxStatus.resolved,
+    );
     expect(seen.last.url.path, '/v1/inbox/conversations');
+    expect(seen.last.url.queryParameters['account_id'], 'acc_1');
+    expect(seen.last.url.queryParameters['status'], 'resolved');
     expect(conversations.data.single.conversationId, 'conv_1');
     expect(conversations.data.single.participant?.handle, 'ada');
     expect(conversations.meta.hasMore, isFalse);
@@ -153,6 +167,30 @@ void main() {
       'post_external_id': 'fb_post_9',
     });
     expect(updated, 3);
+    client.close();
+  });
+
+  test('resolve posts the bulk body and returns the count', () async {
+    final seen = RecordedRequests();
+    final client =
+        fakeClient((_) async => jsonOk({'resolved': 7}), recorder: seen);
+
+    final resolved = await client.inbox.resolve(
+      workspaceId: 'ws_1',
+      type: InboxItemType.comment,
+      accountIds: ['acc_1', 'acc_2'],
+      before: DateTime.utc(2026, 10, 1),
+    );
+
+    expect(seen.last.method, 'POST');
+    expect(seen.last.url.path, '/v1/inbox/resolve');
+    expect(jsonDecode(seen.last.body), {
+      'workspace_id': 'ws_1',
+      'type': 'comment',
+      'account_id': ['acc_1', 'acc_2'],
+      'before': '2026-10-01T00:00:00.000Z',
+    });
+    expect(resolved, 7);
     client.close();
   });
 

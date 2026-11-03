@@ -19,19 +19,20 @@ class InboxResource {
 
   /// Returns one page of items, newest first unless [sort] says otherwise.
   ///
-  /// [type] is one of [InboxItemType], [state] one of [InboxItemState],
-  /// [sort] one of [InboxSort]. `meta.total` and `meta.perPage` are set.
+  /// [type] is one of [InboxItemType], [status] one of [InboxStatus], [sort]
+  /// one of [InboxSort]. [accountIds] narrows to one or more connected
+  /// accounts, and [since] to items the platform dates at or after it.
+  /// `meta.total` and `meta.perPage` are set.
   Future<Page<InboxItem>> list({
     String? workspaceId,
     String? type,
-    String? state,
-    String? platform,
-    String? accountId,
+    List<String>? accountIds,
+    String? status,
+    DateTime? since,
     String? postId,
     String? postExternalId,
     String? conversationId,
     String? direction,
-    String? q,
     String? sort,
     int? page,
     int? perPage,
@@ -39,14 +40,13 @@ class InboxResource {
       _page('/inbox', InboxItem.fromJson, {
         'workspace_id': workspaceId,
         'type': type,
-        'state': state,
-        'platform': platform,
-        'account_id': accountId,
+        'account_id': accountIds,
+        'status': status,
+        'since': since,
         'post_id': postId,
         'post_external_id': postExternalId,
         'conversation_id': conversationId,
         'direction': direction,
-        'q': q,
         'sort': sort,
         'page': page,
         'per_page': perPage,
@@ -54,14 +54,13 @@ class InboxResource {
 
   /// Returns one row per post with comments; pass `kind: 'mentions'` for the
   /// posts the account was tagged in, or `kind: 'reviews'` for one row per
-  /// review left on the business.
+  /// review left on the business. Filters as [list] does.
   Future<Page<InboxThread>> threads({
     String? workspaceId,
     String? kind,
-    String? platform,
-    String? accountId,
-    String? state,
-    String? q,
+    List<String>? accountIds,
+    String? status,
+    DateTime? since,
     String? sort,
     int? page,
     int? perPage,
@@ -69,36 +68,53 @@ class InboxResource {
       _page('/inbox/posts', InboxThread.fromJson, {
         'workspace_id': workspaceId,
         'kind': kind,
-        'platform': platform,
-        'account_id': accountId,
-        'state': state,
-        'q': q,
+        'account_id': accountIds,
+        'status': status,
+        'since': since,
         'sort': sort,
         'page': page,
         'per_page': perPage,
       });
 
-  /// Returns one row per direct-message thread, latest first.
+  /// Returns one row per direct-message thread, latest first. Filters as
+  /// [list] does.
   Future<Page<InboxConversation>> conversations({
     String? workspaceId,
-    String? platform,
-    String? accountId,
-    String? state,
-    String? q,
+    List<String>? accountIds,
+    String? status,
+    DateTime? since,
     String? sort,
     int? page,
     int? perPage,
   }) =>
       _page('/inbox/conversations', InboxConversation.fromJson, {
         'workspace_id': workspaceId,
-        'platform': platform,
-        'account_id': accountId,
-        'state': state,
-        'q': q,
+        'account_id': accountIds,
+        'status': status,
+        'since': since,
         'sort': sort,
         'page': page,
         'per_page': perPage,
       });
+
+  /// Resolves every unanswered item of [type] (one of [InboxItemType]),
+  /// optionally only on [accountIds] and only items dated before [before].
+  /// Nothing reaches a platform. Returns how many items changed.
+  Future<int> resolve({
+    required String workspaceId,
+    required String type,
+    List<String>? accountIds,
+    DateTime? before,
+  }) async {
+    final body = pruned({
+      'workspace_id': workspaceId,
+      'type': type,
+      'account_id': accountIds,
+      'before': before?.toUtc().toIso8601String(),
+    });
+    final result = await _http.object('POST', '/inbox/resolve', body: body);
+    return asInt(result['resolved']) ?? 0;
+  }
 
   /// How many items are unread.
   Future<int> unreadCount({String? workspaceId}) async {
