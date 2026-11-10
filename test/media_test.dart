@@ -72,8 +72,27 @@ void main() {
       expect(seen.last.url.path, '/v1/posts/bulk-import/validate');
       expect(seen.last.body, contains('name="file"; filename="posts.csv"'));
       expect(seen.last.body, contains('name="workspace_id"'));
+      expect(seen.last.body, isNot(contains('name="accounts"')));
       expect(result.validRows, 1);
       expect(result.invalidRows, 1);
+      client.close();
+    });
+
+    test('a bulk import sends default accounts when given', () async {
+      final seen = RecordedRequests();
+      final client = fakeClient(
+        (_) async => jsonOk({'batch_id': 'b1', 'created': 1, 'posts': []}),
+        recorder: seen,
+      );
+
+      await client.posts.commitBulkImport(
+        workspaceId: 'ws_1',
+        file: FoPostFile.fromString('posts.csv', 'content\nhi'),
+        accounts: ['twitter', 'linkedin'],
+      );
+
+      expect(
+          seen.last.body, contains('name="accounts"\r\n\r\ntwitter,linkedin'));
       client.close();
     });
   });

@@ -440,14 +440,16 @@ class PostsResource {
         response is Map<String, dynamic> ? response : {});
   }
 
-  /// Checks a CSV without creating anything.
+  /// Checks a CSV without creating anything. [accounts] (ids or platform
+  /// names) applies to rows whose own accounts cell is empty.
   Future<BulkImportValidation> validateBulkImport({
     required String workspaceId,
     required FoPostFile file,
+    List<String>? accounts,
   }) async {
     final body = await _http.multipart(
       '/posts/bulk-import/validate',
-      fields: {'workspace_id': workspaceId},
+      fields: _bulkImportFields(workspaceId, accounts),
       files: [file],
       fileField: 'file',
     );
@@ -455,19 +457,30 @@ class PostsResource {
         body is Map<String, dynamic> ? body : <String, dynamic>{});
   }
 
-  /// Creates the posts a CSV describes.
+  /// Creates the posts a CSV describes. [accounts] works as in
+  /// [validateBulkImport].
   Future<BulkImportResult> commitBulkImport({
     required String workspaceId,
     required FoPostFile file,
+    List<String>? accounts,
   }) async {
     final body = await _http.multipart(
       '/posts/bulk-import/commit',
-      fields: {'workspace_id': workspaceId},
+      fields: _bulkImportFields(workspaceId, accounts),
       files: [file],
       fileField: 'file',
     );
     return BulkImportResult.fromJson(
         body is Map<String, dynamic> ? body : <String, dynamic>{});
+  }
+
+  Map<String, String> _bulkImportFields(
+      String workspaceId, List<String>? accounts) {
+    return {
+      'workspace_id': workspaceId,
+      if (accounts != null && accounts.isNotEmpty)
+        'accounts': accounts.join(','),
+    };
   }
 
   /// Deletes every post a committed batch created.

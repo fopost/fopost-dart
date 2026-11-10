@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added: `posts.validateBulkImport` and `posts.commitBulkImport` take an optional
+  `accounts` list (account ids or platform names), sent comma-separated and
+  applied to every CSV row whose own `accounts` cell is empty.
 - Removed: `client.blog` (`BlogResource`) and the blog models (`BlogArticle*`,
   `BlogKeyword*`, `BlogSettings*`, `BlogWebsiteTest`, `BlogPlanRun`), retired
   with the API's `/v1/blog` endpoints. `client.blogs` (articles on a connected
