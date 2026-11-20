@@ -337,7 +337,7 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `webhooks`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                              |
 | `analytics`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`, `inbox` |
 | `automations` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                                   |
-| `media`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `uploadDirectFile`, `delete`                                                                                                                                                                                |
+| `media`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `uploadDirectFile`, `generateAltText`, `delete`                                                                                                                                                                                |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `resolve`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `repost`, `unrepost`, `bookmark`, `unbookmark`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `handover` |
 | `contacts`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `import`, `listFields`, `createField`, `updateField`, `deleteField`, `conversationAnalytics` |
 | `broadcasts`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
@@ -350,6 +350,9 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `whatsapp`    | `profile`, `updateProfile`, `requestDisplayName`, `setUsername`, `templates`, `templateLibrary`, `template`, `createTemplate`, `importTemplate`, `updateTemplate`, `deleteTemplate`, `groups`, `createGroup`, `group`, `updateGroup`, `deleteGroup`, `groupInviteLink`, `resetGroupInviteLink`, `removeGroupParticipants`, `blocked`, `blockUsers`, `unblockUsers`, `commerceSettings`, `updateCommerceSettings`, `linkCatalog`, `flows`, `flow`, `createFlow`, `updateFlow`, `deleteFlow`, `uploadFlowJson`, `publishFlow`, `deprecateFlow`, `flowResponses`, `encryptionKeyStatus`, `setEncryptionKey`, `accountEvents`, `sandboxSessions`, `createSandboxSession` |
 | `blogs`       | `listBlogs`, `listArticles`, `getArticle`, `createArticle`, `updateArticle`, `deleteArticle`, `listProducts`, `updateProduct` |
 | `queue`       | `slots`, `createSlot`, `updateSlot`, `deleteSlot`, `next`, `preview` |
+| `designs`     | `list`, `create`, `get`, `update`, `delete`, `versions`, `restoreVersion`, `duplicate`, `export`, `bulk`, `posts`, `textToSlides`, `fromPost` |
+| `fonts`       | `list`, `upload`, `delete` |
+| `videoEdits`  | `ops`, `list`, `create`, `get` |
 | `connectSessions` | `create`, `get` |
 | `logs`        | `list` |
 | `validate`    | `post`, `length`, `media`                                                                                                                                                                                 |
