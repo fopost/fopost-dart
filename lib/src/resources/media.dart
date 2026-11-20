@@ -182,6 +182,13 @@ class MediaResource {
     return complete(slot.uploadId);
   }
 
+  /// Generates alt text for a library image and stores it on the asset.
+  ///
+  /// Uses AI credits; an API key needs the `ai` scope as well as `posts`.
+  Future<GeneratedAltText> generateAltText(String id) async =>
+      GeneratedAltText.fromJson(await _http.object(
+          'POST', '/media/${Uri.encodeComponent(id)}/alt-text'));
+
   /// Removes an asset from the library.
   Future<void> delete(String id) =>
       _http.discard('DELETE', '/media/${Uri.encodeComponent(id)}');
