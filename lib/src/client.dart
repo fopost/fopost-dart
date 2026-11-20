@@ -14,6 +14,7 @@ import 'resources/communities.dart';
 import 'resources/connect_sessions.dart';
 import 'resources/contacts.dart';
 import 'resources/designs.dart';
+import 'resources/fonts.dart';
 import 'resources/google_ads.dart';
 import 'resources/google_business.dart';
 import 'resources/inbox.dart';
@@ -103,6 +104,7 @@ class FoPost {
     automations = AutomationsResource(_http);
     media = MediaResource(_http);
     designs = DesignsResource(_http);
+    fonts = FontsResource(_http);
     inbox = InboxResource(_http);
     contacts = ContactsResource(_http);
     broadcasts = BroadcastsResource(_http);
@@ -161,6 +163,9 @@ class FoPost {
 
   /// Designs: pages of layers, their versions, exports and bulk copies.
   late final DesignsResource designs;
+
+  /// The font library and a workspace's uploaded fonts.
+  late final FontsResource fonts;
 
   /// Comments, mentions and direct messages on connected accounts.
   late final InboxResource inbox;
