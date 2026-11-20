@@ -234,4 +234,25 @@ void main() {
       client.close();
     });
   });
+
+  test('generateAltText posts to the asset and reads the text', () async {
+    final seen = RecordedRequests();
+    final client = fakeClient(
+      (_) async => jsonBare({
+        'alt_text': 'A bar chart of monthly sign-ups',
+        'alt_text_source': 'ai',
+        'tags': ['chart', 'growth'],
+      }),
+      recorder: seen,
+    );
+
+    final result = await client.media.generateAltText('md_1');
+
+    expect(seen.last.method, 'POST');
+    expect(seen.last.url.path, '/v1/media/md_1/alt-text');
+    expect(result.altText, 'A bar chart of monthly sign-ups');
+    expect(result.source, 'ai');
+    expect(result.tags, ['chart', 'growth']);
+    client.close();
+  });
 }

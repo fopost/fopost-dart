@@ -253,3 +253,33 @@ class UploadLimits {
   @override
   String toString() => 'UploadLimits($maxFileBytes, $source)';
 }
+
+/// Alt text generated for a library image.
+class GeneratedAltText {
+  /// Creates the result.
+  const GeneratedAltText({
+    required this.altText,
+    this.source,
+    this.tags = const [],
+  });
+
+  /// Reads the result.
+  factory GeneratedAltText.fromJson(Map<String, dynamic> json) =>
+      GeneratedAltText(
+        altText: asString(json['alt_text']) ?? '',
+        source: asString(json['alt_text_source']),
+        tags: asStringList(json['tags']),
+      );
+
+  /// The description, now stored on the asset.
+  final String altText;
+
+  /// Where the text came from: `ai`.
+  final String? source;
+
+  /// Search tags generated alongside it.
+  final List<String> tags;
+
+  @override
+  String toString() => 'GeneratedAltText($altText)';
+}

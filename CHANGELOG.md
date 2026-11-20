@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Added: `designs`, the Create section's designs. `list`, `create`, `get`,
+  `update` and `restoreVersion` (both answer a `DesignChange` with the saved
+  `DesignVersion`, if any), `delete`, `versions`, `duplicate`, `export`
+  (renders pages into the media library as a `DesignExport`), `bulk` (one copy
+  per row), `posts` (the posts that used a design, with metrics),
+  `textToSlides` (a `SlideOutline`; uses AI credits and needs the `ai` scope)
+  and `fromPost`. The design document is a plain `Map` on `Design.document`.
+- Added: `fonts.list` (the font library plus a workspace's uploads),
+  `fonts.upload` (a `FoPostFile`, multipart) and `fonts.delete`.
+- Added: `videoEdits.ops`, `list`, `create` and `get`. `create` takes a list
+  of `VideoEditOperation(op, params)` and answers the queued `VideoEdit`; poll
+  `get` until its `status` is `succeeded` or `failed`. An operation that uses
+  AI also needs the `ai` scope.
+- Added: `media.generateAltText` writes AI alt text onto a library image and
+  answers a `GeneratedAltText`. Needs the `ai` scope.
 - Added: `posts.validateBulkImport` and `posts.commitBulkImport` take an optional
   `accounts` list (account ids or platform names), sent comma-separated and
   applied to every CSV row whose own `accounts` cell is empty.
