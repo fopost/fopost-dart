@@ -191,7 +191,7 @@ class FoPost {
   /// Boosts, ads, audiences and lead forms.
   late final AdsResource ads;
 
-  /// Google Ads only: keywords, assets, conversions and raw GAQL.
+  /// Google Ads only: bid strategies, ad schedules, conversions and raw GAQL.
   late final GoogleAdsResource googleAds;
 
   /// Standalone checks on a draft, a text's length, or a media URL.

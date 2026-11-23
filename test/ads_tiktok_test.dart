@@ -42,13 +42,9 @@ void main() {
     expect(seen.last.url.queryParameters['identity_id'], 'idt_1');
   });
 
-  test('sends sparkPostId on an ad and smartPlus on a campaign', () async {
+  test('sends sparkPostId on an ad', () async {
     final seen = RecordedRequests();
     final client = fakeClient((request) async {
-      if (request.url.path.endsWith('/campaigns')) {
-        return jsonOk({'id': 'c1', 'name': 'Smart', 'status': 'PAUSED'},
-            headers: const {});
-      }
       return jsonOk({
         'id': 'ad_1',
         'workspaceId': 'ws_1',
@@ -72,16 +68,6 @@ void main() {
       sparkPostId: 'item_99',
     );
     expect(jsonDecode(seen.last.body)['sparkPostId'], 'item_99');
-
-    await client.ads.createCampaign(
-      workspaceId: 'ws_1',
-      connectionId: 'conn_1',
-      adAccountId: '7011',
-      name: 'Smart',
-      goal: AdGoal.traffic,
-      smartPlus: true,
-    );
-    expect(jsonDecode(seen.last.body)['smartPlus'], true);
   });
 
   test('uploads conversions and reports what the network accepted', () async {

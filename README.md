@@ -342,10 +342,10 @@ response, and `error.bodyMap` gives you any extra fields the API sent.
 | `contacts`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `import`, `listFields`, `createField`, `updateField`, `deleteField`, `conversationAnalytics` |
 | `broadcasts`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
 | `sequences`   | `list`, `get`, `create`, `update`, `delete`, `enroll`, `unenroll`, `enrollments` |
-| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `estimateReach`, `insights`, `adInsights`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `goals`, `catalogs`, `createCatalog`, `catalog`, `updateCatalog`, `deleteCatalog`, `catalogProducts`, `writeCatalogProducts`, `productFeeds`, `createProductFeed`, `deleteProductFeed`, `feedUploads`, `startFeedUpload`, `productSets`, `createProductSet`, `updateProductSet`, `deleteProductSet`, `reachFrequency`, `createReachFrequency`, `reachFrequencyPrediction`, `reserveReachFrequency`, `cancelReachFrequency`, `library`, `partnershipCreators`, `requestPartnership`, `revokePartnership`, `accountActivity`, `labels`, `createLabel`, `updateLabel`, `deleteLabel`, `applyLabel`, `studies`, `createStudy`, `study`, `deleteStudy`, `iosCampaignLimits`, `highDemandPeriods`, `createHighDemandPeriod`, `deleteHighDemandPeriod`, `valueRuleSets`, `createValueRuleSet`, `deleteValueRuleSet` |
+| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `bulkSetStatus`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `estimateReach`, `insights`, `adInsights`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `goals`, `reachFrequency`, `createReachFrequency`, `reachFrequencyPrediction`, `reserveReachFrequency`, `cancelReachFrequency`, `partnershipCreators`, `requestPartnership`, `revokePartnership`, `accountActivity`, `labels`, `createLabel`, `updateLabel`, `deleteLabel`, `applyLabel`, `studies`, `createStudy`, `study`, `deleteStudy`, `iosCampaignLimits`, `highDemandPeriods`, `createHighDemandPeriod`, `deleteHighDemandPeriod`, `valueRuleSets`, `createValueRuleSet`, `deleteValueRuleSet` |
 | `knowledge`   | `list`, `create`, `update`, `delete`, `sync`, `search`                                                                                                                                                    |
 | `inbox`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `refresh`, `resolve`, `listApprovals`, `approveReply`, `rejectReply`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `repost`, `unrepost`, `bookmark`, `unbookmark`, `pin`, `unpin`, `react`, `startConversation`, `setTyping` |
-| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `providers`, `authorize`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `addAudienceCompanies`, `searchTargeting`, `estimateReach`, `insights`, `adInsights`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `bidPricing`, `supplyForecast`, `conversionRules`, `createConversionRule`, `conversionRule`, `updateConversionRule`, `deleteConversionRule`, `attachConversionRule`, `detachConversionRule`, `conversionMetrics`, `sendConversionEvents`, `uploadConversions`, `sendPixelConversions`, `listConversionBatches`, `pixels`, `createPixel`, `pixel`, `updatePixel`, `sharePixel`, `pixelStats`, `eventMatchQuality`, `customConversions`, `createCustomConversion`, `customConversion`, `updateCustomConversion`, `deleteCustomConversion` |
+| `ads`         | `list`, `external`, `boostable`, `connections`, `sources`, `providers`, `authorize`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `bulkSetStatus`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `addAudienceCompanies`, `searchTargeting`, `estimateReach`, `insights`, `adInsights`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `bidPricing`, `supplyForecast`, `conversionRules`, `createConversionRule`, `conversionRule`, `updateConversionRule`, `deleteConversionRule`, `attachConversionRule`, `detachConversionRule`, `conversionMetrics`, `sendConversionEvents`, `uploadConversions`, `sendPixelConversions`, `listConversionBatches`, `pixels`, `createPixel`, `pixel`, `updatePixel`, `sharePixel`, `pixelStats`, `eventMatchQuality`, `customConversions`, `createCustomConversion`, `customConversion`, `updateCustomConversion`, `deleteCustomConversion` |
 | `googleBusiness` | `getLocation`, `updateLocation`, `getAttributes`, `updateAttributes`, `getMenus`, `replaceMenus`, `getServices`, `replaceServices`, `listMedia`, `addMedia`, `deleteMedia`, `listPlaceActions`, `createPlaceAction`, `updatePlaceAction`, `deletePlaceAction`, `getVerificationOptions`, `startVerification`, `completeVerification`, `getPerformance`, `getSearchKeywords`, `assign` |
 | `whatsapp`    | `profile`, `updateProfile`, `requestDisplayName`, `setUsername`, `templates`, `templateLibrary`, `template`, `createTemplate`, `importTemplate`, `updateTemplate`, `deleteTemplate`, `groups`, `createGroup`, `group`, `updateGroup`, `deleteGroup`, `groupInviteLink`, `resetGroupInviteLink`, `removeGroupParticipants`, `blocked`, `blockUsers`, `unblockUsers`, `commerceSettings`, `updateCommerceSettings`, `linkCatalog`, `flows`, `flow`, `createFlow`, `updateFlow`, `deleteFlow`, `uploadFlowJson`, `publishFlow`, `deprecateFlow`, `flowResponses`, `encryptionKeyStatus`, `setEncryptionKey`, `accountEvents`, `sandboxSessions`, `createSandboxSession` |
 | `blogs`       | `listBlogs`, `listArticles`, `getArticle`, `createArticle`, `updateArticle`, `deleteArticle`, `listProducts`, `updateProduct` |
@@ -371,8 +371,7 @@ Requests send `X-API-Key`. A key carries only the scopes granted when it was
 created: `posts` (which also covers publishing, deliveries, media, and `validate`),
 `workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, `automations`,
 `inbox`, `ads`. Spending money through `ads` (`boost`, `create`, `setStatus`,
-`delete`, `bulkSetStatus`, and every create, update, delete and duplicate on
-campaigns, ad sets and network ads) needs `publish` as well, and anything
+`delete` and `bulkSetStatus`) needs `publish` as well, and anything
 created starts paused unless `paused: false` is passed. The inbox actions `editComment`, `like`, `unlike`,
 `repost`, `unrepost`, `bookmark`, `unbookmark`, `pin`, `unpin`, `react`, `startConversation`,
 `setTyping` and `handover`, deleting our own reply, a reply with `mediaIds` or `quickReplies`,
@@ -456,8 +455,8 @@ Docs at [fopost.com/docs](https://fopost.com/docs). Questions or a problem:
 
 ### Google Ads
 
-Campaigns, ad groups, ads, audiences and insights are on `client.ads` and dispatch by
-connection. What only Google has is on `client.googleAds`:
+Audiences and insights are on `client.ads` and dispatch by connection. What only
+Google has is on `client.googleAds`:
 
 ```dart
 const scope = GoogleAdsScope(
@@ -465,22 +464,21 @@ const scope = GoogleAdsScope(
   customerId: '1234567890',
 );
 
-final keywords = await client.googleAds.keywords(scope);
+final strategies = await client.googleAds.bidStrategies(scope);
 
-await client.googleAds.createKeyword(
+await client.googleAds.createBidStrategy(
   const GoogleAdsScope(
     workspaceId: '7d2b8c11-…',
     connectionId: 'c4d5e6f7-…',
     customerId: '1234567890',
   ),
-  adGroupId: '1234567890~adGroup~77',
-  text: 'running shoes',
-  matchType: 'EXACT',
+  name: 'Target CPA',
+  type: 'TARGET_CPA',
+  targetMinor: 1500,
 );
 ```
 
-Also `keywordIdeas`, `keywordMetrics`, `searchTerms`, `bidStrategies`, `adSchedule` and
-`setAdSchedule`, the negative keyword lists, `assets` and `assetGroups`,
-`localServicesLeads`, the conversion methods, and `query` for a raw read-only GAQL SELECT.
+Also `adSchedule` and `setAdSchedule`, `localServicesLeads`, the conversion methods, and
+`query` for a raw read-only GAQL SELECT.
 Changes need the `publish` scope as well as `ads`; `customerId` has to name an account the
 connection's grant reaches.

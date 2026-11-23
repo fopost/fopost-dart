@@ -41,11 +41,11 @@ class GoogleAdsScope {
       };
 }
 
-/// Google Ads: keywords, assets, Performance Max asset groups, Local Services
-/// leads, conversions and raw GAQL.
+/// Google Ads: bid strategies, ad schedules, Local Services leads,
+/// conversions and raw GAQL.
 ///
-/// Campaigns, ad groups, ads, audiences and insights are on `client.ads` and
-/// dispatch by connection; a connection on another network answers 400 here.
+/// Audiences and insights are on `client.ads` and dispatch by connection; a
+/// connection on another network answers 400 here.
 /// Every call needs the `ads` scope, and anything that changes what a live
 /// account serves or bids also needs `publish`. Amounts are in the account's
 /// currency, in minor units. Reach it as `client.googleAds`.
@@ -55,94 +55,6 @@ class GoogleAdsResource {
   GoogleAdsResource(this._http);
 
   final FoPostHttp _http;
-
-  // ── Keywords ──
-
-  /// Keywords on the account, or on one ad group.
-  Future<List<GoogleKeyword>> keywords(
-    GoogleAdsScope scope, {
-    String? adGroupId,
-  }) async {
-    final rows = await _http.objects('GET', '/ads/google/keywords',
-        query: {...scope.query, 'ad_group_id': adGroupId});
-    return rows.map(GoogleKeyword.fromJson).toList();
-  }
-
-  /// Adds a keyword. Needs the `publish` scope as well as `ads`.
-  Future<String> createKeyword(
-    GoogleAdsScope scope, {
-    required String adGroupId,
-    required String text,
-    required String matchType,
-    int? cpcBidMinor,
-  }) =>
-      _id('POST', '/ads/google/keywords', {
-        ...scope.body,
-        ...pruned({
-          'adGroupId': adGroupId,
-          'text': text,
-          'matchType': matchType,
-          'cpcBidMinor': cpcBidMinor,
-        }),
-      });
-
-  /// Pauses, resumes or rebids a keyword. Needs `publish` as well as `ads`.
-  Future<String> updateKeyword(
-    String keywordId,
-    GoogleAdsScope scope, {
-    String? status,
-    int? cpcBidMinor,
-  }) =>
-      _id('PATCH', '/ads/google/keywords/$keywordId', {
-        ...scope.body,
-        ...pruned({'status': status, 'cpcBidMinor': cpcBidMinor}),
-      });
-
-  /// Removes a keyword. Needs `publish` as well as `ads`.
-  Future<void> deleteKeyword(String keywordId, GoogleAdsScope scope) => _http
-      .discard('DELETE', '/ads/google/keywords/$keywordId', body: scope.body);
-
-  /// Ideas from seed keywords, a landing page, or both.
-  Future<List<GoogleKeywordIdea>> keywordIdeas(
-    GoogleAdsScope scope, {
-    List<String>? seeds,
-    String? url,
-    String? languageId,
-    List<String>? geoTargetIds,
-  }) async {
-    final rows =
-        await _http.objects('POST', '/ads/google/keyword-ideas', body: {
-      ...scope.body,
-      ...pruned({
-        'seeds': seeds,
-        'url': url,
-        'languageId': languageId,
-        'geoTargetIds': geoTargetIds,
-      }),
-    });
-    return rows.map(GoogleKeywordIdea.fromJson).toList();
-  }
-
-  /// Historical metrics for keywords you already have.
-  Future<List<GoogleKeywordIdea>> keywordMetrics(
-    GoogleAdsScope scope, {
-    required List<String> keywords,
-  }) async {
-    final rows = await _http.objects('POST', '/ads/google/keyword-metrics',
-        body: {...scope.body, 'keywords': keywords});
-    return rows.map(GoogleKeywordIdea.fromJson).toList();
-  }
-
-  /// What people actually searched, with the metrics each term earned.
-  Future<List<GoogleSearchTerm>> searchTerms(
-    GoogleAdsScope scope, {
-    required String since,
-    required String until,
-  }) async {
-    final rows = await _http.objects('GET', '/ads/google/search-terms',
-        query: {...scope.query, 'since': since, 'until': until});
-    return rows.map(GoogleSearchTerm.fromJson).toList();
-  }
 
   // ── Bid strategies and ad schedule ──
 
@@ -186,136 +98,6 @@ class GoogleAdsResource {
         body: {...scope.body, 'campaignId': campaignId, 'slots': slots});
     return asInt(result['slots']) ?? 0;
   }
-
-  // ── Negative keyword lists ──
-
-  /// The account's negative keyword lists.
-  Future<List<GoogleSharedSet>> negativeKeywordLists(
-      GoogleAdsScope scope) async {
-    final rows = await _http.objects('GET', '/ads/google/negative-keywords',
-        query: scope.query);
-    return rows.map(GoogleSharedSet.fromJson).toList();
-  }
-
-  /// Creates a negative keyword list. Needs `publish` as well as `ads`.
-  Future<String> createNegativeKeywordList(
-    GoogleAdsScope scope, {
-    required String name,
-  }) =>
-      _id('POST', '/ads/google/negative-keywords',
-          {...scope.body, 'name': name});
-
-  /// Adds keywords to a list; answers how many landed. Needs `publish`.
-  Future<int> addNegativeKeywords(
-    GoogleAdsScope scope, {
-    required String sharedSetId,
-    required List<Map<String, dynamic>> keywords,
-  }) async {
-    final result = await _http.object(
-        'POST', '/ads/google/negative-keywords/keywords', body: {
-      ...scope.body,
-      'sharedSetId': sharedSetId,
-      'keywords': keywords
-    });
-    return asInt(result['added']) ?? 0;
-  }
-
-  /// Puts a list on a campaign. Needs `publish` as well as `ads`.
-  Future<void> attachNegativeKeywordList(
-    GoogleAdsScope scope, {
-    required String sharedSetId,
-    required String campaignId,
-  }) =>
-      _http.discard('POST', '/ads/google/negative-keywords/attach', body: {
-        ...scope.body,
-        'sharedSetId': sharedSetId,
-        'campaignId': campaignId,
-      });
-
-  // ── Assets ──
-
-  /// Sitelinks, callouts and snippets, with the links that place each one.
-  Future<GoogleAssets> assets(GoogleAdsScope scope) async =>
-      GoogleAssets.fromJson(
-          await _http.object('GET', '/ads/google/assets', query: scope.query));
-
-  /// Adds an asset to the library. Needs `publish` as well as `ads`.
-  ///
-  /// [spec] is a sitelink, callout or snippet.
-  Future<String> createAsset(
-    GoogleAdsScope scope, {
-    required Map<String, dynamic> spec,
-  }) =>
-      _id('POST', '/ads/google/assets', {...scope.body, 'spec': spec});
-
-  /// Puts an asset under the ads it belongs to. Needs `publish`.
-  Future<void> attachAsset(
-    GoogleAdsScope scope, {
-    required String assetId,
-    required String fieldType,
-    String? campaignId,
-  }) =>
-      _http.discard('POST', '/ads/google/assets/attach', body: {
-        ...scope.body,
-        ...pruned({
-          'assetId': assetId,
-          'fieldType': fieldType,
-          'campaignId': campaignId,
-        }),
-      });
-
-  /// Removes the links that put an asset under an ad; on Google the asset
-  /// itself is permanent. Needs `publish` as well as `ads`.
-  Future<void> deleteAsset(String assetId, GoogleAdsScope scope) =>
-      _http.discard('DELETE', '/ads/google/assets/$assetId', body: scope.body);
-
-  // ── Performance Max asset groups ──
-
-  /// Performance Max asset groups on the account, or on one campaign.
-  Future<List<GoogleAssetGroup>> assetGroups(
-    GoogleAdsScope scope, {
-    String? campaignId,
-  }) async {
-    final rows = await _http.objects('GET', '/ads/google/asset-groups',
-        query: {...scope.query, 'campaign_id': campaignId});
-    return rows.map(GoogleAssetGroup.fromJson).toList();
-  }
-
-  /// Creates an asset group, paused unless [status] says otherwise. Needs
-  /// `publish` as well as `ads`.
-  Future<String> createAssetGroup(
-    GoogleAdsScope scope, {
-    required String campaignId,
-    required String name,
-    required List<String> finalUrls,
-    String? status,
-  }) =>
-      _id('POST', '/ads/google/asset-groups', {
-        ...scope.body,
-        ...pruned({
-          'campaignId': campaignId,
-          'name': name,
-          'finalUrls': finalUrls,
-          'status': status,
-        }),
-      });
-
-  /// Renames, pauses or resumes an asset group. Needs `publish`.
-  Future<String> updateAssetGroup(
-    String assetGroupId,
-    GoogleAdsScope scope, {
-    String? name,
-    String? status,
-  }) =>
-      _id('PATCH', '/ads/google/asset-groups/$assetGroupId', {
-        ...scope.body,
-        ...pruned({'name': name, 'status': status}),
-      });
-
-  /// Removes an asset group. Needs `publish` as well as `ads`.
-  Future<void> deleteAssetGroup(String assetGroupId, GoogleAdsScope scope) =>
-      _http.discard('DELETE', '/ads/google/asset-groups/$assetGroupId',
-          body: scope.body);
 
   // ── Local Services leads ──
 
@@ -373,47 +155,6 @@ class GoogleAdsResource {
   }) =>
       _uploaded('/ads/google/conversions/adjustments',
           {...scope.body, 'adjustments': adjustments});
-
-  // ── Recommendations ──
-
-  /// Google's own read on what the account should change next; [types] narrows
-  /// to those recommendation types.
-  Future<List<GoogleRecommendation>> recommendations(
-    GoogleAdsScope scope, {
-    List<String> types = const [],
-  }) async {
-    final rows =
-        await _http.objects('GET', '/ads/google/recommendations', query: {
-      ...scope.query,
-      if (types.isNotEmpty) 'types': types.join(','),
-    });
-    return rows.map(GoogleRecommendation.fromJson).toList();
-  }
-
-  /// The account's score and weight, and the score of each live campaign.
-  Future<GoogleOptimizationScore> optimizationScore(
-      GoogleAdsScope scope) async {
-    final result = await _http.object('GET', '/ads/google/optimization-score',
-        query: scope.query);
-    return GoogleOptimizationScore.fromJson(result);
-  }
-
-  /// Applies each one, which changes what the live account serves or bids, and
-  /// answers how many landed. Needs `publish` as well as `ads`.
-  Future<int> applyRecommendations(
-    GoogleAdsScope scope, {
-    required List<String> ids,
-  }) =>
-      _counted('/ads/google/recommendations/apply', 'applied',
-          {...scope.body, 'ids': ids});
-
-  /// Hides each one so Google stops surfacing it. Needs `publish`.
-  Future<int> dismissRecommendations(
-    GoogleAdsScope scope, {
-    required List<String> ids,
-  }) =>
-      _counted('/ads/google/recommendations/dismiss', 'dismissed',
-          {...scope.body, 'ids': ids});
 
   // ── GAQL ──
 
