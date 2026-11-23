@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Removed: the ads campaign tree, creative, catalog and Ad Library methods,
+  matching the ads API. `ads.accountTree`, the campaign, ad set and network ad
+  methods (`createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`,
+  `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`,
+  `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`,
+  `deleteNetworkAd`, `duplicateNetworkAd`), `creatives`, `createCreative`,
+  `creative`, `deleteCreative`, every catalog, product, feed and product set
+  method, and `library` are gone, with the `AdAccountTree`, `AdCampaign`,
+  `AdSet`, `NetworkAd`, `AdCreative*`, `AdCreativeFormat`, `ProductCatalog`,
+  `CatalogProduct*`, `CatalogBatchResult`, `ProductFeed*`, `ProductSet` and
+  `AdLibrary*` models. Boosts, standalone ads, `bulkSetStatus`, audiences,
+  lead forms, insights, pixels and conversions are unchanged.
+- Removed: `googleAds` keyword, keyword idea, keyword metric, search term,
+  negative keyword list, asset, asset group, recommendation and optimization
+  score methods, with their `GoogleKeyword*`, `GoogleSearchTerm`,
+  `GoogleSharedSet`, `GoogleAsset*`, `GoogleRecommendation*` and
+  `GoogleOptimizationScore*` models. Bid strategies, ad schedules, Local
+  Services leads, conversions and `query` are unchanged.
 - Added: `designs`, the Create section's designs. `list`, `create`, `get`,
   `update` and `restoreVersion` (both answer a `DesignChange` with the saved
   `DesignVersion`, if any), `delete`, `versions`, `duplicate`, `export`
