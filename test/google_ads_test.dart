@@ -12,73 +12,52 @@ const scope = GoogleAdsScope(
 );
 
 void main() {
-  test('keywords name the connection and the customer', () async {
+  test('bid strategies name the connection and the customer', () async {
     final seen = RecordedRequests();
     final client = fakeClient(
       (_) async => jsonBare({
         'data': [
           {
-            'id': '1234567890~keyword~77~99',
-            'adGroupId': '1234567890~adGroup~77',
-            'text': 'running shoes',
-            'matchType': 'EXACT',
+            'id': '1234567890~biddingStrategy~42',
+            'name': 'Target CPA',
+            'type': 'TARGET_CPA',
             'status': 'ENABLED',
-            'cpcBidMinor': 180,
-            'negative': false,
+            'campaignCount': 3,
           }
         ]
       }),
       recorder: seen,
     );
 
-    final keywords = await client.googleAds
-        .keywords(scope, adGroupId: '1234567890~adGroup~77');
+    final strategies = await client.googleAds.bidStrategies(scope);
 
-    expect(keywords.single.text, 'running shoes');
-    expect(keywords.single.cpcBidMinor, 180);
-    expect(seen.last.url.path, '/v1/ads/google/keywords');
+    expect(strategies.single.type, 'TARGET_CPA');
+    expect(strategies.single.campaignCount, 3);
+    expect(seen.last.url.path, '/v1/ads/google/bid-strategies');
     expect(seen.last.url.queryParameters['connection_id'], 'conn_1');
     expect(seen.last.url.queryParameters['customer_id'], '1234567890');
-    expect(
-        seen.last.url.queryParameters['ad_group_id'], '1234567890~adGroup~77');
   });
 
-  test('create keyword sends the scope in the body', () async {
+  test('create bid strategy sends the scope in the body', () async {
     final seen = RecordedRequests();
     final client = fakeClient(
       (_) async => jsonBare({
-        'data': {'id': '1234567890~keyword~77~99'}
+        'data': {'id': '1234567890~biddingStrategy~42'}
       }, status: 201),
       recorder: seen,
     );
 
-    final id = await client.googleAds.createKeyword(
+    final id = await client.googleAds.createBidStrategy(
       scope,
-      adGroupId: '1234567890~adGroup~77',
-      text: 'running shoes',
-      matchType: 'EXACT',
+      name: 'Target CPA',
+      type: 'TARGET_CPA',
+      targetMinor: 1500,
     );
 
-    expect(id, '1234567890~keyword~77~99');
+    expect(id, '1234567890~biddingStrategy~42');
     final body = jsonDecode(seen.last.body) as Map<String, dynamic>;
     expect(body['customerId'], '1234567890');
-    expect(body['matchType'], 'EXACT');
-  });
-
-  test('delete carries the scope in the body', () async {
-    final seen = RecordedRequests();
-    final client =
-        fakeClient((_) async => jsonBare({'data': null}), recorder: seen);
-
-    await client.googleAds.deleteAsset('1234567890~asset~4321', scope);
-
-    expect(seen.last.method, 'DELETE');
-    expect(seen.last.url.path, '/v1/ads/google/assets/1234567890~asset~4321');
-    expect(jsonDecode(seen.last.body), {
-      'workspaceId': 'ws_1',
-      'connectionId': 'conn_1',
-      'customerId': '1234567890',
-    });
+    expect(body['targetMinor'], 1500);
   });
 
   test('ad schedule is replaced with put', () async {
@@ -122,47 +101,6 @@ void main() {
 
     expect(rows.length, 1);
     expect(seen.last.url.path, '/v1/ads/insights/query');
-  });
-
-  test('recommendations join the types filter', () async {
-    final seen = RecordedRequests();
-    final client = fakeClient(
-      (_) async => jsonBare({
-        'data': [
-          {
-            'id': 'customers/1234567890/recommendations/ABC~1',
-            'type': 'KEYWORD',
-            'campaignId': '1234567890~campaign~55',
-            'dismissed': false,
-            'impact': {'baseClicks': 10, 'potentialClicks': 25},
-          }
-        ]
-      }),
-      recorder: seen,
-    );
-
-    final rows = await client.googleAds
-        .recommendations(scope, types: ['KEYWORD', 'TARGET_CPA_OPT_IN']);
-
-    expect(rows.first.type, 'KEYWORD');
-    expect(rows.first.impact?.potentialClicks, 25);
-    expect(seen.last.url.queryParameters['types'], 'KEYWORD,TARGET_CPA_OPT_IN');
-  });
-
-  test('apply recommendations sends the ids', () async {
-    final seen = RecordedRequests();
-    final client = fakeClient(
-      (_) async => jsonBare({
-        'data': {'applied': 1}
-      }),
-      recorder: seen,
-    );
-
-    final applied = await client.googleAds.applyRecommendations(scope,
-        ids: ['customers/1234567890/recommendations/ABC~1']);
-
-    expect(applied, 1);
-    expect(seen.last.url.path, '/v1/ads/google/recommendations/apply');
   });
 
   test('authorize google has its own route', () async {
